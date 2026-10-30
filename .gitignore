@@ -1,3 +1,127 @@
-.godot/
-*.tmp
+# ==============================================================================
+# Clowder: Alley Siege - .gitignore
+# Best-practice gitignore for Godot 4 + GDScript + Python tools + Node.js + Windows/OS
+# ==============================================================================
 
+# ------------------------------------------------------------------------------
+# Godot 4
+# ------------------------------------------------------------------------------
+# Godot-specific cache, imported binary assets, shader caches, and metadata
+.godot/
+# Export credentials (passwords, keystores)
+export_credentials.cfg
+# Binary compiled translation files (keep text-based translations if added)
+*.translation
+
+# Note: *.import files in project directories (e.g. presentation/art/*.import)
+# MUST be tracked in Godot 4 to preserve import configurations.
+
+# ------------------------------------------------------------------------------
+# Build and Export Outputs
+# ------------------------------------------------------------------------------
+bin/
+build/
+builds/
+dist/
+export/
+out/
+*.pck
+*.apk
+*.aab
+*.ipa
+*.exe
+
+# ------------------------------------------------------------------------------
+# Python (Tools, Test Harnesses, and Scripts)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+var/
+sdist/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+
+# ------------------------------------------------------------------------------
+# Node.js / JavaScript
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# Logs, Temp Files, Crash Dumps
+# ------------------------------------------------------------------------------
+*.log
+godot.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# ------------------------------------------------------------------------------
+# Operating System Files
+# ------------------------------------------------------------------------------
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ------------------------------------------------------------------------------
+# IDEs and Editors
+# ------------------------------------------------------------------------------
+# Visual Studio Code: ignore local workspace state, keep shared settings
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# JetBrains / Rider
+.idea/
+*.iml
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
