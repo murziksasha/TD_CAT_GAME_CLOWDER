@@ -1,0 +1,52 @@
+{
+  "id": "biscuit",
+  "name": "Biscuit",
+  "title": "Fishbone Lobber",
+  "category": "Alley",
+  "placement_mask": ["Land"],
+  "footprint_radius": 20.0,
+  "cost": 525,
+  "base": {
+    "damage": 1,
+    "damage_type": "Blast",
+    "pierce": 16,
+    "radius": 45.0,
+    "cooldown": 1.45,
+    "range": 160.0,
+    "travel_time": 0.4,
+    "see_shadow": false
+  },
+  "paths": {
+    "path_a": {
+      "name": "Heavy",
+      "tiers": [
+        {"tier": 1, "name": "Bigger Bones", "cost": 300, "radius": 60.0, "damage": 2},
+        {"tier": 2, "name": "Heavy Skelet", "cost": 600, "damage": 3},
+        {"tier": 3, "name": "Concussive Flurry", "cost": 1800, "damage": 6, "stun_mice": 0.5, "stun_rats": 0.2},
+        {"tier": 4, "name": "Rat Smasher", "cost": 5500, "damage": 12, "radius": 80.0, "bonus_damage_rats": 10},
+        {"tier": 5, "name": "Whale Fall", "cost": 28000, "damage": 20, "bonus_damage_rats": 40, "radius": 100.0, "cooldown": 2.2, "stun_burrow": 1.2, "stun_bristle": 0.8, "stun_monarch": 0.4, "stun_dusk": 0.6, "stun_matriarch": 0.0}
+      ]
+    },
+    "path_b": {
+      "name": "Cluster",
+      "tiers": [
+        {"tier": 1, "name": "Bone Crumbs", "cost": 250, "crumb_count": 4, "crumb_damage": 1},
+        {"tier": 2, "name": "Extra Shards", "cost": 500, "crumb_count": 6},
+        {"tier": 3, "name": "Secondary Pop", "cost": 1600, "crumb_explode_damage": 2},
+        {"tier": 4, "name": "Sharp Splinters", "cost": 4000, "crumb_damage_type": "Bite"},
+        {"tier": 5, "name": "Crumb Carpet", "cost": 22000, "crumb_count": 12, "crumb_damage": 3, "crumb_damage_type": "Bite", "carpet_duration": 3.0}
+      ]
+    },
+    "path_c": {
+      "name": "Rapid",
+      "tiers": [
+        {"tier": 1, "name": "Quick Fling", "cost": 250, "cooldown": 1.1},
+        {"tier": 2, "name": "Fast Loader", "cost": 500, "cooldown": 0.85},
+        {"tier": 3, "name": "Hot Ash", "cost": 1400, "burn_patch_dps": 2, "burn_patch_duration": 3.0},
+        {"tier": 4, "name": "Rapid Launcher", "cost": 4500, "cooldown": 0.6, "damage": 2},
+        {"tier": 5, "name": "Barrage Basket", "cost": 20000, "cooldown": 0.35, "damage": 3, "radius": 50.0, "burn_patch_dps": 4}
+      ]
+    }
+  }
+}
+

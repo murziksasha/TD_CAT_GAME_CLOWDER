@@ -1,0 +1,30 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; but it is here for version control and automated tools.
+
+config_version=5
+
+[application]
+
+config/name="Clowder: Alley Siege"
+config/description="Free, single-player path tower defense with cats defending the alley against mice."
+config/version="1.0.0"
+run/main_scene="res://presentation/main.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[physics]
+
+common/physics_ticks_per_second=30
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=1
+

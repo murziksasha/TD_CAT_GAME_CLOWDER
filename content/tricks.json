@@ -1,0 +1,79 @@
+{
+  "max_damage_on_matriarch": 1100,
+  "tricks": {
+    "tuna_strike": {
+      "name": "Tuna Strike",
+      "price": 250,
+      "min_level": 1,
+      "cooldown_rounds": 15,
+      "kibble_cost": 50,
+      "damage": 12,
+      "damage_type": "Bite",
+      "radius": 60.0
+    },
+    "night_lantern": {
+      "name": "Night Lantern",
+      "price": 280,
+      "min_level": 1,
+      "cooldown_rounds": 10,
+      "kibble_cost": 40,
+      "reveal_shadow_duration": 12.0
+    },
+    "yarn_snare": {
+      "name": "Yarn Snare",
+      "price": 300,
+      "min_level": 1,
+      "cooldown_rounds": 12,
+      "kibble_cost": 40,
+      "hold_mice_duration": 6.0,
+      "slow_rat_speed": 0.8,
+      "slow_rat_duration": 3.0,
+      "matriarch_immune": true
+    },
+    "hairball_volley": {
+      "name": "Hairball Volley",
+      "price": 350,
+      "min_level": 1,
+      "cooldown_rounds": 16,
+      "kibble_cost": 60,
+      "trigger_hero_volley": true
+    },
+    "catnip_frenzy": {
+      "name": "Catnip Frenzy",
+      "price": 400,
+      "min_level": 1,
+      "cooldown_rounds": 18,
+      "kibble_cost": 80,
+      "attack_speed_bonus": 0.50,
+      "duration": 8.0
+    },
+    "fish_rain": {
+      "name": "Fish Rain",
+      "price": 450,
+      "min_level": 8,
+      "cooldown_rounds": 20,
+      "kibble_cost": 0,
+      "base_kibble": 400,
+      "kibble_per_round": 10
+    },
+    "ratwhistle": {
+      "name": "Ratwhistle",
+      "price": 600,
+      "min_level": 10,
+      "cooldown_rounds": 16,
+      "kibble_cost": 100,
+      "screen_rat_damage": 100,
+      "damage_type": "Bite"
+    },
+    "nine_life_pulse": {
+      "name": "Nine-Life Pulse",
+      "price": 900,
+      "min_level": 12,
+      "once_per_match": true,
+      "kibble_cost": 0,
+      "restore_lives": 25,
+      "banned_in_1_life_modes": true
+    }
+  }
+}
+

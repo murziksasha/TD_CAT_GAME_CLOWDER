@@ -1,0 +1,35 @@
+{
+  "id": "pebble",
+  "name": "Sister Pebble",
+  "title": "Ledger Cat",
+  "starter": false,
+  "unlock_account_level": 14,
+  "place_cost": 900,
+  "base": {
+    "cooldown": 1.2,
+    "damage": 1,
+    "damage_type": "Bite",
+    "pierce": 1,
+    "range": 120.0
+  },
+  "level_milestones": {
+    "7": {"fishercat_production_buff": 0.10},
+    "20": {"end_round_base": 40, "end_round_per_level": 4, "leak_life_reduction": 5}
+  },
+  "active_abilities": {
+    "ability_1": {
+      "unlock_level": 3,
+      "name": "Skim",
+      "cooldown": 45.0,
+      "next_round_pop_bonus": 0.20
+    },
+    "ability_2": {
+      "unlock_level": 10,
+      "name": "Audit",
+      "cooldown": 60.0,
+      "audit_base": 500,
+      "audit_per_level": 30
+    }
+  }
+}
+

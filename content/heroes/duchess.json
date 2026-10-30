@@ -1,0 +1,40 @@
+{
+  "id": "duchess",
+  "name": "Duchess",
+  "title": "Hearth Cat",
+  "starter": false,
+  "unlock_account_level": 7,
+  "place_cost": 750,
+  "base": {
+    "cooldown": 1.0,
+    "damage": 1,
+    "damage_type": "Magic",
+    "burn_dps": 2,
+    "burn_duration": 3.0,
+    "range": 130.0,
+    "can_hit_ink": false
+  },
+  "level_milestones": {
+    "7": {"burn_duration_bonus": 2.0, "blast_radius_aura": 15.0},
+    "8": {"can_hit_ink": true, "damage_type": "Void"},
+    "20": {"banked_coals_percent_hp_dps": 0.02, "banked_coals_rat_cap": 40, "banked_coals_matriarch_cap": 15}
+  },
+  "active_abilities": {
+    "ability_1": {
+      "unlock_level": 3,
+      "name": "Heatwave",
+      "cooldown": 35.0,
+      "radius": 100.0,
+      "burn_dps": 4,
+      "burn_duration": 4.0
+    },
+    "ability_2": {
+      "unlock_level": 10,
+      "name": "Chili Heart",
+      "cooldown": 50.0,
+      "fire_zone_duration": 8.0,
+      "fire_zone_dps": 8
+    }
+  }
+}
+

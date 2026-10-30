@@ -1,0 +1,49 @@
+{
+  "id": "miso",
+  "name": "Miso",
+  "title": "Cafe Cat",
+  "category": "Den",
+  "placement_mask": ["Land"],
+  "footprint_radius": 20.0,
+  "cost": 700,
+  "base": {
+    "is_aura_emitter": true,
+    "aura_radius": 110.0,
+    "buff_range_ratio": 0.10,
+    "buff_self": false,
+    "hero_multiplier": 0.5
+  },
+  "paths": {
+    "path_a": {
+      "name": "Tempo",
+      "tiers": [
+        {"tier": 1, "name": "Espresso Shot", "cost": 400, "buff_attack_speed_ratio": 0.10},
+        {"tier": 2, "name": "Steamed Milk", "cost": 800, "buff_range_ratio": 0.15},
+        {"tier": 3, "name": "Caffeine Rush", "cost": 2000, "buff_attack_speed_ratio": 0.18},
+        {"tier": 4, "name": "Barista Special", "cost": 6000, "aura_radius": 160.0, "alley_damage_bonus": 1},
+        {"tier": 5, "name": "Head Barista", "cost": 20000, "aura_radius": 200.0, "buff_attack_speed_ratio": 0.25, "buff_range_ratio": 0.20, "alley_damage_bonus": 1, "hunt_crit_chance_bonus": 0.10}
+      ]
+    },
+    "path_b": {
+      "name": "Menu",
+      "tiers": [
+        {"tier": 1, "name": "Chalkboard Special", "cost": 500, "grant_night_eye": true},
+        {"tier": 2, "name": "Corner Patio", "cost": 900, "aura_radius": 150.0},
+        {"tier": 3, "name": "Full Breakfast", "cost": 2500, "buff_pierce_bonus": 1},
+        {"tier": 4, "name": "Gourmet Board", "cost": 4000, "notes": "Aura-only night eye and pierce locked"},
+        {"tier": 5, "name": "All-Seeing Menu", "cost": 18000, "aura_radius": 260.0, "grant_night_eye": true, "buff_pierce_bonus": 2, "global_shadow_reveal_interval": 15.0, "global_shadow_reveal_duration": 3.0}
+      ]
+    },
+    "path_c": {
+      "name": "Bell",
+      "tiers": [
+        {"tier": 1, "name": "Loyalty Card", "cost": 300, "aura_discount_ratio": 0.05},
+        {"tier": 2, "name": "Happy Hour", "cost": 800, "aura_discount_ratio": 0.10},
+        {"tier": 3, "name": "Clowder Tab", "cost": 3000, "aura_discount_ratio": 0.15},
+        {"tier": 4, "name": "Rallying Bell", "cost": 7000, "active_ability": "rallying_bell", "bell_cooldown": 50.0, "bell_duration": 8.0, "bell_speed_ratio": 0.70},
+        {"tier": 5, "name": "Grand Bell", "cost": 22000, "active_ability": "grand_bell", "bell_cooldown": 45.0, "bell_duration": 12.0, "bell_speed_ratio": 1.00, "bell_damage_bonus_alley_hunt": 1}
+      ]
+    }
+  }
+}
+

@@ -1,0 +1,51 @@
+{
+  "id": "nibs",
+  "name": "Nibs",
+  "title": "Circle Pouncer",
+  "category": "Alley",
+  "placement_mask": ["Land"],
+  "footprint_radius": 20.0,
+  "cost": 280,
+  "base": {
+    "damage": 1,
+    "damage_type": "Claw",
+    "pierce": 1,
+    "arcs": 8,
+    "range": 75.0,
+    "cooldown": 1.1,
+    "see_shadow": false
+  },
+  "paths": {
+    "path_a": {
+      "name": "More Paws",
+      "tiers": [
+        {"tier": 1, "name": "Extra Arcs", "cost": 150, "arcs": 10},
+        {"tier": 2, "name": "Heavy Claws", "cost": 300, "arcs": 12, "damage": 2},
+        {"tier": 3, "name": "Rapid Swipes", "cost": 900, "arcs": 16, "cooldown": 0.8},
+        {"tier": 4, "name": "Porcelain Shredder", "cost": 4000, "bonus_damage_porcelain": 2},
+        {"tier": 5, "name": "Blender", "cost": 22000, "hits_per_second": 24, "damage": 2, "pierce": 2, "bonus_damage_porcelain": 4}
+      ]
+    },
+    "path_b": {
+      "name": "Hot Claws",
+      "tiers": [
+        {"tier": 1, "name": "Warm Claws", "cost": 200, "burn_dps": 1, "burn_duration": 3.0, "burn_type": "Bite"},
+        {"tier": 2, "name": "Scorching Touch", "cost": 400, "burn_dps": 2, "burn_frost_multiplier": 2.0},
+        {"tier": 3, "name": "Spread Spark", "cost": 800, "burn_death_jump_count": 3},
+        {"tier": 4, "name": "Firechain", "cost": 3000, "burn_death_jump_count": 6},
+        {"tier": 5, "name": "Chili Mittens", "cost": 19000, "burn_dps": 5, "rat_burn_multiplier": 0.5, "matriarch_burn_multiplier": 0.25}
+      ]
+    },
+    "path_c": {
+      "name": "Long Pounce",
+      "tiers": [
+        {"tier": 1, "name": "Stretched Leap", "cost": 150, "range": 110.0},
+        {"tier": 2, "name": "Projectile Arcs", "cost": 350, "range": 140.0, "arcs_as_projectiles": true, "pierce": 2},
+        {"tier": 3, "name": "Shock Ring", "cost": 1200, "ring_every": 5, "ring_range": 180.0, "ring_damage": 2},
+        {"tier": 4, "name": "Expanding Wave", "cost": 3500, "ring_pierce": 20},
+        {"tier": 5, "name": "Alley Sweep", "cost": 17000, "dash_interval": 6.0, "dash_track_distance": 200.0, "dash_damage_mice": 8, "dash_damage_rats": 30, "dash_damage_matriarch": 15, "dash_damage_type": "Bite"}
+      ]
+    }
+  }
+}
+

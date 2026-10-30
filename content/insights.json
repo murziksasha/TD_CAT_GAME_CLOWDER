@@ -1,0 +1,68 @@
+{
+  "max_points_at_40": 43,
+  "tree_cost": 15,
+  "depth_costs": [1, 1, 1, 2, 2, 2, 3, 3],
+  "trees": {
+    "alley": [
+      {"id": "alley_1", "name": "Extra Starting Kibble", "cost": 1, "desc": "+50 start kibble on Sunny and Alley"},
+      {"id": "alley_2", "name": "Soft Landings", "cost": 1, "desc": "First leak removes 10 fewer lives, once"},
+      {"id": "alley_3", "name": "Pip Practice", "cost": 1, "desc": "Pip gains +5% attack speed"},
+      {"id": "alley_4", "name": "Hot Start", "cost": 2, "req_mastery": {"cat": "nibs", "rank": 2}, "desc": "Nibs burn lasts +1s"},
+      {"id": "alley_5", "name": "Thick Ruff", "cost": 2, "req_mastery": {"cat": "pudding", "rank": 2}, "desc": "Pudding freeze lasts +0.3s on mice"},
+      {"id": "alley_6", "name": "Bigger Bones", "cost": 2, "req_mastery": {"cat": "biscuit", "rank": 3}, "desc": "Biscuit explosion radius +8"},
+      {"id": "alley_7", "name": "Alley Drill", "cost": 3, "desc": "All Alley cats gain +1 pierce"},
+      {"id": "alley_8", "name": "Veteran Tosser", "cost": 3, "req_mastery": {"category": "Alley", "rank": 8}, "desc": "Second copy of one Alley tier-5 allowed"}
+    ],
+    "hunt": [
+      {"id": "hunt_1", "name": "Perch Discount", "cost": 1, "desc": "Sable costs 50 less"},
+      {"id": "hunt_2", "name": "Steady Aim", "cost": 1, "desc": "Sable cooldown -5%"},
+      {"id": "hunt_3", "name": "Gutter Maps", "cost": 1, "desc": "Water cats gain +10% range"},
+      {"id": "hunt_4", "name": "Harpoon Drill", "cost": 2, "req_mastery": {"cat": "sable", "rank": 3}, "desc": "Anti-rat bonus damage on Hunt cats +10%"},
+      {"id": "hunt_5", "name": "Long Patrol", "cost": 2, "desc": "Air cats move 10% faster"},
+      {"id": "hunt_6", "name": "Deadeye Drill", "cost": 2, "req_mastery": {"cat": "sable", "rank": 5}, "desc": "Sable every-Nth shot counter is one shorter"},
+      {"id": "hunt_7", "name": "Hunt Pack", "cost": 3, "desc": "Hunt cats gain +1 damage vs rats"},
+      {"id": "hunt_8", "name": "Second Perch", "cost": 3, "req_mastery": {"category": "Hunt", "rank": 8}, "desc": "Second copy of one Hunt tier-5 allowed"}
+    ],
+    "myth": [
+      {"id": "myth_1", "name": "Ink Study", "cost": 1, "desc": "Nim path C tier 1 costs 100 less"},
+      {"id": "myth_2", "name": "Warm Spark", "cost": 1, "desc": "Burn dps from Myth cats +1"},
+      {"id": "myth_3", "name": "Hex Reach", "cost": 1, "desc": "Hex spread radius +20%"},
+      {"id": "myth_4", "name": "Brew Loyalty", "cost": 2, "req_mastery": {"cat": "bub", "rank": 2}, "desc": "Bub brew lasts 20% longer"},
+      {"id": "myth_5", "name": "Thorn Pact", "cost": 2, "req_mastery": {"category": "Myth", "rank": 3}, "desc": "Myth cats gain +5% range"},
+      {"id": "myth_6", "name": "Void Lesson", "cost": 2, "req_mastery": {"category": "Myth", "rank": 5}, "desc": "One chosen Myth cat treats Ink as normal target"},
+      {"id": "myth_7", "name": "Myth Chorus", "cost": 3, "desc": "Magic damage +1"},
+      {"id": "myth_8", "name": "Second Star", "cost": 3, "req_mastery": {"category": "Myth", "rank": 8}, "desc": "Second copy of one Myth tier-5 allowed"}
+    ],
+    "den": [
+      {"id": "den_1", "name": "First Catch", "cost": 1, "desc": "Goldie produces +20 kibble per round"},
+      {"id": "den_2", "name": "Wider Cafe", "cost": 1, "desc": "Miso radius +15"},
+      {"id": "den_3", "name": "Honey Lesson", "cost": 1, "desc": "Honey slow lasts +2s"},
+      {"id": "den_4", "name": "Interest", "cost": 2, "req_mastery": {"cat": "goldie", "rank": 4}, "desc": "Vault interest +2 percentage points"},
+      {"id": "den_5", "name": "Single Discount", "cost": 2, "req_mastery": {"cat": "miso", "rank": 5}, "desc": "Global discount floor moves from 60% to 55%"},
+      {"id": "den_6", "name": "Sentry Oil", "cost": 2, "req_mastery": {"cat": "sprocket", "rank": 2}, "desc": "Sentry lifetime +5s"},
+      {"id": "den_7", "name": "Den Network", "cost": 3, "desc": "Support auras also grant +5% attack speed"},
+      {"id": "den_8", "name": "Market Day", "cost": 3, "req_mastery": {"cat": "goldie_or_miso", "rank": 8}, "desc": "Start each match with one free tier-1 token"}
+    ],
+    "hero": [
+      {"id": "hero_1", "name": "Early Bowl", "cost": 1, "desc": "Hero place cost -100"},
+      {"id": "hero_2", "name": "Fast Growth", "cost": 1, "desc": "Hero XP +8%"},
+      {"id": "hero_3", "name": "Level Head Start", "cost": 1, "desc": "Hero starts at level 2"},
+      {"id": "hero_4", "name": "Pin Cushion Drill", "cost": 2, "desc": "Mittens level-3 cooldown -5s"},
+      {"id": "hero_5", "name": "Hearth Drill", "cost": 2, "desc": "Duchess burn cap vs normal rats +5 dps"},
+      {"id": "hero_6", "name": "Hero Start 3", "cost": 2, "desc": "Hero starts at level 3"},
+      {"id": "hero_7", "name": "Ability Fuel", "cost": 3, "desc": "Hero active cooldowns -10%"},
+      {"id": "hero_8", "name": "Beloved", "cost": 3, "desc": "Hero level-20 passive 20% stronger"}
+    ],
+    "clowder": [
+      {"id": "clowder_1", "name": "Keen Wallet", "cost": 1, "desc": "+25 start kibble on every mode except Bare Paw"},
+      {"id": "clowder_2", "name": "Clean Sell", "cost": 1, "desc": "Sell refund becomes 75% on modes that allow selling"},
+      {"id": "clowder_3", "name": "Third Trick", "cost": 1, "desc": "Unlocks trick slot 3"},
+      {"id": "clowder_4", "name": "Pre-round Peek", "cost": 2, "desc": "Next round mouse list and counts always visible"},
+      {"id": "clowder_5", "name": "Feat Focus", "cost": 2, "desc": "Feat XP +10%"},
+      {"id": "clowder_6", "name": "Reroll Saver", "cost": 2, "desc": "First feat reroll of match is free"},
+      {"id": "clowder_7", "name": "Long Memory", "cost": 3, "desc": "Mastery XP +10%"},
+      {"id": "clowder_8", "name": "Keeper's Bell", "cost": 3, "desc": "Once per match, all cats gain +20% attack speed for 10s"}
+    ]
+  }
+}
+

@@ -1,0 +1,109 @@
+{
+  "mode": "sunny",
+  "max_round": 40,
+  "rounds": {
+    "1": [{"count": 15, "coat": "rust", "spacing": 0.9}],
+    "2": [{"count": 25, "coat": "rust", "spacing": 0.6}],
+    "3": [
+      {"count": 12, "coat": "rust", "spacing": 0.5},
+      {"count": 10, "coat": "slate", "spacing": 0.5}
+    ],
+    "4": [{"count": 20, "coat": "slate", "spacing": 0.5}],
+    "5": [{"count": 18, "coat": "moss", "spacing": 0.55}],
+    "6": [
+      {"count": 12, "coat": "moss", "spacing": 0.4},
+      {"count": 15, "coat": "rust", "spacing": 0.3}
+    ],
+    "7": [{"count": 16, "coat": "grain", "spacing": 0.45}],
+    "8": [
+      {"count": 14, "coat": "grain", "spacing": 0.4},
+      {"count": 12, "coat": "moss", "spacing": 0.4}
+    ],
+    "9": [{"count": 24, "coat": "grain", "spacing": 0.35}],
+    "10": [{"count": 40, "coat": "sugar", "spacing": 0.35}],
+    "11": [
+      {"count": 20, "coat": "sugar", "spacing": 0.3},
+      {"count": 15, "coat": "grain", "spacing": 0.3}
+    ],
+    "12": [
+      {"count": 15, "coat": "moss", "spacing": 0.4},
+      {"count": 10, "coat": "soot", "spacing": 0.6}
+    ],
+    "13": [
+      {"count": 12, "coat": "soot", "spacing": 0.5},
+      {"count": 12, "coat": "frost", "spacing": 0.5}
+    ],
+    "14": [
+      {"count": 20, "coat": "sugar", "spacing": 0.25},
+      {"count": 8, "coat": "soot", "spacing": 0.5}
+    ],
+    "15": [
+      {"count": 10, "coat": "frost", "spacing": 0.4},
+      {"count": 10, "coat": "soot", "spacing": 0.4},
+      {"count": 20, "coat": "grain", "spacing": 0.3}
+    ],
+    "16": [{"count": 25, "coat": "sugar", "spacing": 0.25}],
+    "17": [
+      {"count": 8, "coat": "soot", "gnaw": true, "spacing": 0.7},
+      {"count": 20, "coat": "slate", "spacing": 0.3}
+    ],
+    "18": [
+      {"count": 10, "coat": "frost", "gnaw": true, "spacing": 0.6},
+      {"count": 15, "coat": "sugar", "spacing": 0.3}
+    ],
+    "19": [
+      {"count": 30, "coat": "sugar", "spacing": 0.25},
+      {"count": 10, "coat": "moss", "spacing": 0.3}
+    ],
+    "20": [
+      {"count": 15, "coat": "soot", "spacing": 0.35},
+      {"count": 15, "coat": "frost", "spacing": 0.35}
+    ],
+    "21": [{"count": 12, "coat": "marble", "spacing": 0.5}],
+    "22": [
+      {"count": 10, "coat": "marble", "spacing": 0.45},
+      {"count": 20, "coat": "sugar", "spacing": 0.25}
+    ],
+    "23": [
+      {"count": 8, "coat": "iron", "spacing": 0.8},
+      {"count": 15, "coat": "grain", "spacing": 0.3}
+    ],
+    "24": [{"count": 12, "coat": "iron", "spacing": 0.6}],
+    "25": [{"count": 10, "coat": "prism", "spacing": 0.55}],
+    "26": [
+      {"count": 8, "coat": "prism", "spacing": 0.5},
+      {"count": 8, "coat": "iron", "spacing": 0.6}
+    ],
+    "27": [{"count": 12, "coat": "marble", "gnaw": true, "spacing": 0.45}],
+    "28": [{"count": 15, "coat": "sugar", "shadow": true, "spacing": 0.3}],
+    "29": [
+      {"count": 10, "coat": "prism", "spacing": 0.5},
+      {"count": 12, "coat": "sugar", "shadow": true, "spacing": 0.3}
+    ],
+    "30": [{"count": 20, "coat": "prism", "spacing": 0.4}],
+    "31": [{"count": 8, "coat": "iron", "shadow": true, "spacing": 0.7}],
+    "32": [{"count": 6, "coat": "porcelain", "spacing": 1.2}],
+    "33": [
+      {"count": 8, "coat": "porcelain", "spacing": 1.0},
+      {"count": 20, "coat": "sugar", "spacing": 0.25}
+    ],
+    "34": [{"count": 6, "coat": "porcelain", "gnaw": true, "spacing": 1.2}],
+    "35": [{"count": 10, "coat": "porcelain", "spacing": 0.8}],
+    "36": [
+      {"count": 8, "coat": "porcelain", "shadow": true, "spacing": 1.0},
+      {"count": 10, "coat": "iron", "spacing": 0.5}
+    ],
+    "37": [{"count": 6, "coat": "porcelain", "plated": true, "spacing": 1.3}],
+    "38": [
+      {"count": 12, "coat": "porcelain", "spacing": 0.7},
+      {"count": 15, "coat": "prism", "spacing": 0.35}
+    ],
+    "39": [
+      {"count": 8, "coat": "porcelain", "plated": true, "spacing": 1.0},
+      {"count": 10, "coat": "prism", "shadow": true, "spacing": 0.4},
+      {"count": 20, "coat": "sugar", "spacing": 0.2}
+    ],
+    "40": [{"count": 1, "rat": "burrow", "spacing": 1.0, "sunny_reduced_hp": true}]
+  }
+}
+

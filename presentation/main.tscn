@@ -1,0 +1,344 @@
+[gd_scene load_steps=2 format=3 uid="uid://clowder_main_scene"]
+
+[ext_resource type="Script" path="res://presentation/main.gd" id="1_main"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="PanelContainer" parent="CanvasLayer/HUD"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 960.0
+offset_bottom = 62.0
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/HUD/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="LivesLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 18
+text = "❤️ Lives: 200"
+
+[node name="KibbleLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
+theme_override_font_sizes/font_size = 18
+text = "🐟 Kibble: 850"
+
+[node name="RoundLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Round: 0 / 40 (Sunny)"
+
+[node name="SpeedContainer" type="HBoxContainer" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Speed1Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+text = "1x"
+
+[node name="Speed2Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+text = "2x"
+
+[node name="Speed3Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+text = "3x"
+
+[node name="StartRoundButton" type="Button" parent="CanvasLayer/HUD/TopBar/HBox"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "▶ Start Round (Space)"
+
+[node name="BottomDock" type="PanelContainer" parent="CanvasLayer/HUD"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 610.0
+offset_right = 960.0
+offset_bottom = 708.0
+
+[node name="Scroll" type="ScrollContainer" parent="CanvasLayer/HUD/BottomDock"]
+layout_mode = 2
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="CatButtons" type="HBoxContainer" parent="CanvasLayer/HUD/BottomDock/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="InspectorPanel" type="PanelContainer" parent="CanvasLayer/HUD"]
+visible = false
+layout_mode = 0
+offset_left = 976.0
+offset_top = 12.0
+offset_right = 1264.0
+offset_bottom = 708.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/InspectorPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CatTitleLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Pip — Yarn Tosser"
+
+[node name="CategoryLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "Alley Cat • Claw Damage"
+
+[node name="StatsLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Dmg: 1 | Pierce: 2 | Range: 130"
+
+[node name="FeatStatusLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 13
+text = "Feat Rank: 0 (XP: 0/100)"
+
+[node name="TargetPriorityBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+text = "Target: FIRST"
+
+[node name="HSeparator1" type="HSeparator" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+
+[node name="UpgradesTitle" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Upgrade Paths (Crosspath max 2)"
+
+[node name="PathABtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Path A [0/5]\nLong Needle ($127)"
+alignment = 0
+
+[node name="PathBBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Path B [0/5]\nKeen Whisker ($85)"
+alignment = 0
+
+[node name="PathCBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Path C [0/5]\nTwin Spool ($153)"
+alignment = 0
+
+[node name="HSeparator2" type="HSeparator" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+
+[node name="HeroAbilitiesBox" type="VBoxContainer" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Ability1Btn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeroAbilitiesBox"]
+layout_mode = 2
+text = "⚡ Pin Cushion (Lvl 3)"
+
+[node name="Ability2Btn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeroAbilitiesBox"]
+layout_mode = 2
+text = "⚡ Spool Barrage (Lvl 10)"
+
+[node name="SellBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "Sell (+119 Kibble)"
+
+[node name="DeselectBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+text = "Close Panel"
+
+[node name="RightInfoPanel" type="PanelContainer" parent="CanvasLayer/HUD"]
+layout_mode = 0
+offset_left = 976.0
+offset_top = 12.0
+offset_right = 1264.0
+offset_bottom = 708.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/RightInfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Clowder: Alley Siege"
+
+[node name="Subtitle" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "Sunny Gutter (Beginner • 1200u)"
+
+[node name="HSep" type="HSeparator" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+layout_mode = 2
+
+[node name="HelpText" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Click a Cat below to deploy.
+• Click placed cat to upgrade.
+• 3 Paths (A, B, C): Crosspath rule allows at most 2 paths; one >= T3 caps other at T2.
+• Feats unlock between rounds!
+• Space: Start / Next Round
+• 1, 2, 3: Game Speed
+• Esc / Right-Click: Cancel"
+autowrap_mode = 2
+
+[node name="IncomingInfo" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "Next Round: Round 1\nWave: 15 Rust Mice"
+autowrap_mode = 2
+
+[node name="FeatModal" type="PanelContainer" parent="CanvasLayer/HUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -180.0
+offset_right = 340.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/FeatModal"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ModalTitle" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "✨ CAT FEAT ACHIEVED! ✨"
+horizontal_alignment = 1
+
+[node name="ModalSubtitle" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Pip reached Feat Rank 1! Choose 1 Feat perk:"
+horizontal_alignment = 1
+
+[node name="CardsHBox" type="HBoxContainer" parent="CanvasLayer/HUD/FeatModal/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Card1" type="PanelContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Long Whiskers"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "+12% range"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox"]
+layout_mode = 2
+text = "Pick Perk"
+
+[node name="Card2" type="PanelContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Quick Paw"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "+10% attack speed"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2/VBox"]
+layout_mode = 2
+text = "Pick Perk"
+
+[node name="Card3" type="PanelContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Careful Aim"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "+2 pierce, -8% range"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3/VBox"]
+layout_mode = 2
+text = "Pick Perk"
+
+[node name="RerollBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox"]
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "🎲 Reroll Feats (150 Kibble)"
