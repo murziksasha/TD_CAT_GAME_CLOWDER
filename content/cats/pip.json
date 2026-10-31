@@ -1,0 +1,52 @@
+{
+  "id": "pip",
+  "name": "Pip",
+  "title": "Yarn Tosser",
+  "category": "Alley",
+  "placement_mask": ["Land"],
+  "footprint_radius": 20.0,
+  "cost": 200,
+  "base": {
+    "damage": 1,
+    "damage_type": "Claw",
+    "pierce": 2,
+    "cooldown": 0.95,
+    "range": 130.0,
+    "projectile_speed": 400.0,
+    "see_shadow": false,
+    "can_pop_iron": false
+  },
+  "paths": {
+    "path_a": {
+      "name": "Needle",
+      "tiers": [
+        {"tier": 1, "name": "Long Needle", "cost": 150, "pierce": 4},
+        {"tier": 2, "name": "Sharp Needle", "cost": 250, "damage": 2},
+        {"tier": 3, "name": "Barbed Spool", "cost": 700, "damage": 3, "pierce": 6},
+        {"tier": 4, "name": "Spool Burst", "cost": 3200, "burst_every": 5, "burst_count": 8},
+        {"tier": 5, "name": "Spool Storm", "cost": 18000, "cooldown": 0.45, "burst_every": 5, "burst_count": 16, "bonus_damage_porcelain_rats": 1}
+      ]
+    },
+    "path_b": {
+      "name": "Eye",
+      "tiers": [
+        {"tier": 1, "name": "Keen Whisker", "cost": 100, "range": 160.0},
+        {"tier": 2, "name": "Night Eye", "cost": 300, "see_shadow": true},
+        {"tier": 3, "name": "Hawk Focus", "cost": 800, "attack_speed_mult": 1.25, "crit_chance": 0.15, "crit_multiplier": 2.0},
+        {"tier": 4, "name": "Marked Prey", "cost": 3500, "mark_on_crit": 1, "mark_duration": 4.0},
+        {"tier": 5, "name": "Hawkeye", "cost": 16000, "full_track_range": true, "crit_chance": 0.25, "crit_multiplier": 2.0, "mark_on_crit": 2, "mark_duration": 6.0, "mark_rat_duration": 4.0, "mark_matriarch_bonus": 1, "mark_matriarch_duration": 3.0}
+      ]
+    },
+    "path_c": {
+      "name": "Multi",
+      "tiers": [
+        {"tier": 1, "name": "Twin Spool", "cost": 180, "projectiles": 2},
+        {"tier": 2, "name": "Triple Spool", "cost": 280, "projectiles": 3},
+        {"tier": 3, "name": "Seeking Yarn", "cost": 900, "seeking": true, "turn_rate": 6.0},
+        {"tier": 4, "name": "Fivefold", "cost": 2800, "projectiles": 5},
+        {"tier": 5, "name": "Yarn Tempest", "cost": 15000, "projectiles": 8, "seeking": true, "bonus_pierce": 4, "yarn_cloud_interval": 8.0, "yarn_cloud_dps": 1, "yarn_cloud_pierce": 10, "yarn_cloud_duration": 6.0}
+      ]
+    }
+  }
+}
+

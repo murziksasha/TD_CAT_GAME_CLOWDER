@@ -1,0 +1,46 @@
+{
+  "id": "goldie",
+  "name": "Goldie",
+  "title": "Fishercat",
+  "category": "Den",
+  "placement_mask": ["Land"],
+  "footprint_radius": 27.5,
+  "cost": 1250,
+  "base": {
+    "has_attack": false,
+    "end_round_kibble": 140
+  },
+  "paths": {
+    "path_a": {
+      "name": "Vault",
+      "tiers": [
+        {"tier": 1, "name": "Bigger Net", "cost": 400, "end_round_kibble": 200},
+        {"tier": 2, "name": "Deep Basket", "cost": 800, "end_round_kibble": 280},
+        {"tier": 3, "name": "Heavy Haul", "cost": 1800, "end_round_kibble": 400},
+        {"tier": 4, "name": "Vault", "cost": 5000, "is_vault": true, "interest_rate": 0.08, "vault_cap": 4000},
+        {"tier": 5, "name": "Deep Vault", "cost": 18000, "interest_rate": 0.12, "vault_cap": 15000, "flat_bonus_round": 200, "auto_collect": true}
+      ]
+    },
+    "path_b": {
+      "name": "Catch Meter",
+      "tiers": [
+        {"tier": 1, "name": "Tide Gauge", "cost": 300, "meter_target_rounds": 4, "meter_payout": 150},
+        {"tier": 2, "name": "Fast Reeling", "cost": 700, "meter_target_rounds": 3, "meter_payout": 200},
+        {"tier": 3, "name": "Dual Creel", "cost": 2000, "max_stored_payouts": 2},
+        {"tier": 4, "name": "Prize Haul", "cost": 4500, "meter_average_extra_round": 180},
+        {"tier": 5, "name": "Trophy Fish", "cost": 16000, "trophy_every_n_rounds": 5, "trophy_payout": 1200}
+      ]
+    },
+    "path_c": {
+      "name": "Night Market",
+      "tiers": [
+        {"tier": 1, "name": "Discount Stall", "cost": 350, "end_round_kibble": 160, "placement_discount_once": 50},
+        {"tier": 2, "name": "Wholesale Basket", "cost": 900, "placement_discount_once": 100},
+        {"tier": 3, "name": "Harbor Bargain", "cost": 2500, "placement_discount_once": 150, "upgrade_discount_range_ratio": 0.05},
+        {"tier": 4, "name": "Export Dock", "cost": 6000, "end_round_kibble": 300, "placement_discount_once": 200},
+        {"tier": 5, "name": "Night Market", "cost": 22000, "end_round_kibble": 800, "map_upgrade_discount_ratio": 0.10, "free_t1_token_per_round": true}
+      ]
+    }
+  }
+}
+

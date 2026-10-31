@@ -1,0 +1,70 @@
+{
+  "rats": {
+    "burrow": {
+      "name": "Burrow Rat",
+      "first_round": 40,
+      "body_hp": 200,
+      "sunny_r40_hp": 130,
+      "speed_multiplier": 1.00,
+      "on_death": [{"unit_type": "porcelain", "count": 4}],
+      "rbe": 616,
+      "plated_rbe": 856,
+      "sunny_r40_rbe": 546,
+      "immunities": [],
+      "notes": "First blimp equivalent"
+    },
+    "bristle": {
+      "name": "Bristle Rat",
+      "first_round": 60,
+      "body_hp": 700,
+      "speed_multiplier": 0.55,
+      "on_death": [{"unit_type": "burrow", "count": 4}],
+      "rbe": 3164,
+      "plated_rbe": 4824,
+      "immunities": [],
+      "notes": ""
+    },
+    "monarch": {
+      "name": "Monarch Rat",
+      "first_round": 80,
+      "body_hp": 4000,
+      "speed_multiplier": 0.30,
+      "on_death": [{"unit_type": "bristle", "count": 4}],
+      "rbe": 16656,
+      "plated_rbe": 27296,
+      "immunities": ["Knockback"],
+      "stun_multiplier": 0.5,
+      "notes": "Knockback immune; stun duration x0.5"
+    },
+    "dusk": {
+      "name": "Dusk Rat",
+      "first_round": 90,
+      "body_hp": 700,
+      "speed_multiplier": 3.20,
+      "on_death": [
+        {"unit_type": "porcelain", "count": 4, "shadow": true, "plated": true}
+      ],
+      "rbe": 1212,
+      "immunities": ["Claw", "Blast"],
+      "shadow": true,
+      "chill_multiplier": 0.5,
+      "notes": "Claw and Blast immune, Shadow, Chill effect x0.5"
+    },
+    "matriarch": {
+      "name": "Rat Matriarch",
+      "first_round": 100,
+      "body_hp": 22000,
+      "speed_multiplier": 0.18,
+      "on_death": [
+        {"unit_type": "monarch", "count": 2},
+        {"unit_type": "dusk", "count": 3}
+      ],
+      "rbe": 58948,
+      "immunities": ["Stun", "Knockback", "Freeze", "Slow", "Amber", "InstantKill"],
+      "control_immune": true,
+      "burn_cap_dps": 15,
+      "notes": "Full control immunity. Takes Mark, Hex, Burn at reduced caps"
+    }
+  }
+}
+

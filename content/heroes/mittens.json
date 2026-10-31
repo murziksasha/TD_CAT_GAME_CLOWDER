@@ -1,0 +1,41 @@
+{
+  "id": "mittens",
+  "name": "Mittens",
+  "title": "Yarn Warden",
+  "starter": true,
+  "place_cost": 600,
+  "base": {
+    "cooldown": 0.8,
+    "damage": 1,
+    "damage_type": "Claw",
+    "pierce": 3,
+    "range": 160.0,
+    "see_shadow": false
+  },
+  "level_milestones": {
+    "4": {"see_shadow": true},
+    "6": {"damage_type": "Bite"},
+    "7": {"soft_paws_speed_self": 0.20, "soft_paws_speed_alley": 0.05},
+    "20": {"last_thread_prevent_lives": 20, "last_thread_bonus_damage": 1}
+  },
+  "active_abilities": {
+    "ability_1": {
+      "unlock_level": 3,
+      "name": "Pin Cushion",
+      "cooldown": 40.0,
+      "kibble_cost": 0,
+      "needle_count": 10,
+      "needle_damage": 2,
+      "needle_pierce": 4
+    },
+    "ability_2": {
+      "unlock_level": 10,
+      "name": "Spool Barrage",
+      "cooldown": 50.0,
+      "kibble_cost": 0,
+      "duration": 6.0,
+      "seeking_needles_per_shot": 5
+    }
+  }
+}
+

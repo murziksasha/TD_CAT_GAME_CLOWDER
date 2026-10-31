@@ -1,0 +1,125 @@
+{
+  "base_speed_unit": 40.0,
+  "coats": {
+    "rust": {
+      "name": "Rust",
+      "speed_multiplier": 1.00,
+      "layer_hp": 1,
+      "children": [],
+      "rbe": 1,
+      "immunities": [],
+      "shape": "round ears"
+    },
+    "slate": {
+      "name": "Slate",
+      "speed_multiplier": 1.40,
+      "layer_hp": 1,
+      "children": [{"coat": "rust", "count": 1}],
+      "rbe": 2,
+      "immunities": [],
+      "shape": "notched ear"
+    },
+    "moss": {
+      "name": "Moss",
+      "speed_multiplier": 1.80,
+      "layer_hp": 1,
+      "children": [{"coat": "slate", "count": 1}],
+      "rbe": 3,
+      "immunities": [],
+      "shape": "leaf tail"
+    },
+    "grain": {
+      "name": "Grain",
+      "speed_multiplier": 3.20,
+      "layer_hp": 1,
+      "children": [{"coat": "moss", "count": 1}],
+      "rbe": 4,
+      "immunities": [],
+      "shape": "stripe tail"
+    },
+    "sugar": {
+      "name": "Sugar",
+      "speed_multiplier": 3.50,
+      "layer_hp": 1,
+      "children": [{"coat": "grain", "count": 1}],
+      "rbe": 5,
+      "immunities": [],
+      "shape": "heart tail tip"
+    },
+    "soot": {
+      "name": "Soot",
+      "speed_multiplier": 1.80,
+      "layer_hp": 1,
+      "children": [{"coat": "sugar", "count": 2}],
+      "rbe": 11,
+      "immunities": ["Blast"],
+      "shape": "square body"
+    },
+    "frost": {
+      "name": "Frost",
+      "speed_multiplier": 1.80,
+      "layer_hp": 1,
+      "children": [{"coat": "sugar", "count": 2}],
+      "rbe": 11,
+      "immunities": ["Freeze", "Chill"],
+      "shape": "white ruff"
+    },
+    "ink": {
+      "name": "Ink",
+      "speed_multiplier": 1.80,
+      "layer_hp": 1,
+      "children": [{"coat": "sugar", "count": 2}],
+      "rbe": 11,
+      "immunities": ["Magic"],
+      "shape": "dripping tail"
+    },
+    "iron": {
+      "name": "Iron",
+      "speed_multiplier": 1.00,
+      "layer_hp": 1,
+      "children": [{"coat": "soot", "count": 2}],
+      "rbe": 23,
+      "immunities": ["Claw"],
+      "shape": "bucket helmet"
+    },
+    "marble": {
+      "name": "Marble",
+      "speed_multiplier": 1.80,
+      "layer_hp": 1,
+      "children": [
+        {"coat": "soot", "count": 1, "is_primary": true},
+        {"coat": "frost", "count": 1, "is_primary": false}
+      ],
+      "rbe": 23,
+      "immunities": ["Blast", "Freeze", "Chill"],
+      "shape": "split face"
+    },
+    "prism": {
+      "name": "Prism",
+      "speed_multiplier": 2.20,
+      "layer_hp": 1,
+      "children": [{"coat": "marble", "count": 2, "is_primary": true}],
+      "rbe": 47,
+      "immunities": [],
+      "shape": "scarf"
+    },
+    "porcelain": {
+      "name": "Porcelain",
+      "speed_multiplier": 2.50,
+      "layer_hp": 10,
+      "children": [{"coat": "prism", "count": 2, "is_primary": true}],
+      "rbe": 104,
+      "immunities": [],
+      "shape": "cracked jar carried on the back"
+    }
+  },
+  "super_porcelain": {
+    "start_round": 81,
+    "shell_hp": 60,
+    "plated_shell_hp": 120,
+    "rbe": 68,
+    "plated_rbe": 128,
+    "shell_bounty": 48
+  }
+}
+

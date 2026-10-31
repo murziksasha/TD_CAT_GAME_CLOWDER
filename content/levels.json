@@ -1,0 +1,35 @@
+{
+  "base_cost": 120,
+  "cost_per_level": 30,
+  "mode_multipliers": {
+    "sunny": 0.70,
+    "sunny_first_clear": 1.00,
+    "alley": 1.00,
+    "night": 1.30,
+    "last_whisker": 1.60,
+    "bare_paw": 2.00
+  },
+  "freeplay_flat_xp": 15,
+  "queue_ceremony_caps": {
+    "max_cats": 2,
+    "max_heroes": 1,
+    "max_maps": 1
+  },
+  "level_unlocks": {
+    "2": {"cats": ["pudding"]},
+    "3": {"cats": ["biscuit"]},
+    "4": {"trick_slots": 1},
+    "5": {"cats": ["sable"]},
+    "6": {"cats": ["goldie"]},
+    "7": {"heroes": ["duchess"], "cats": ["miso"]},
+    "8": {"cats": ["honey"]},
+    "9": {"cats": ["nim"]},
+    "10": {"heroes": ["baron"], "trick_slots": 2, "maps": ["market_lane"]},
+    "12": {"tricks": ["nine_life_pulse"]},
+    "14": {"heroes": ["pebble"]},
+    "16": {"maps": ["fishmarket_maze"]},
+    "18": {"heroes": ["obsidian"]},
+    "22": {"heroes": ["velvet"]}
+  }
+}
+

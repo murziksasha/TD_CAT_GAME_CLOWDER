@@ -1,0 +1,39 @@
+{
+  "cosmetic_resell_ratio": 0.50,
+  "trick_resell_ratio": 0.40,
+  "first_clear_fishcoin": {
+    "sunny": 50,
+    "alley": 80,
+    "night": 110,
+    "last_whisker": 150,
+    "bare_paw": 200
+  },
+  "repeat_clear_fishcoin": {
+    "sunny": 10,
+    "alley": 15,
+    "night": 20,
+    "last_whisker": 25,
+    "bare_paw": 40
+  },
+  "daily_bonus": 30,
+  "weekly_bonus": 80,
+  "account_level_up_fishcoin": 15,
+  "cosmetics": [
+    {"id": "pip_red_collar", "name": "Red Collar (Pip)", "category": "skin_accessory", "price": 80},
+    {"id": "nibs_striped_scarf", "name": "Striped Scarf (Nibs)", "category": "skin_accessory", "price": 80},
+    {"id": "plain_dye_calico", "name": "Plain Dye: Calico", "category": "dye", "price": 100},
+    {"id": "plain_dye_tuxedo", "name": "Plain Dye: Tuxedo", "category": "dye", "price": 100},
+    {"id": "plain_dye_tabby", "name": "Plain Dye: Tabby", "category": "dye", "price": 100},
+    {"id": "mittens_winter_coat", "name": "Mittens Winter Coat", "category": "hero_skin", "price": 600},
+    {"id": "duchess_ember_eyes", "name": "Duchess Ember Eyes", "category": "hero_skin", "price": 700},
+    {"id": "trail_yarn", "name": "Yarn Projectile Trail", "category": "trail", "price": 150},
+    {"id": "trail_fishbones", "name": "Fishbones Trail", "category": "trail", "price": 150},
+    {"id": "vfx_confetti", "name": "Confetti Pop Flourish", "category": "vfx", "price": 200},
+    {"id": "banner_fishmarket", "name": "Fishmarket Alley Banner", "category": "banner", "price": 120},
+    {"id": "banner_rooftop", "name": "Rooftop Alley Banner", "category": "banner", "price": 120},
+    {"id": "frame_brass", "name": "Brass UI Frame", "category": "frame", "price": 180},
+    {"id": "frame_wood", "name": "Wood UI Frame", "category": "frame", "price": 180},
+    {"id": "frame_night", "name": "Night UI Frame", "category": "frame", "price": 180}
+  ]
+}
+

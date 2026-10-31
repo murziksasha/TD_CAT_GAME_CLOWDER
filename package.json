@@ -1,0 +1,16 @@
+{
+  "name": "clowder-alley-siege",
+  "version": "1.0.0",
+  "description": "Clowder: Alley Siege - Godot 4 Path Tower Defense",
+  "main": "launch.js",
+  "scripts": {
+    "start": "node launch.js",
+    "game": "node launch.js",
+    "editor": "node launch.js --editor",
+    "test": "python tools/balance_runner.py",
+    "test:sunny": "python tools/sunny_scripted_match.py"
+  },
+  "author": "",
+  "license": "MIT"
+}
+

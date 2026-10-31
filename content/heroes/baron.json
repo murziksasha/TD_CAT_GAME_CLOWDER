@@ -1,0 +1,39 @@
+{
+  "id": "baron",
+  "name": "Baron Salt",
+  "title": "Harbor Cat",
+  "starter": false,
+  "unlock_account_level": 10,
+  "place_cost": 700,
+  "base": {
+    "cooldown": 1.4,
+    "damage": 3,
+    "damage_type": "Blast",
+    "pierce": 12,
+    "radius": 50.0,
+    "range": 150.0
+  },
+  "level_milestones": {
+    "7": {"blast_damage_aura": 1},
+    "20": {"keelhaul_interval": 8.0, "keelhaul_strip_plated": true, "keelhaul_matriarch_strip_duration": 5.0}
+  },
+  "active_abilities": {
+    "ability_1": {
+      "unlock_level": 3,
+      "name": "Depth Charge",
+      "cooldown": 40.0,
+      "track_length": 180.0,
+      "damage": 6,
+      "damage_type": "Blast"
+    },
+    "ability_2": {
+      "unlock_level": 10,
+      "name": "Broadside",
+      "cooldown": 55.0,
+      "bomb_count": 3,
+      "bomb_damage": 15,
+      "damage_type": "Blast"
+    }
+  }
+}
+

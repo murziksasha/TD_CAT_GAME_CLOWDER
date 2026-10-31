@@ -1,0 +1,52 @@
+{
+  "id": "sable",
+  "name": "Sable",
+  "title": "Rooftop Sniper",
+  "category": "Hunt",
+  "placement_mask": ["Land", "Perch"],
+  "footprint_radius": 20.0,
+  "cost": 450,
+  "base": {
+    "damage": 2,
+    "damage_type": "Bite",
+    "pierce": 1,
+    "cooldown": 1.35,
+    "range": -1.0,
+    "full_track_range": true,
+    "hitscan": true,
+    "see_shadow": false
+  },
+  "paths": {
+    "path_a": {
+      "name": "Hamstring",
+      "tiers": [
+        {"tier": 1, "name": "Heavy Shot", "cost": 350, "damage": 4},
+        {"tier": 2, "name": "Pointed Tip", "cost": 700, "damage": 8, "bonus_damage_porcelain": 4},
+        {"tier": 3, "name": "Rat Cripple", "cost": 2200, "stun_rats": 1.0},
+        {"tier": 4, "name": "Deep Wound", "cost": 7000, "damage": 18, "stun_rats": 1.5},
+        {"tier": 5, "name": "Hamstring", "cost": 32000, "damage": 40, "bonus_damage_rats": 30, "stun_burrow": 2.5, "stun_bristle": 1.5, "stun_monarch": 0.7, "stun_dusk": 1.2, "mark_matriarch": 3, "mark_matriarch_duration": 2.0}
+      ]
+    },
+    "path_b": {
+      "name": "Shrapnel",
+      "tiers": [
+        {"tier": 1, "name": "Shrapnel Burst", "cost": 300, "splash_damage": 2, "splash_damage_type": "Claw", "splash_radius": 30.0, "splash_pierce": 6},
+        {"tier": 2, "name": "Wide Spray", "cost": 600, "splash_radius": 50.0},
+        {"tier": 3, "name": "Ricochet Pellet", "cost": 2000, "bounces": 1},
+        {"tier": 4, "name": "Chain Shrapnel", "cost": 5000, "bounces": 3},
+        {"tier": 5, "name": "Ricochet", "cost": 24000, "damage": 8, "bounces": 6, "bounce_damage": 6, "bounce_damage_type": "Bite", "see_shadow": true}
+      ]
+    },
+    "path_c": {
+      "name": "Deadeye",
+      "tiers": [
+        {"tier": 1, "name": "Hair Trigger", "cost": 400, "cooldown": 1.0},
+        {"tier": 2, "name": "Quick Cycle", "cost": 800, "cooldown": 0.75},
+        {"tier": 3, "name": "Priority Sight", "cost": 1500, "special_targeting": "rats_then_porcelain_then_progress"},
+        {"tier": 4, "name": "Gunslinger", "cost": 6000, "damage": 6, "cooldown": 0.55},
+        {"tier": 5, "name": "One-Shot Lane", "cost": 27000, "damage": 8, "cooldown": 0.4, "heavy_shot_every": 8, "heavy_shot_damage": 80}
+      ]
+    }
+  }
+}
+
