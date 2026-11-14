@@ -185,6 +185,7 @@ var current_map_id: String = "sunny_gutter"
 var localization: ClowderLocalization
 var match_paused := false
 var world_camera: Camera2D
+var camera_panel: PanelContainer
 var camera_controls: HBoxContainer
 const CAMERA_CENTER := Vector2(640.0, 360.0)
 const CAMERA_SIZE := Vector2(1280.0, 720.0)
@@ -247,6 +248,7 @@ func _ready() -> void:
 	_setup_language_toggle()
 	_setup_profile_badge()
 	_setup_top_bar_extra_buttons()
+	_organize_top_bar()
 	_setup_camera_controls()
 	_connect_ui_signals()
 	_setup_extended_ui()
@@ -258,6 +260,19 @@ func _load_tex(path: String) -> Texture2D:
 	if ResourceLoader.exists(path):
 		return load(path)
 	return null
+
+func _get_single_frame_icon(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	if texture is AtlasTexture:
+		return texture
+	if texture.get_width() > texture.get_height() and texture.get_height() >= 32:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		var h := texture.get_height()
+		atlas.region = Rect2(0, 0, h, h)
+		return atlas
+	return texture
 
 func _load_cat_catalog() -> Dictionary:
 	var result: Dictionary = {}
@@ -307,10 +322,40 @@ func _apply_wood_theme() -> void:
 		almanac_modal,
 		insights_modal,
 		shop_modal,
-		settings_modal
+		settings_modal,
+		camera_panel
 	]:
 		if node is PanelContainer:
 			node.add_theme_stylebox_override("panel", panel)
+
+	# Theme dock scrollbar with matching wood & brass styling
+	var scroll_bg := StyleBoxFlat.new()
+	scroll_bg.bg_color = Color(0.10, 0.06, 0.04, 0.75)
+	scroll_bg.set_corner_radius_all(3)
+	
+	var grabber := StyleBoxFlat.new()
+	grabber.bg_color = Color(0.85, 0.65, 0.28, 0.85)
+	grabber.border_color = Color(0.93, 0.72, 0.32)
+	grabber.set_border_width_all(1)
+	grabber.set_corner_radius_all(3)
+	
+	var grabber_hl := StyleBoxFlat.new()
+	grabber_hl.bg_color = Color(1.0, 0.82, 0.45, 0.95)
+	grabber_hl.border_color = Color(1.0, 0.9, 0.6)
+	grabber_hl.set_border_width_all(1)
+	grabber_hl.set_corner_radius_all(3)
+	
+	if has_node("CanvasLayer/HUD/BottomDock/Scroll"):
+		var scroll_node: ScrollContainer = $CanvasLayer/HUD/BottomDock/Scroll
+		var hsb: HScrollBar = scroll_node.get_h_scroll_bar()
+		if hsb != null:
+			hsb.custom_minimum_size = Vector2(0, 8)
+			hsb.add_theme_stylebox_override("scroll", scroll_bg)
+			hsb.add_theme_stylebox_override("scroll_focus", scroll_bg)
+			hsb.add_theme_stylebox_override("grabber", grabber)
+			hsb.add_theme_stylebox_override("grabber_highlight", grabber_hl)
+			hsb.add_theme_stylebox_override("grabber_pressed", grabber_hl)
+
 	var normal := _wood_button(Color(0.93, 0.72, 0.32), Color(0.40, 0.22, 0.10))
 	var hover := _wood_button(Color(1.0, 0.86, 0.45), Color(0.55, 0.32, 0.12))
 	var pressed := _wood_button(Color(0.75, 0.52, 0.18), Color(0.24, 0.12, 0.06))
@@ -442,13 +487,25 @@ func _build_cat_dock() -> void:
 		var price = sim.economy.calculate_price(c["cost"])
 		btn.text = "%s\n%d" % [c["name"], price]
 		btn.custom_minimum_size = Vector2(108, 72)
-		btn.icon = cat_sprites.get(c["id"])
+		btn.icon = _get_single_frame_icon(cat_sprites.get(c["id"]))
 		btn.expand_icon = true
 		btn.add_theme_constant_override("icon_max_width", 42)
 		if c["is_hero"]:
 			btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 		btn.pressed.connect(_on_dock_button_pressed.bind(c["id"], c["is_hero"]))
 		cat_buttons_container.add_child(btn)
+
+	var scroll_node: ScrollContainer = $CanvasLayer/HUD/BottomDock/Scroll
+	if not scroll_node.gui_input.is_connected(_on_dock_scroll_input):
+		scroll_node.gui_input.connect(_on_dock_scroll_input)
+
+func _on_dock_scroll_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.is_pressed():
+		var scroll_node: ScrollContainer = $CanvasLayer/HUD/BottomDock/Scroll
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			scroll_node.scroll_horizontal = mini(int(scroll_node.get_h_scroll_bar().max_value), scroll_node.scroll_horizontal + 70)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			scroll_node.scroll_horizontal = maxi(0, scroll_node.scroll_horizontal - 70)
 
 func _connect_ui_signals() -> void:
 	if not start_round_btn.pressed.is_connected(_on_start_round_pressed):
@@ -716,7 +773,7 @@ func _update_hero_commander_panel() -> void:
 		return
 		
 	var h = sim.hero
-	hero_cmd_portrait.texture = cat_sprites.get(h.id)
+	hero_cmd_portrait.texture = _get_single_frame_icon(cat_sprites.get(h.id))
 	hero_cmd_name_lbl.text = "%s (Lvl %d)" % [h.hero_name, h.level]
 	var next_xp = SimHero.XP_TABLE[mini(h.level, SimHero.XP_TABLE.size() - 1)]
 	hero_cmd_xp_bar.max_value = maxf(1.0, float(next_xp))
@@ -922,12 +979,7 @@ func _show_results_dialog(won: bool) -> void:
 		results_unlock_lbl.text = "\n".join(unlock_lines)
 
 func _setup_profile_badge() -> void:
-	profile_badge_lbl = Label.new()
-	profile_badge_lbl.add_theme_font_size_override("font_size", 14)
-	profile_badge_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.6))
-	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
-	hbox.add_child(profile_badge_lbl)
-	_update_profile_badge()
+	profile_badge_lbl = null
 
 func _update_profile_badge() -> void:
 	if profile_badge_lbl == null or save_mgr == null:
@@ -935,18 +987,19 @@ func _update_profile_badge() -> void:
 	var lvl: int = int(save_mgr.data.get("account", {}).get("level", 1))
 	var fish: int = int(save_mgr.data.get("economy", {}).get("fishcoin", 0))
 	var bones: int = int(save_mgr.data.get("economy", {}).get("golden_bones", 0))
-	profile_badge_lbl.text = "  Lvl %d | 🐟 %d | 🦴 %d  " % [lvl, fish, bones]
+	profile_badge_lbl.text = "Lvl %d | 🐟 %d | 🦴 %d" % [lvl, fish, bones]
 
 func _setup_mode_select() -> void:
 	mode_select_btn = OptionButton.new()
-	mode_select_btn.custom_minimum_size = Vector2(130, 0)
-	mode_select_btn.add_item("Sunny (40r)", SimConstants.GameMode.SUNNY)
-	mode_select_btn.add_item("Alley (60r)", SimConstants.GameMode.ALLEY)
-	mode_select_btn.add_item("Night (80r)", SimConstants.GameMode.NIGHT)
+	mode_select_btn.fit_to_longest_item = false
+	mode_select_btn.custom_minimum_size = Vector2(80, 0)
+	mode_select_btn.add_item("Sunny", SimConstants.GameMode.SUNNY)
+	mode_select_btn.add_item("Alley", SimConstants.GameMode.ALLEY)
+	mode_select_btn.add_item("Night", SimConstants.GameMode.NIGHT)
 	mode_select_btn.add_item("Last Whisker", SimConstants.GameMode.LAST_WHISKER)
 	mode_select_btn.add_item("Bare Paw", SimConstants.GameMode.BARE_PAW)
-	mode_select_btn.add_item("Testing Lab", TESTING_LAB_MODE)
-	mode_select_btn.add_item("Alley Crawl", ALLEY_CRAWL_MODE)
+	mode_select_btn.add_item("Lab", TESTING_LAB_MODE)
+	mode_select_btn.add_item("Crawl", ALLEY_CRAWL_MODE)
 	mode_select_btn.selected = current_mode
 	mode_select_btn.item_selected.connect(_on_mode_selected)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(mode_select_btn)
@@ -1204,12 +1257,14 @@ func _refresh_testing_lab_controls() -> void:
 func _setup_top_bar_extra_buttons() -> void:
 	auto_wave_btn = Button.new()
 	_update_auto_wave_btn_text()
+	auto_wave_btn.custom_minimum_size = Vector2(70, 0)
 	auto_wave_btn.tooltip_text = "Auto-Start Waves (0.4s pause)"
 	auto_wave_btn.pressed.connect(_toggle_auto_wave)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(auto_wave_btn)
 
 	coop_player_toggle_btn = Button.new()
-	coop_player_toggle_btn.text = "🐱 P1 (Teal)"
+	coop_player_toggle_btn.text = "🐱 P1"
+	coop_player_toggle_btn.custom_minimum_size = Vector2(50, 0)
 	coop_player_toggle_btn.tooltip_text = "Switch Co-op Placer [Hotkey: P]"
 	coop_player_toggle_btn.visible = false
 	coop_player_toggle_btn.pressed.connect(_toggle_coop_player)
@@ -1217,41 +1272,49 @@ func _setup_top_bar_extra_buttons() -> void:
 
 	almanac_top_btn = Button.new()
 	almanac_top_btn.text = "📖"
+	almanac_top_btn.custom_minimum_size = Vector2(32, 0)
 	almanac_top_btn.tooltip_text = "The Almanac"
 	almanac_top_btn.pressed.connect(_open_almanac)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(almanac_top_btn)
 
-	leaderboard_top_btn = Button.new()
-	leaderboard_top_btn.text = "🏆"
-	leaderboard_top_btn.tooltip_text = "Top 100 Leaderboards"
-	leaderboard_top_btn.pressed.connect(_open_leaderboard)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(leaderboard_top_btn)
-
-	coop_top_btn = Button.new()
-	coop_top_btn.text = "👥"
-	coop_top_btn.tooltip_text = "Co-op Mode (Local / LAN)"
-	coop_top_btn.pressed.connect(_open_coop_modal)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(coop_top_btn)
-
-	shop_top_btn = Button.new()
-	shop_top_btn.text = "🛍"
-	shop_top_btn.tooltip_text = "The Alley Market"
-	shop_top_btn.pressed.connect(func(): _open_shop("regular"))
-	$CanvasLayer/HUD/TopBar/HBox.add_child(shop_top_btn)
-
 	menu_hub_btn = Button.new()
 	menu_hub_btn.text = "☰ Menu"
+	menu_hub_btn.custom_minimum_size = Vector2(62, 0)
+	menu_hub_btn.tooltip_text = "Game Menu (Play, Almanac, Insights, Shop, Settings, Leaderboard, Co-op)"
 	menu_hub_btn.pressed.connect(_toggle_title_menu)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(menu_hub_btn)
+
+func _organize_top_bar() -> void:
+	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
+	var speed_container = hbox.get_node_or_null("SpeedContainer")
+	var ordered: Array = [
+		lives_label,
+		kibble_label,
+		round_label,
+		map_select_btn,
+		mode_select_btn,
+		speed_container,
+		auto_wave_btn,
+		start_round_btn,
+		coop_player_toggle_btn,
+		almanac_top_btn,
+		language_btn,
+		menu_hub_btn
+	]
+	var idx := 0
+	for node in ordered:
+		if node != null and node.get_parent() == hbox:
+			hbox.move_child(node, idx)
+			idx += 1
 
 func _update_auto_wave_btn_text() -> void:
 	if auto_wave_btn == null:
 		return
 	if auto_wave_enabled:
-		auto_wave_btn.text = "⚡ Auto: ON"
+		auto_wave_btn.text = "⚡ Auto"
 		auto_wave_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
 	else:
-		auto_wave_btn.text = "⏸ Auto: OFF"
+		auto_wave_btn.text = "⏸ Auto"
 		auto_wave_btn.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 
 func _toggle_auto_wave() -> void:
@@ -1344,6 +1407,7 @@ func _setup_meta_screens() -> void:
 	title_menu.shop_pressed.connect(func(): _open_shop("regular"))
 	title_menu.prestige_shop_pressed.connect(func(): _open_shop("vault"))
 	title_menu.settings_pressed.connect(_open_settings)
+	title_menu.coop_pressed.connect(_open_coop_modal)
 
 func _close_all_modals() -> void:
 	if title_menu != null: title_menu.visible = false
@@ -1422,7 +1486,8 @@ func _on_results_map_select() -> void:
 
 func _setup_map_select() -> void:
 	map_select_btn = OptionButton.new()
-	map_select_btn.custom_minimum_size = Vector2(170, 0)
+	map_select_btn.fit_to_longest_item = false
+	map_select_btn.custom_minimum_size = Vector2(130, 0)
 	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
 	hbox.add_child(map_select_btn)
 	
@@ -1466,7 +1531,8 @@ func _setup_map_select() -> void:
 
 func _setup_language_toggle() -> void:
 	language_btn = Button.new()
-	language_btn.custom_minimum_size = Vector2(48, 0)
+	language_btn.custom_minimum_size = Vector2(36, 0)
+	language_btn.tooltip_text = "Toggle Language (EN / UA)"
 	language_btn.pressed.connect(_on_language_toggled)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(language_btn)
 	_apply_wood_theme()
@@ -1598,19 +1664,32 @@ func _restore_balcony_view() -> void:
 	balcony_hint_time = 0.0
 
 func _setup_camera_controls() -> void:
+	camera_panel = PanelContainer.new()
+	camera_panel.name = "CameraControlsPanel"
+	camera_panel.offset_left = 836.0
+	camera_panel.offset_top = 568.0
+	camera_panel.offset_right = 960.0
+	camera_panel.offset_bottom = 604.0
+	var panel_style := _wood_panel()
+	panel_style.content_margin_left = 4
+	panel_style.content_margin_right = 4
+	panel_style.content_margin_top = 3
+	panel_style.content_margin_bottom = 3
+	panel_style.set_corner_radius_all(8)
+	camera_panel.add_theme_stylebox_override("panel", panel_style)
+	$CanvasLayer/HUD.add_child(camera_panel)
+
 	camera_controls = HBoxContainer.new()
-	camera_controls.position = Vector2(730, 548)
-	camera_controls.add_theme_constant_override("separation", 6)
-	$CanvasLayer/HUD.add_child(camera_controls)
+	camera_controls.alignment = BoxContainer.ALIGNMENT_CENTER
+	camera_controls.add_theme_constant_override("separation", 4)
+	camera_panel.add_child(camera_controls)
+
 	for label in ["+", "−", "Reset"]:
 		var button := Button.new()
 		button.text = label
-		button.custom_minimum_size = Vector2(64, 42)
+		button.custom_minimum_size = Vector2(28, 24) if label != "Reset" else Vector2(46, 24)
 		button.focus_mode = Control.FOCUS_NONE
-		button.modulate.a = 0.78
 		button.tooltip_text = "Zoom in · Arrow keys: move" if label == "+" else ("Zoom out" if label == "−" else "Reset view · Home")
-		button.mouse_entered.connect(func(): button.modulate.a = 1.0)
-		button.mouse_exited.connect(func(): button.modulate.a = 0.78)
 		if label == "Reset":
 			button.pressed.connect(_restore_balcony_view)
 		else:
@@ -1716,6 +1795,8 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 	if shop_modal != null and shop_modal.visible and shop_modal.get_global_rect().has_point(screen_pos):
 		return
 	if settings_modal != null and settings_modal.visible and settings_modal.get_global_rect().has_point(screen_pos):
+		return
+	if camera_panel != null and camera_panel.visible and camera_panel.get_global_rect().has_point(screen_pos):
 		return
 	if camera_controls != null and camera_controls.get_global_rect().has_point(screen_pos):
 		return
@@ -2115,17 +2196,19 @@ func _update_ui() -> void:
 	if testing_lab != null and lab_dps_label != null:
 		var sample := testing_lab.get_dps_sample()
 		lab_dps_label.text = "DPS: unavailable (0 ticks)" if int(sample.elapsed_ticks) <= 0 else "DPS: %.1f | HP: %d | Ticks: %d" % [float(sample.dps), int(sample.hp_removed), int(sample.elapsed_ticks)]
-	var crawl_prefix := "District %d/%d · " % [alley_crawl.current_stage + 1, alley_crawl.stage_count] if alley_crawl_session != null else ""
-	round_label.text = "%s%s: %d / %d (%s)" % [crawl_prefix, _t("ui.round", "Round"), sim.current_round, sim.max_rounds, _t("map.%s" % current_map_id, current_map_id.capitalize())]
+	var crawl_prefix := "D%d/%d · " % [alley_crawl.current_stage + 1, alley_crawl.stage_count] if alley_crawl_session != null else ""
+	round_label.text = "%s%s %d/%d" % [crawl_prefix, _t("ui.round", "Round"), sim.current_round, sim.max_rounds]
 	if map_select_btn != null:
-		map_select_btn.disabled = alley_crawl_session != null
+		map_select_btn.disabled = sim.round_in_progress or alley_crawl_session != null
+	if mode_select_btn != null:
+		mode_select_btn.disabled = sim.round_in_progress or alley_crawl_session != null
 	_update_wave_strip()
 	_update_hero_commander_panel()
 	if not sim.round_in_progress and not match_paused:
 		if auto_start_timer > 0.0:
-			start_round_btn.text = "Next: %.1fs [Space]" % maxf(0.0, auto_start_timer)
+			start_round_btn.text = "%.1fs [Space]" % maxf(0.0, auto_start_timer)
 		else:
-			start_round_btn.text = _t("ui.start_round", "Start round") + " [Space]"
+			start_round_btn.text = "▶ %s [Space]" % _t("ui.start", "Start")
 	start_round_btn.disabled = sim.round_in_progress or sim.match_won or sim.match_lost or feat_modal.visible
 	if selected_tower != null or selected_is_hero:
 		_update_inspector()
@@ -2363,10 +2446,19 @@ func _draw_towers() -> void:
 		_draw_hero_sprite(h_pos, sim.hero)
 
 func _blit(tex: Texture2D, pos: Vector2, height: float, alpha: float, foot_anchor: float) -> void:
-	var scale := height / float(tex.get_height())
-	var w := float(tex.get_width()) * scale
-	var top_left := pos - Vector2(w * 0.5, height * foot_anchor)
-	draw_texture_rect(tex, Rect2(top_left, Vector2(w, height)), false, Color(1, 1, 1, alpha))
+	if tex == null:
+		return
+	var is_sheet := tex.get_width() > tex.get_height() and tex.get_height() >= 32
+	if is_sheet:
+		var cell_h := float(tex.get_height())
+		var dest := Rect2(pos - Vector2(height * 0.5, height * foot_anchor), Vector2(height, height))
+		var src := Rect2(Vector2(0, 0), Vector2(cell_h, cell_h))
+		draw_texture_rect_region(tex, dest, src, Color(1, 1, 1, alpha))
+	else:
+		var scale := height / float(tex.get_height())
+		var w := float(tex.get_width()) * scale
+		var top_left := pos - Vector2(w * 0.5, height * foot_anchor)
+		draw_texture_rect(tex, Rect2(top_left, Vector2(w, height)), false, Color(1, 1, 1, alpha))
 
 func _draw_shadow(pos: Vector2, radius: float) -> void:
 	draw_set_transform(pos, 0.0, Vector2(1.0, 0.38))

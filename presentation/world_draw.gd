@@ -69,7 +69,7 @@ func _ground_tint(map_key: String) -> Color:
 
 func _decoration_for(map_key: String) -> Dictionary:
 	var decorations := {
-		"sunny_gutter": {"lantern": Vector2(180, 250), "puddle": Vector2(860, 230), "stall": Vector2(1080, 510)},
+		"sunny_gutter": {"lantern": Vector2(265, 245), "puddle": Vector2(860, 230), "stall": Vector2(1080, 510)},
 		"lantern_stoop": {"lantern": Vector2(340, 285), "puddle": Vector2(930, 530), "stall": Vector2(1020, 250)},
 		"puddle_court": {"lantern": Vector2(820, 130), "puddle": Vector2(440, 355), "stall": Vector2(980, 520)},
 		"canal_night": {"lantern": Vector2(850, 120), "puddle": Vector2(930, 260), "stall": Vector2(1070, 540)},

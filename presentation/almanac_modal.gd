@@ -168,13 +168,26 @@ func _select_tab(tab_id: String) -> void:
 		"glossary":
 			_show_glossary()
 
+func _get_single_frame_icon(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	if texture is AtlasTexture:
+		return texture
+	if texture.get_width() > texture.get_height() and texture.get_height() >= 32:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		var h := texture.get_height()
+		atlas.region = Rect2(0, 0, h, h)
+		return atlas
+	return texture
+
 func _add_list_item(item_id: String, item_name: String, icon_tex: Texture2D) -> void:
 	var btn := Button.new()
 	btn.text = " " + item_name
 	btn.custom_minimum_size = Vector2(230, 40)
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	if icon_tex != null:
-		btn.icon = icon_tex
+		btn.icon = _get_single_frame_icon(icon_tex)
 		btn.expand_icon = true
 		btn.add_theme_constant_override("icon_max_width", 32)
 	btn.pressed.connect(func():

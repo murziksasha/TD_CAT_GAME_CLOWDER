@@ -11,6 +11,7 @@ signal shop_pressed
 signal prestige_shop_pressed
 signal settings_pressed
 signal leaderboard_pressed
+signal coop_pressed
 
 var level_lbl: Label
 var xp_bar: ProgressBar
@@ -117,6 +118,10 @@ func _build_ui() -> void:
 	_add_menu_btn(center_vbox, "🏆 Top 100 Leaderboards", func():
 		leaderboard_pressed.emit()
 	, Color(1.0, 0.88, 0.45))
+
+	_add_menu_btn(center_vbox, "👥 Co-op Mode (Local / LAN)", func():
+		coop_pressed.emit()
+	, Color(0.35, 0.85, 0.95))
 
 	_add_menu_btn(center_vbox, "⚙ Settings & Accessibility", func():
 		settings_pressed.emit()
