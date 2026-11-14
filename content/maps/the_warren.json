@@ -1,0 +1,141 @@
+{
+  "id": "the_warren",
+  "name": "The Warren",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "E",
+  "difficulty": "expert",
+  "shape": "three_lanes",
+  "path_width": 40,
+  "path_length": 900,
+  "family": "redesigned",
+  "lesson": "Three short burrow trails rotate on the posted schedule; read the next active route.",
+  "paths": [
+    {
+      "id": "burrow_a",
+      "points": [
+        {
+          "x": 30,
+          "y": 120
+        },
+        {
+          "x": 570,
+          "y": 120
+        },
+        {
+          "x": 570,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "id": "burrow_b",
+      "points": [
+        {
+          "x": 30,
+          "y": 340
+        },
+        {
+          "x": 570,
+          "y": 340
+        },
+        {
+          "x": 570,
+          "y": 700
+        }
+      ]
+    },
+    {
+      "id": "burrow_c",
+      "points": [
+        {
+          "x": 30,
+          "y": 580
+        },
+        {
+          "x": 570,
+          "y": 580
+        },
+        {
+          "x": 570,
+          "y": 220
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": []
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "the_warren_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "the_warren_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "the_warren_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ],
+  "verbs": {
+    "schedule": {
+      "default_paths": [
+        0
+      ],
+      "round_paths": {
+        "2": [
+          1
+        ],
+        "3": [
+          2
+        ],
+        "5": [
+          1
+        ],
+        "7": [
+          2
+        ],
+        "9": [
+          1
+        ],
+        "11": [
+          2
+        ]
+      }
+    }
+  }
+}

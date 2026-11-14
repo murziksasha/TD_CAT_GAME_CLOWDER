@@ -1,0 +1,107 @@
+{
+  "id": "two_purse_lane",
+  "name": "Two-Purse Lane",
+  "map_revision": 2,
+  "ward": "night_market",
+  "band": "A",
+  "difficulty": "advanced",
+  "shape": "dual",
+  "path_width": 40,
+  "path_length": 1000,
+  "family": "redesigned",
+  "lesson": "Two independent lanes have unequal travel times and share the same lives.",
+  "paths": [
+    {
+      "id": "short_lane",
+      "points": [
+        {
+          "x": 50,
+          "y": 190
+        },
+        {
+          "x": 700,
+          "y": 190
+        },
+        {
+          "x": 700,
+          "y": 540
+        }
+      ]
+    },
+    {
+      "id": "long_lane",
+      "points": [
+        {
+          "x": 50,
+          "y": 470
+        },
+        {
+          "x": 850,
+          "y": 470
+        },
+        {
+          "x": 850,
+          "y": 120
+        },
+        {
+          "x": 850,
+          "y": 120
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 450,
+        "y": 330,
+        "radius": 32
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "two_purse_lane_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "two_purse_lane_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "two_purse_lane_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

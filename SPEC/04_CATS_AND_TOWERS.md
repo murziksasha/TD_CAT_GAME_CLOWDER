@@ -166,6 +166,23 @@ Identities, base archetypes, and price bands follow the identical crosspath laws
 - **Lumen (Sun Cat)**: Land, 2500 kibble. Ultra-fast magic bite beam (0.08s cooldown); Solstice beam, King's Roar stun.
 - **Vesper (Pursuit Cat)**: Air Lane, 800 kibble. Interceptor aircraft patrol; supply drop calling temporary helper kittens.
 
+### Bub — Potion Cat
+
+- **Role**: Acid damage over time, impact splash, targeted support, and capped damage-to-Kibble conversion.
+- **Category**: Myth | **Mask**: Land | **Base Cost**: 450 kibble.
+- **Base Stats**: Lobbed Acid flask, 1 damage, 1 pierce, 18 impact radius, 1.2s cooldown, 145 range. Corrosion deals 1 DPS for 3s. Acid is stopped by no coat.
+- **Corrosion**: strongest DPS wins and duration refreshes; it coexists with Burn and Hex. Rat caps are centralized in `sim/status.gd` (15 DPS Matriarch, 40 DPS other large Rats).
+- **Master Brew**: assigned between rounds to one non-Hero cat in Bub's range. Brew sources do not stack; selling Bub removes its buffs.
+- **Midas**: pays only from HP actually removed by that Bub's direct Acid, Corrosion, and puddles. Fractional Kibble accumulates deterministically and the per-round cap resets at round start.
+
+| Tier | Path A: Acid | Path B: Brew | Path C: Midas |
+| :---: | :--- | :--- | :--- |
+| **1** | **Concentrated Brew** (250): 2 damage, 2 Corrosion DPS. | **Long Ladle** (300): 175 range. | **Copper Flask** (250): 5% removed HP, cap 40/round. |
+| **2** | **Etching Salts** (550): radius 28, pierce 3, Corrosion lasts 4s. | **Quick Stir** (650): 0.95s cooldown. | **Gilded Drip** (600): 8%, cap 90. |
+| **3** | **Spill Flask** (1700): radius 45, pierce 8. | **Taster's Brew** (2000): target gains +10% attack speed and range. | **Alchemist's Ledger** (2000): 3 damage, 2 DPS; 12%, cap 180. |
+| **4** | **Caustic Rain** (6000): 5 damage, 6 DPS, radius 55, pierce 14, 1.0s cooldown. | **Potent Brew** (6500): target gains +15% speed/range and +1 damage. | **Profit Catalyst** (6000): 5 damage, 4 DPS; 15%, cap 400. |
+| **5** | **Meltdown** (28000): 10 damage, 12 DPS for 5s, radius 70, pierce 24; every fifth attack leaves a 75-radius, 8-DPS puddle for 6s. | **Master Brew** (28000): target gains +25% speed, +20% range, +1 damage, +2 pierce; nearby cats gain +10% speed/range and +1 pierce. | **Midas Mitt** (26000): 8 damage, 8 DPS for 5s; 20%, cap 800. |
+
 ---
 
 ## 4. Alpha Cats (Post-v1 Reserved Specification)

@@ -1,0 +1,96 @@
+{
+  "id": "fig_and_twine",
+  "name": "Fig and Twine",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "curved_street",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "A curved street leaves several small open pockets for carefully placed cats.",
+  "paths": [
+    {
+      "id": "main_path",
+      "points": [
+        {
+          "x": 60,
+          "y": 200
+        },
+        {
+          "x": 600,
+          "y": 200
+        },
+        {
+          "x": 600,
+          "y": 520
+        },
+        {
+          "x": 210,
+          "y": 520
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 910,
+        "y": 420,
+        "radius": 55
+      }
+    ],
+    "perches": [
+      {
+        "x": 460,
+        "y": 350,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "fig_and_twine_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "fig_and_twine_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "fig_and_twine_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

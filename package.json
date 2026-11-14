@@ -8,7 +8,8 @@
     "game": "node launch.js",
     "editor": "node launch.js --editor",
     "test": "python tools/balance_runner.py",
-    "test:sunny": "python tools/sunny_scripted_match.py"
+    "test:sunny": "python tools/sunny_scripted_match.py",
+    "test:expansion": "node tools/run_expansion_tests.js"
   },
   "author": "",
   "license": "MIT"

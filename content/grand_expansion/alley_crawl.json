@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "generator_version": 1,
+  "stage_count_min": 5,
+  "stage_count_max": 7,
+  "district_rounds": [10, 15, 20, 25, 30, 35, 40],
+  "completion_fishcoin": 20,
+  "curse_fishcoin_cap": 40,
+  "maps": [
+    "sunny_gutter", "lantern_stoop", "crabapple_bend", "fishbone_straight",
+    "morning_arch", "market_lane", "stall_row", "puddle_court",
+    "sack_corner", "herring_square", "welcome_bridge", "chimney_step",
+    "twin_gutters", "basket_bridge", "rooftop_crossing", "copper_scale"
+  ],
+  "modifiers": {
+    "dense_fog": {"name": "Dense Fog", "effect": "cat_range_percent", "value": -15, "min_stage": 2},
+    "greased_cobbles": {"name": "Greased Cobbles", "effect": "mouse_speed_percent", "value": 12, "min_stage": 2},
+    "ink_tide": {"name": "Ink Tide", "effect": "ink_interval_rounds", "value": 4, "min_stage": 3},
+    "frenzy_clock": {"name": "Frenzy Clock", "effect": "attack_speed_percent_both_sides", "value": 15, "min_stage": 3},
+    "lean_pantry": {"name": "Lean Pantry", "effect": "starting_kibble_percent", "value": -20, "min_stage": 2},
+    "long_night": {"name": "Long Night", "effect": "round_spacing_percent", "value": -15, "min_stage": 3},
+    "plated_procession": {"name": "Plated Procession", "effect": "plated_every_nth_group", "value": 3, "min_stage": 3},
+    "shadow_market": {"name": "Shadow Market", "effect": "shadow_every_nth_group", "value": 4, "min_stage": 2},
+    "narrow_yard": {"name": "Narrow Yard", "effect": "footprint_percent", "value": 10, "min_stage": 2},
+    "rat_weather": {"name": "Rat Weather", "effect": "rat_body_hp_percent", "value": 15, "min_stage": 4},
+    "full_bowls": {"name": "Full Bowls", "effect": "end_round_kibble_flat", "value": 10, "min_stage": 1},
+    "clear_morning": {"name": "Clear Morning", "effect": "cat_range_percent", "value": 10, "min_stage": 1}
+  },
+  "incompatibilities": [
+    ["dense_fog", "clear_morning"]
+  ],
+  "relics": {
+    "golden_whisker": {"name": "Golden Whisker", "effect": "pop_kibble_percent", "value": 8},
+    "catnip_satchel": {"name": "Catnip Satchel", "effect": "attack_speed_percent", "value": 8},
+    "pier_bell": {"name": "Pier Bell", "effect": "hero_xp_percent", "value": 12},
+    "mended_saucer": {"name": "Mended Saucer", "effect": "district_start_lives", "value": 10},
+    "cobbler_thread": {"name": "Cobbler Thread", "effect": "projectile_speed_percent", "value": 15},
+    "market_token": {"name": "Market Token", "effect": "first_upgrade_discount_percent", "value": 20}
+  },
+  "curses": {
+    "empty_bowls": {"name": "Empty Bowls", "effect": "starting_kibble_percent", "value": -25, "fishcoin": 8},
+    "hasty_tide": {"name": "Hasty Tide", "effect": "mouse_speed_percent", "value": 18, "fishcoin": 10},
+    "brittle_gate": {"name": "Brittle Gate", "effect": "starting_lives_percent", "value": -30, "fishcoin": 12},
+    "rat_tribute": {"name": "Rat Tribute", "effect": "rat_body_hp_percent", "value": 25, "fishcoin": 15}
+  }
+}

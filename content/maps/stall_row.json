@@ -1,0 +1,106 @@
+{
+  "id": "stall_row",
+  "name": "Stall Row",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "street",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "A single street passes staggered permanent stalls that create distinct lines of fire.",
+  "paths": [
+    {
+      "id": "main_street",
+      "points": [
+        {
+          "x": 50,
+          "y": 220
+        },
+        {
+          "x": 950,
+          "y": 220
+        },
+        {
+          "x": 950,
+          "y": 570
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 450,
+        "y": 140,
+        "radius": 32
+      },
+      {
+        "x": 750,
+        "y": 320,
+        "radius": 32
+      }
+    ]
+  },
+  "sight_blockers": [
+    {
+      "id": "stall_row_permanent_1",
+      "x": 400,
+      "y": 270,
+      "width": 90,
+      "height": 50
+    },
+    {
+      "id": "stall_row_permanent_2",
+      "x": 700,
+      "y": 130,
+      "width": 90,
+      "height": 50
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "stall_row_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "stall_row_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "stall_row_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

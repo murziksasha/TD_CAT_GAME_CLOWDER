@@ -1,0 +1,124 @@
+{
+  "id": "rooftop_crossing",
+  "name": "Rooftop Crossing",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "split_merge",
+  "path_width": 40,
+  "path_length": 1100,
+  "family": "redesigned",
+  "lesson": "Two roofs join on one terrace; the merge is a strong shared firing opportunity.",
+  "paths": [
+    {
+      "id": "roof_a",
+      "points": [
+        {
+          "x": 30,
+          "y": 130
+        },
+        {
+          "x": 420,
+          "y": 130
+        },
+        {
+          "x": 420,
+          "y": 350
+        },
+        {
+          "x": 700,
+          "y": 350
+        },
+        {
+          "x": 700,
+          "y": 560
+        }
+      ]
+    },
+    {
+      "id": "roof_b",
+      "points": [
+        {
+          "x": 20,
+          "y": 560
+        },
+        {
+          "x": 420,
+          "y": 560
+        },
+        {
+          "x": 420,
+          "y": 350
+        },
+        {
+          "x": 700,
+          "y": 350
+        },
+        {
+          "x": 700,
+          "y": 560
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 330,
+        "y": 230,
+        "radius": 30
+      },
+      {
+        "x": 580,
+        "y": 270,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "rooftop_crossing_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "rooftop_crossing_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "rooftop_crossing_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

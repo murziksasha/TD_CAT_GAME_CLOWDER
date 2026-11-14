@@ -92,3 +92,10 @@ static func is_immune_to_damage(immunities: Array, damage_type: int) -> bool:
 			return false
 	return false
 
+static func immunity_cue_for_damage(damage_type: int) -> String:
+	match damage_type:
+		DamageType.CLAW: return "iron"
+		DamageType.BLAST: return "soot"
+		DamageType.MAGIC: return "ink"
+		_: return ""
+

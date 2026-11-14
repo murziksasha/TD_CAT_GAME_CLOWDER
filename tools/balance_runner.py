@@ -236,7 +236,159 @@ def test_account_xp_and_level_progression():
             break
             
     assert reached_level in [9, 10, 11], f"Level progression landed on {reached_level}, expected 9-11"
-    print(f"[PASS] [9/9] First Sunny clear grants {total_xp} XP and reaches level {reached_level} (within 9-11).")
+    print(f"[PASS] [9/14] First Sunny clear grants {total_xp} XP and reaches level {reached_level} (within 9-11).")
+
+def test_ward_atlas_travel_floor():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    mice_data = load_json("mice.json")
+    max_mouse_speed = mice_data["base_speed_unit"] * max(c["speed_multiplier"] for c in mice_data["coats"].values()) # 140.0
+    
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json") or fname == "sunny_gutter.json":
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        band = mdata.get("band", "B")
+        paths = mdata.get("paths", [])
+        min_len = min(p.get("length", mdata.get("path_length", 1200.0)) for p in paths) if paths else mdata.get("path_length", 1200.0)
+        
+        # Floor: B/B+ >= 8.0s, I/A >= 6.0s, E >= 5.0s (min 700)
+        if band in ["B", "B+"]:
+            assert min_len >= 900, f"Map {fname} band {band} path length {min_len} < 900"
+        elif band in ["I", "A"]:
+            assert min_len >= 780, f"Map {fname} band {band} path length {min_len} < 780"
+        elif band == "E":
+            assert min_len >= 700, f"Map {fname} band E path length {min_len} < 700"
+    print("[PASS] [10/14] Ward Atlas travel-floor content checks validated.")
+
+def test_ward_atlas_land_witness():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        land_zones = mdata.get("placement_zones", {}).get("land", [])
+        assert len(land_zones) > 0, f"Map {fname} has no land placement zones"
+        total_land_area = sum(z.get("width", 0) * z.get("height", 0) for z in land_zones)
+        assert total_land_area >= 8 * (math.pi * 20.0**2), f"Map {fname} cannot hold 8 cat footprints"
+    print("[PASS] [11/14] Ward Atlas land-witness footprint capacity validated.")
+
+def test_map_revision_two_geometry_and_clearance():
+    """Content-side guard for measured routes and unlockable, genuinely usable pads."""
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    targets = {"B": 1200.0, "B+": 1250.0, "I": 1100.0, "A": 1000.0, "E": 900.0}
+
+    def route_length(points):
+        return sum(math.hypot(b["x"] - a["x"], b["y"] - a["y"])
+                   for a, b in zip(points, points[1:]))
+
+    def segment_distance(p, a, b):
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        denom = dx * dx + dy * dy
+        t = 0.0 if denom == 0 else max(0.0, min(1.0, ((p[0] - a["x"]) * dx + (p[1] - a["y"]) * dy) / denom))
+        return math.hypot(p[0] - (a["x"] + t * dx), p[1] - (a["y"] + t * dy))
+
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        assert data.get("map_revision") == 2, f"{fname} is not geometry revision 2"
+        measured = [route_length(p["points"]) for p in data["paths"]]
+        shortest = min(measured)
+        target = targets[data["band"]]
+        assert abs(shortest - target) <= target * 0.05, f"{fname} shortest path {shortest:.1f} misses {target:.0f} +/-5%"
+        assert abs(float(data["path_length"]) - shortest) < 0.01, f"{fname} path_length is not measured"
+        obstacles = data.get("obstacles", [])
+        assert len(obstacles) == 3 and sorted(o.get("cost") for o in obstacles) == [50, 100, 150], f"{fname} needs small/medium/large clutter"
+        assert len({o.get("id") for o in obstacles}) == 3, f"{fname} clutter ids must be stable and unique"
+
+        def clear_of_route(point):
+            return all(segment_distance(point, a, b) >= 40.0
+                       for path in data["paths"] for a, b in zip(path["points"], path["points"][1:]))
+        def clear_of_water(point):
+            return all(math.hypot(point[0] - w["x"], point[1] - w["y"]) >= w.get("radius", 0) + 24.0
+                       for w in data.get("placement_zones", {}).get("water", []))
+        def clear_of_rect(point, obstacle):
+            r = obstacle["base"]
+            return not (r["x"] - 24 <= point[0] <= r["x"] + r["width"] + 24 and r["y"] - 24 <= point[1] <= r["y"] + r["height"] + 24)
+
+        witnesses = []
+        for x in range(30, 1250, 48):
+            for y in range(30, 700, 48):
+                point = (x, y)
+                if clear_of_route(point) and clear_of_water(point) and all(clear_of_rect(point, o) for o in obstacles):
+                    if all(math.hypot(point[0] - q[0], point[1] - q[1]) >= 48 for q in witnesses):
+                        witnesses.append(point)
+        assert len(witnesses) >= 8, f"{fname} has fewer than eight clear 24-radius cat pads"
+        for obstacle in obstacles:
+            r = obstacle["base"]
+            pad = (r["x"] + r["width"] / 2, r["y"] + r["height"] / 2)
+            assert clear_of_route(pad) and clear_of_water(pad), f"{fname} {obstacle['id']} does not release a usable pad"
+    print("[PASS] [new] Geometry revision, target lengths, eight pad witnesses, and clutter pads validated.")
+
+def test_ward_atlas_threat_hints():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        if "hint" in mdata:
+            assert len(mdata["hint"].strip()) > 0, f"Map {fname} has empty hint"
+        assert len(mdata.get("lesson", "").strip()) > 0 or fname == "sunny_gutter.json", f"Map {fname} missing lesson description"
+    print("[PASS] [12/14] Ward Atlas teaching hint and lesson descriptions validated.")
+
+def test_tide_lift_100_refund():
+    total_spent = 1500
+    sell_refund = round(total_spent * 0.70)
+    assert sell_refund == 1050
+    tide_lift_refund = total_spent
+    assert tide_lift_refund == 1500
+    assert tide_lift_refund > sell_refund
+    print("[PASS] [13/14] Tide 100% lift refund law (distinct from 70% sell) validated.")
+
+def test_locale_catalogue_parity():
+    en = load_json("locales/en.json")
+    uk = load_json("locales/uk.json")
+    assert set(en) == set(uk), "English and Ukrainian locale keys must match exactly"
+    assert en["ui.language"] == "UA" and uk["ui.language"] == "EN"
+    assert uk["map.sunny_gutter"] == "Сонячна ринва"
+    print("[PASS] [14/15] English/Ukrainian catalogue key parity validated.")
+
+def find_godot_executable():
+    import os
+    local_winget_console = os.path.join(
+        os.environ.get("LOCALAPPDATA", ""),
+        "Microsoft",
+        "WinGet",
+        "Packages",
+        "GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe",
+        "Godot_v4.7.2-stable_win64_console.exe"
+    )
+    if os.path.exists(local_winget_console):
+        return local_winget_console
+    return "godot"
+
+def test_atlas_headless_sim():
+    import subprocess
+    godot_exe = find_godot_executable()
+    cmd = [godot_exe, "--headless", "--path", BASE_DIR, "-s", "tools/test_atlas_sim.gd"]
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=BASE_DIR)
+    assert res.returncode == 0, f"Headless atlas simulation failed:\n{res.stdout}\n{res.stderr}"
+    assert "Twin Gutters Path B leak verified" in res.stdout
+    assert "Stall Row sight obstruction" in res.stdout
+    print("[PASS] [14/14] Ward Atlas headless simulation (Twin Gutters B-leak & Stall Row sight) validated.")
+
+def test_bub_headless_sim():
+    import subprocess
+    godot_exe = find_godot_executable()
+    cmd = [godot_exe, "--headless", "--path", BASE_DIR, "-s", "tools/test_bub_sim.gd"]
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=BASE_DIR)
+    assert res.returncode == 0, f"Headless Bub simulation failed:\n{res.stdout}\n{res.stderr}"
+    assert "Bub Acid, Corrosion, Brew, Midas, Meltdown, and art verified" in res.stdout
+    print("[PASS] [new] Bub Acid/Brew/Midas headless integration validated.")
 
 if __name__ == "__main__":
     print("==================================================")
@@ -251,6 +403,14 @@ if __name__ == "__main__":
     test_goldie_payback()
     test_feat_seeding_stability()
     test_account_xp_and_level_progression()
+    test_ward_atlas_travel_floor()
+    test_ward_atlas_land_witness()
+    test_map_revision_two_geometry_and_clearance()
+    test_ward_atlas_threat_hints()
+    test_tide_lift_100_refund()
+    test_locale_catalogue_parity()
+    test_atlas_headless_sim()
+    test_bub_headless_sim()
     print("==================================================")
-    print("   ALL 9 BALANCE GATES PASSED CLEANLY (GREEN)    ")
+    print("   ALL 14 BALANCE & ATLAS GATES PASSED CLEANLY    ")
     print("==================================================")

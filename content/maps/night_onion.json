@@ -1,0 +1,96 @@
+{
+  "id": "night_onion",
+  "name": "Night Onion",
+  "map_revision": 2,
+  "ward": "night_market",
+  "band": "A",
+  "difficulty": "advanced",
+  "shape": "night_loop",
+  "path_width": 40,
+  "path_length": 1000,
+  "family": "redesigned",
+  "lesson": "A compact loop makes night threats readable without hiding the available ground.",
+  "paths": [
+    {
+      "id": "main_loop",
+      "points": [
+        {
+          "x": 70,
+          "y": 180
+        },
+        {
+          "x": 520,
+          "y": 180
+        },
+        {
+          "x": 520,
+          "y": 550
+        },
+        {
+          "x": 340,
+          "y": 550
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 820,
+        "y": 400,
+        "radius": 60
+      }
+    ],
+    "perches": [
+      {
+        "x": 340,
+        "y": 330,
+        "radius": 32
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "night_onion_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "night_onion_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "night_onion_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

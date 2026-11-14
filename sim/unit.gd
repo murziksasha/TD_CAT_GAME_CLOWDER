@@ -12,6 +12,7 @@ var spawn_coat: String = ""
 
 # Path progress
 var path_id: String = "main_loop"
+var path_index: int = 0
 var s: float = 0.0 # distance along path
 
 # Combat stats
@@ -166,7 +167,9 @@ func hit(
 		"overflow_damage": 0,
 		"children_to_spawn": [],
 		"shell_bounty": 0,
-		"coat_popped": false
+		"coat_popped": false,
+		"popped_coats": [],
+		"blocked_by": ""
 	}
 	
 	if not is_alive:
@@ -174,6 +177,7 @@ func hit(
 		
 	# Immunity check
 	if SimConstants.is_immune_to_damage(immunities, damage_type):
+		result.blocked_by = SimConstants.immunity_cue_for_damage(damage_type)
 		return result
 		
 	# Damage calculation
@@ -220,6 +224,7 @@ func hit(
 		
 		if layer_hp <= 0:
 			result.coat_popped = true
+			result.popped_coats.append(unit_type)
 			var remaining_dmg = effective_damage - dmg_applied
 			result.overflow_damage = remaining_dmg
 			
@@ -276,6 +281,7 @@ func hit(
 						result.hp_removed += sub_hit.hp_removed
 						result.shell_bounty += sub_hit.shell_bounty
 						result.children_to_spawn.append_array(sub_hit.children_to_spawn)
+						result.popped_coats.append_array(sub_hit.popped_coats)
 						result.overflow_damage = sub_hit.overflow_damage
 						if sub_hit.killed:
 							result.killed = true
@@ -290,18 +296,17 @@ func _transition_to_child(new_coat: String, shadow: bool, gnaw: bool, plated: bo
 	_apply_mouse_coat_data(new_coat)
 
 func tick(delta: float) -> Dictionary:
-	var tick_res = status.tick(delta)
-	
+	var tick_res := tick_status(delta)
+	tick_movement(delta)
+	return tick_res
+
+func tick_status(delta: float) -> Dictionary:
+	var tick_res := status.tick(delta)
 	if revealed_timer > 0.0:
 		revealed_timer = maxf(0.0, revealed_timer - delta)
-		
-	# Apply DoTs from status
-	if is_alive:
-		if tick_res.burn_damage > 0.0:
-			hit(int(ceil(tick_res.burn_damage)), tick_res.burn_type)
-		if is_alive and tick_res.hex_damage > 0.0:
-			hit(int(ceil(tick_res.hex_damage)), SimConstants.DamageType.MAGIC)
-			
+	return tick_res
+
+func tick_movement(delta: float) -> void:
 	# Gnaw regrow logic
 	if is_alive and not is_rat and is_gnaw and gnaw_regrows_left > 0:
 		var cur_speed_mult = status.get_speed_multiplier()
@@ -316,8 +321,6 @@ func tick(delta: float) -> Dictionary:
 	if is_alive:
 		var actual_speed = base_speed * status.get_speed_multiplier()
 		s += actual_speed * delta
-		
-	return tick_res
 
 func _try_gnaw_regrow() -> void:
 	if unit_type == spawn_coat:

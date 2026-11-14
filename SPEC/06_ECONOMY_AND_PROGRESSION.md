@@ -27,6 +27,11 @@ Kibble is the tactical, in-match currency used to purchase units, upgrade paths,
 - Purchasing a Continue on allowed modes:
   $$\text{Continue Cost} = 250 + (25 \times \text{round})$$
 - Feat Card Reroll: **150 Kibble** (capped at 1 reroll per cat per match).
+- Optional map clearance: **50 / 100 / 150 Kibble** for the small, medium, and
+  large placement-only clutter piles on every map. Clearance is fixed-price:
+  mode multipliers and discounts never apply. It is available only before or
+  between rounds (also in Bare Paw), grants no reward or refund, and is never
+  required to complete a map.
 
 ### Selling Rules
 - **Refund Rate**: Exactly **70%** of total kibble invested into that cat instance (base placement plus all upgrades purchased), rounded down.

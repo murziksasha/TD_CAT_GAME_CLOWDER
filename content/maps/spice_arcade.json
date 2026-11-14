@@ -1,0 +1,101 @@
+{
+  "id": "spice_arcade",
+  "name": "Spice Arcade",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "arcade",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "A long arcade is broken by permanent supports, so choose each line of sight deliberately.",
+  "paths": [
+    {
+      "id": "main_arcade",
+      "points": [
+        {
+          "x": 40,
+          "y": 210
+        },
+        {
+          "x": 1040,
+          "y": 210
+        },
+        {
+          "x": 1040,
+          "y": 460
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 710,
+        "y": 125,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [
+    {
+      "id": "spice_arcade_permanent_1",
+      "x": 420,
+      "y": 275,
+      "width": 42,
+      "height": 88
+    },
+    {
+      "id": "spice_arcade_permanent_2",
+      "x": 720,
+      "y": 275,
+      "width": 42,
+      "height": 88
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "spice_arcade_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "spice_arcade_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "spice_arcade_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

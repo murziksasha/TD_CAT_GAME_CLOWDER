@@ -1,0 +1,96 @@
+{
+  "id": "welcome_bridge",
+  "name": "Welcome Bridge",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "bridge",
+  "path_width": 40,
+  "path_length": 1100,
+  "family": "redesigned",
+  "lesson": "The bridge opens into a calm recovery courtyard after its first bend.",
+  "paths": [
+    {
+      "id": "main_path",
+      "points": [
+        {
+          "x": 60,
+          "y": 140
+        },
+        {
+          "x": 600,
+          "y": 140
+        },
+        {
+          "x": 600,
+          "y": 500
+        },
+        {
+          "x": 400,
+          "y": 500
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 350,
+        "y": 300,
+        "radius": 70
+      }
+    ],
+    "perches": [
+      {
+        "x": 520,
+        "y": 310,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "welcome_bridge_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "welcome_bridge_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "welcome_bridge_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

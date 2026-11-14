@@ -91,6 +91,8 @@ Style anchor: the cat sprites in `presentation/art/cats/`. Cozy painterly storyb
 | `presentation/art/props/` | `stall`, `lantern`, `crates`, `puddle` |
 | `presentation/art/tiles/` | `grass.png`, `cobble.png` |
 
+Optional animation sheets live beside these fallback sprites: `<id>_sheet.png` for cats and heroes, `<coat>_walk.png` for mice, and `<rat>_walk.png` for rats. The renderer is sheet-aware but must remain safe when they are absent.
+
 `presentation/main.gd` loads those paths. A missing file falls back to a flat geometric shape, so a bad sprite never crashes the match.
 
 ### Drawing Rules:
@@ -134,4 +136,14 @@ All canonical game design parameters, formulas, and balance rules are preserved 
 - **Verification Routine**:
   1. After any sim, content, or balance change: run `npm test` and `npm run test:sunny`.
   2. Ensure all 9 balance gates pass cleanly.
-  3. After a presentation change: launch the game (`npm start`), place Pip, start a round, and confirm mice walk the cobbles, the dock displays cat icons, and HUD interactions function properly.
+   3. After a presentation change: launch the game (`npm start`), place Pip, start a round, and confirm mice walk the cobbles, the dock displays cat icons, and HUD interactions function properly.
+
+---
+
+## 8. Presentation pipeline
+
+- Game feel lives in `presentation/`. The sim may append plain dictionaries to `presentation_log` as output, but never reads that log, calls `Time`/`OS`, or touches the scene tree.
+- Missing art always falls back to a static sprite or flat shape. Health bars, feat stars, level text, kibble, and lives remain code-drawn and accurate to the sim.
+- Sheets are transparent 128px cells: four idle frames then six attack frames, in 3/4 view facing right. Presentation flips toward the target. Never bake ground, numbers, or words into an asset.
+- Upgrades read through overlay ornaments at tiers 1, 3, and 5; do not make fifteen body repaints per cat. Damage-type colors and immunity cues are the shared combat language, and HUD chrome remains the wood theme.
+- After presentation work, run the game, place Pip, start a round, verify the cobbles, dock icons, HUD, and a tier ornament. After sim or content work, run `npm test` and `npm run test:sunny`.

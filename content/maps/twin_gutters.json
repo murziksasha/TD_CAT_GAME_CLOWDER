@@ -1,0 +1,130 @@
+{
+  "id": "twin_gutters",
+  "name": "Twin Gutters",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "split_merge",
+  "path_width": 40,
+  "path_length": 1100,
+  "family": "redesigned",
+  "lesson": "Two entrances merge into one long exit. The shared finish is the recovery zone.",
+  "paths": [
+    {
+      "id": "path_a",
+      "points": [
+        {
+          "x": 40,
+          "y": 120
+        },
+        {
+          "x": 470,
+          "y": 120
+        },
+        {
+          "x": 470,
+          "y": 350
+        },
+        {
+          "x": 690,
+          "y": 350
+        },
+        {
+          "x": 690,
+          "y": 610
+        }
+      ]
+    },
+    {
+      "id": "path_b",
+      "points": [
+        {
+          "x": 20,
+          "y": 520
+        },
+        {
+          "x": 470,
+          "y": 520
+        },
+        {
+          "x": 470,
+          "y": 350
+        },
+        {
+          "x": 690,
+          "y": 350
+        },
+        {
+          "x": 690,
+          "y": 610
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 260,
+        "y": 290,
+        "radius": 50
+      }
+    ],
+    "perches": [
+      {
+        "x": 420,
+        "y": 240,
+        "radius": 30
+      },
+      {
+        "x": 750,
+        "y": 340,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "twin_gutters_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "twin_gutters_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "twin_gutters_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "weigh_house",
+  "name": "Weigh House",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "warehouse_loop",
+  "path_width": 40,
+  "path_length": 1150,
+  "family": "redesigned",
+  "lesson": "Walk around the weigh house and choose an inner or outer side of the defense.",
+  "paths": [
+    {
+      "id": "main_loop",
+      "points": [
+        {
+          "x": 60,
+          "y": 150
+        },
+        {
+          "x": 610,
+          "y": 150
+        },
+        {
+          "x": 610,
+          "y": 470
+        },
+        {
+          "x": 330,
+          "y": 470
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 420,
+        "y": 300,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [
+    {
+      "id": "weigh_house_permanent_1",
+      "x": 400,
+      "y": 270,
+      "width": 100,
+      "height": 75
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "weigh_house_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "weigh_house_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "weigh_house_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

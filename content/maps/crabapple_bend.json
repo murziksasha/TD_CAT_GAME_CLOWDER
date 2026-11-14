@@ -1,0 +1,96 @@
+{
+  "id": "crabapple_bend",
+  "name": "Crabapple Bend",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B",
+  "difficulty": "beginner",
+  "shape": "bend",
+  "path_width": 40,
+  "path_length": 1200,
+  "family": "redesigned",
+  "lesson": "A single generous corner rounds the crabapple tree. Cover the turn, then recover on the long exit.",
+  "paths": [
+    {
+      "id": "main_path",
+      "points": [
+        {
+          "x": 70,
+          "y": 160
+        },
+        {
+          "x": 670,
+          "y": 160
+        },
+        {
+          "x": 670,
+          "y": 470
+        },
+        {
+          "x": 380,
+          "y": 470
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 970,
+        "y": 550,
+        "radius": 55
+      }
+    ],
+    "perches": [
+      {
+        "x": 390,
+        "y": 100,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "crabapple_bend_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "crabapple_bend_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "crabapple_bend_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "herring_square",
+  "name": "Herring Square",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "square",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "Circle the square from inside or outside; both sides retain open placements.",
+  "paths": [
+    {
+      "id": "main_loop",
+      "points": [
+        {
+          "x": 60,
+          "y": 160
+        },
+        {
+          "x": 650,
+          "y": 160
+        },
+        {
+          "x": 650,
+          "y": 510
+        },
+        {
+          "x": 340,
+          "y": 510
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 425,
+        "y": 335,
+        "radius": 68
+      }
+    ],
+    "perches": [
+      {
+        "x": 405,
+        "y": 335,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "herring_square_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "herring_square_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "herring_square_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

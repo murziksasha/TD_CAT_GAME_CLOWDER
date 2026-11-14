@@ -1,0 +1,90 @@
+{
+  "id": "copper_scale",
+  "name": "Copper Scale",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "self_cross",
+  "path_width": 40,
+  "path_length": 1105.8756580510726,
+  "family": "redesigned",
+  "lesson": "The track crosses itself around the old scale; crossing lines never switch a mouse's route.",
+  "paths": [
+    {
+      "id": "main_cross",
+      "points": [
+        {
+          "x": 80,
+          "y": 200
+        },
+        {
+          "x": 433,
+          "y": 200
+        },
+        {
+          "x": 181,
+          "y": 393
+        },
+        {
+          "x": 517,
+          "y": 116
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 320,
+        "y": 300,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "copper_scale_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "copper_scale_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "copper_scale_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

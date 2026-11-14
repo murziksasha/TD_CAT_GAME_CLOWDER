@@ -7,6 +7,7 @@ const SimConstants = preload("res://sim/constants.gd")
 var id: int = 0
 var source_cat_id: int = 0
 var position: Vector2 = Vector2.ZERO
+var start_position: Vector2 = Vector2.ZERO
 var target_unit_id: int = -1
 var target_position: Vector2 = Vector2.ZERO
 
@@ -19,6 +20,7 @@ var is_explosion: bool = false
 var is_seeking: bool = false
 var turn_rate: float = 6.0
 var travel_time_left: float = 0.0
+var total_travel_time: float = 0.0
 
 var bonus_porcelain: int = 0
 var bonus_rats: int = 0
@@ -28,6 +30,7 @@ var mark_duration: float = 0.0
 var freeze_duration: float = 0.0
 var burn_dps: float = 0.0
 var burn_duration: float = 0.0
+var payload: Dictionary = {}
 
 var already_hit_unit_ids: Dictionary = {} # Set of unit_ids hit
 var is_active: bool = true
@@ -62,10 +65,13 @@ func setup_lob(
 	p_damage_type: int,
 	p_pierce: int,
 	p_radius: float,
-	p_travel_time: float
+	p_travel_time: float,
+	p_start_pos: Vector2 = Vector2.ZERO,
+	p_payload: Dictionary = {}
 ) -> void:
 	id = p_id
 	source_cat_id = cat_id
+	start_position = p_start_pos if p_start_pos != Vector2.ZERO else target_pos
 	target_position = target_pos
 	position = target_pos
 	damage = p_damage
@@ -73,6 +79,8 @@ func setup_lob(
 	pierce_left = p_pierce
 	radius = p_radius
 	travel_time_left = p_travel_time
+	total_travel_time = p_travel_time
+	payload = p_payload.duplicate(true)
 	is_explosion = true
 	is_active = true
 

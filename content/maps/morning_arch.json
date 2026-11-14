@@ -1,0 +1,96 @@
+{
+  "id": "morning_arch",
+  "name": "Morning Arch",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B",
+  "difficulty": "beginner",
+  "shape": "loop",
+  "path_width": 40,
+  "path_length": 1200,
+  "family": "redesigned",
+  "lesson": "The arch frames a loop around an open central square with room to recover after the bend.",
+  "paths": [
+    {
+      "id": "main_loop",
+      "points": [
+        {
+          "x": 70,
+          "y": 170
+        },
+        {
+          "x": 570,
+          "y": 170
+        },
+        {
+          "x": 570,
+          "y": 500
+        },
+        {
+          "x": 200,
+          "y": 500
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 870,
+        "y": 290,
+        "radius": 60
+      }
+    ],
+    "perches": [
+      {
+        "x": 320,
+        "y": 310,
+        "radius": 34
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "morning_arch_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "morning_arch_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "morning_arch_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "id": "fishbone_straight",
+  "name": "Fishbone Straight",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B",
+  "difficulty": "beginner",
+  "shape": "straight",
+  "path_width": 40,
+  "path_length": 1200,
+  "family": "redesigned",
+  "lesson": "A long approach ends in one short bend, making range and exit coverage easy to read.",
+  "paths": [
+    {
+      "id": "main_path",
+      "points": [
+        {
+          "x": 50,
+          "y": 180
+        },
+        {
+          "x": 1000,
+          "y": 180
+        },
+        {
+          "x": 1000,
+          "y": 430
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [
+      {
+        "x": 680,
+        "y": 570,
+        "radius": 65
+      }
+    ],
+    "perches": [
+      {
+        "x": 520,
+        "y": 110,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "fishbone_straight_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "fishbone_straight_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "fishbone_straight_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
+}
