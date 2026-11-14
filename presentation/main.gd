@@ -2,6 +2,11 @@ extends Node2D
 
 const SimConstants = preload("res://sim/constants.gd")
 const SimMatch = preload("res://sim/match.gd")
+const SimTestingLab = preload("res://sim/testing_lab.gd")
+const TESTING_LAB_MODE = 5
+const SimAlleyCrawl = preload("res://sim/alley_crawl.gd")
+const SimAlleyCrawlSession = preload("res://sim/alley_crawl_session.gd")
+const ALLEY_CRAWL_MODE = 6
 const SimTower = preload("res://sim/tower.gd")
 const SimHero = preload("res://sim/hero.gd")
 const SimFeats = preload("res://sim/feats.gd")
@@ -45,6 +50,27 @@ var shop_top_btn: Button = null
 var trick_btn_hbox: HBoxContainer = null
 var trick_buttons: Array[Button] = []
 var current_mode: int = SimConstants.GameMode.SUNNY
+var testing_lab: SimTestingLab = null
+var lab_panel: PanelContainer = null
+var lab_status: Label = null
+var lab_round: SpinBox = null
+var lab_enemy: OptionButton = null
+var lab_path: OptionButton = null
+var lab_dps_label: Label = null
+var lab_overlay_land: bool = false
+var lab_overlay_water: bool = false
+var lab_overlay_perch: bool = false
+var lab_overlay_blocker: bool = false
+var lab_overlay_path: bool = false
+var alley_crawl: SimAlleyCrawl = null
+var alley_crawl_session: SimAlleyCrawlSession = null
+var alley_crawl_config: Dictionary = {}
+var crawl_panel: PanelContainer = null
+var crawl_title: Label = null
+var crawl_details: Label = null
+var crawl_relic_box: HBoxContainer = null
+var crawl_next_box: HBoxContainer = null
+var crawl_take_curse: CheckButton = null
 
 var lead_mgr: SimLeaderboardManager = null
 var leaderboard_modal: LeaderboardModal = null
@@ -76,6 +102,7 @@ var auto_wave_delay: float = 0.4
 @onready var stats_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/StatsLabel
 @onready var feat_status_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/FeatStatusLabel
 @onready var target_priority_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetPriorityBtn
+@onready var brew_target_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/BrewTargetBtn
 @onready var path_a_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathABtn
 @onready var path_b_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathBBtn
 @onready var path_c_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathCBtn
@@ -134,12 +161,15 @@ var placing_cat_id: String = ""
 var is_placing_hero: bool = false
 var selected_tower: SimTower = null
 var selected_is_hero: bool = false
+var brew_selecting_source: SimTower = null
 
 var pending_feat_tower: SimTower = null
 var current_feat_offer: Array[Dictionary] = []
 var mouse_pos: Vector2 = Vector2.ZERO
 
 var cat_sprites: Dictionary = {}
+var cat_catalog: Dictionary = {}
+var cat_order: Array[String] = []
 var mouse_sprites: Dictionary = {}
 var rat_sprites: Dictionary = {}
 var prop_sprites: Dictionary = {}
@@ -188,6 +218,7 @@ const CAT_COLORS: Dictionary = {
 	"nim": Color(0.56, 0.27, 0.68),
 	"goldie": Color(0.95, 0.61, 0.07),
 	"miso": Color(0.47, 0.33, 0.28),
+	"bub": Color(0.42, 0.65, 0.26),
 	"mittens": Color(0.36, 0.42, 0.49)
 }
 
@@ -211,6 +242,8 @@ func _ready() -> void:
 	_build_cat_dock()
 	_setup_map_select()
 	_setup_mode_select()
+	_setup_testing_lab_controls()
+	_setup_alley_crawl_panel()
 	_setup_language_toggle()
 	_setup_profile_badge()
 	_setup_top_bar_extra_buttons()
@@ -226,8 +259,24 @@ func _load_tex(path: String) -> Texture2D:
 		return load(path)
 	return null
 
+func _load_cat_catalog() -> Dictionary:
+	var result: Dictionary = {}
+	cat_order.clear()
+	var index := _load_json("res://content/cats/index.json")
+	var ids: Array = index.get("ids", ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "marlow", "bub"])
+	for raw_id in ids:
+		var cat_id := str(raw_id)
+		var cat_data := _load_json("res://content/cats/%s.json" % cat_id)
+		if not cat_data.is_empty():
+			cat_order.append(cat_id)
+			result[cat_id] = cat_data
+	cat_catalog = result
+	return result
+
 func _load_art() -> void:
-	for id in ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "marlow", "mittens", "duchess", "baron", "pebble"]:
+	if cat_catalog.is_empty():
+		_load_cat_catalog()
+	for id in cat_order + ["mittens", "duchess", "baron", "pebble"]:
 		cat_sprites[id] = _load_sheet_or_static("res://presentation/art/cats/%s" % id)
 	for id in ["rust", "slate", "moss", "grain", "sugar", "soot", "frost", "ink", "iron", "marble", "prism", "porcelain"]:
 		mouse_sprites[id] = _load_sheet_or_static("res://presentation/art/mice/%s" % id, "_walk")
@@ -315,6 +364,16 @@ func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 		current_mode = p_mode
 	if results_modal != null:
 		results_modal.visible = false
+	if results_retry_btn != null:
+		results_retry_btn.text = "Retry Map"
+	if current_mode == ALLEY_CRAWL_MODE:
+		_ensure_alley_crawl_run()
+		if alley_crawl != null and not alley_crawl.get_current_node().is_empty():
+			current_map_id = str(alley_crawl.get_current_node().get("map_id", "sunny_gutter"))
+	else:
+		alley_crawl_session = null
+		if crawl_panel != null:
+			crawl_panel.visible = false
 	sim = SimMatch.new()
 	var mice_data = _load_json("res://content/mice.json")
 	var rats_data = _load_json("res://content/rats.json")
@@ -322,17 +381,7 @@ func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 	var round_data = campaign_rounds if not campaign_rounds.is_empty() else _load_json("res://content/rounds/sunny.json")
 	var map_data = _load_json("res://content/maps/%s.json" % current_map_id)
 	
-	var cat_bps = {
-		"pip": _load_json("res://content/cats/pip.json"),
-		"nibs": _load_json("res://content/cats/nibs.json"),
-		"pudding": _load_json("res://content/cats/pudding.json"),
-		"biscuit": _load_json("res://content/cats/biscuit.json"),
-		"sable": _load_json("res://content/cats/sable.json"),
-		"nim": _load_json("res://content/cats/nim.json"),
-		"goldie": _load_json("res://content/cats/goldie.json"),
-		"miso": _load_json("res://content/cats/miso.json"),
-		"marlow": _load_json("res://content/cats/marlow.json")
-	}
+	var cat_bps := _load_cat_catalog()
 	
 	var hero_bps = {
 		"mittens": _load_json("res://content/heroes/mittens.json"),
@@ -342,7 +391,7 @@ func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 	}
 	
 	sim.setup(
-		current_mode,
+		SimConstants.GameMode.SUNNY if current_mode in [TESTING_LAB_MODE, ALLEY_CRAWL_MODE] else current_mode,
 		1337,
 		mice_data,
 		rats_data,
@@ -352,6 +401,21 @@ func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 		0,
 		map_data
 	)
+	testing_lab = null
+	if current_mode == TESTING_LAB_MODE:
+		testing_lab = SimTestingLab.new()
+		testing_lab.setup(sim)
+		sim.replay.mode = TESTING_LAB_MODE
+	alley_crawl_session = null
+	if current_mode == ALLEY_CRAWL_MODE and alley_crawl != null:
+		alley_crawl_session = SimAlleyCrawlSession.new()
+		if alley_crawl_session.setup(alley_crawl):
+			alley_crawl_session.prepare_match(sim)
+			var district_rounds: Array = alley_crawl_config.get("district_rounds", [10])
+			sim.max_rounds = int(district_rounds[mini(alley_crawl.current_stage, district_rounds.size() - 1)])
+			sim.replay.mode = ALLEY_CRAWL_MODE
+	_refresh_testing_lab_controls()
+	_refresh_alley_crawl_panel(false)
 	var tricks_data = _load_json("res://content/tricks.json")
 	sim.load_tricks_data(tricks_data)
 	selected_obstacle_id = ""
@@ -362,21 +426,16 @@ func _build_cat_dock() -> void:
 	for child in cat_buttons_container.get_children():
 		child.queue_free()
 		
-	var cats_to_show = [
-		{"id": "pip", "name": "Pip", "cost": 200, "is_hero": false},
-		{"id": "nibs", "name": "Nibs", "cost": 280, "is_hero": false},
-		{"id": "pudding", "name": "Pudding", "cost": 400, "is_hero": false},
-		{"id": "biscuit", "name": "Biscuit", "cost": 525, "is_hero": false},
-		{"id": "sable", "name": "Sable", "cost": 450, "is_hero": false},
-		{"id": "nim", "name": "Nim", "cost": 475, "is_hero": false},
-		{"id": "goldie", "name": "Goldie", "cost": 1250, "is_hero": false},
-		{"id": "miso", "name": "Miso", "cost": 700, "is_hero": false},
-		{"id": "marlow", "name": "Marlow", "cost": 500, "is_hero": false},
+	var cats_to_show: Array[Dictionary] = []
+	for cat_id in cat_order:
+		var data: Dictionary = cat_catalog.get(cat_id, {})
+		cats_to_show.append({"id": cat_id, "name": data.get("name", cat_id.capitalize()), "cost": int(data.get("cost", 0)), "is_hero": false})
+	cats_to_show.append_array([
 		{"id": "mittens", "name": "Mittens ★", "cost": 600, "is_hero": true},
 		{"id": "duchess", "name": "Duchess ★", "cost": 750, "is_hero": true},
 		{"id": "baron", "name": "Baron Salt ★", "cost": 700, "is_hero": true},
 		{"id": "pebble", "name": "Sister Pebble ★", "cost": 900, "is_hero": true}
-	]
+	])
 	
 	for c in cats_to_show:
 		var btn = Button.new()
@@ -399,6 +458,7 @@ func _connect_ui_signals() -> void:
 		speed3_btn.pressed.connect(func(): _set_speed(3))
 		
 		target_priority_btn.pressed.connect(_on_cycle_target_priority)
+		brew_target_btn.pressed.connect(_on_brew_target_pressed)
 		path_a_btn.pressed.connect(func(): _upgrade_selected("path_a"))
 		path_b_btn.pressed.connect(func(): _upgrade_selected("path_b"))
 		path_c_btn.pressed.connect(func(): _upgrade_selected("path_c"))
@@ -755,6 +815,16 @@ func _show_results_dialog(won: bool) -> void:
 			else:
 				coaching = "Tactical Observation: Review tower placement and crosspath synergies. Combine crowd-control (Pudding) with DPS (Pip, Biscuit)."
 	results_coaching_lbl.text = coaching
+
+	var crawl_reward: Dictionary = {}
+	if alley_crawl_session != null and alley_crawl != null:
+		if won:
+			alley_crawl_session.finish_district(sim)
+			if alley_crawl.completed:
+				crawl_reward = save_mgr.claim_alley_crawl_completion(alley_crawl.to_dict(), alley_crawl_config)
+		else:
+			alley_crawl.fail_run()
+		_persist_alley_crawl()
 	
 	# Record match completion in persistent save manager
 	var fielded_cat_damages := {}
@@ -763,7 +833,7 @@ func _show_results_dialog(won: bool) -> void:
 
 	var levels_data = _load_json("res://content/levels.json")
 	var match_res: Dictionary = {}
-	if save_mgr != null:
+	if save_mgr != null and testing_lab == null and alley_crawl_session == null:
 		match_res = save_mgr.record_match_completion(
 			current_map_id,
 			sim.mode,
@@ -777,7 +847,7 @@ func _show_results_dialog(won: bool) -> void:
 
 	# Record match in Leaderboard Manager
 	var lead_res: Dictionary = {}
-	if lead_mgr != null:
+	if lead_mgr != null and testing_lab == null and alley_crawl_session == null:
 		var hero_id = sim.hero.id if sim.hero != null else "mittens"
 		var clean_sheet = sim.leak_history.is_empty()
 		var p_name = str(save_mgr.data.get("account", {}).get("keeper_name", "AlleyKeeper"))
@@ -833,7 +903,20 @@ func _show_results_dialog(won: bool) -> void:
 		if not unl_parts.is_empty():
 			unlock_lines.append("✨ Unlocked: " + ", ".join(unl_parts))
 
-	if unlock_lines.is_empty():
+	if testing_lab != null:
+		results_unlock_lbl.text = "Testing Lab: no progression or rewards recorded."
+	elif alley_crawl_session != null:
+		if alley_crawl.completed:
+			results_unlock_lbl.text = "Alley Crawl complete: +%d Fishcoin%s" % [int(crawl_reward.get("fishcoin", 0)), "" if crawl_reward.get("success", false) else " (already claimed)"]
+			results_retry_btn.text = "Begin New Crawl"
+		elif alley_crawl.failed:
+			results_unlock_lbl.text = "Alley Crawl ended. No completion reward was granted."
+			results_retry_btn.text = "Begin New Crawl"
+		else:
+			results_unlock_lbl.text = "District cleared. Choose a Relic and the next route."
+			results_modal.visible = false
+			_refresh_alley_crawl_panel(true)
+	elif unlock_lines.is_empty():
 		results_unlock_lbl.text = "Mastery & Progression: +%d Match XP recorded." % (sim.current_round * 25)
 	else:
 		results_unlock_lbl.text = "\n".join(unlock_lines)
@@ -862,13 +945,261 @@ func _setup_mode_select() -> void:
 	mode_select_btn.add_item("Night (80r)", SimConstants.GameMode.NIGHT)
 	mode_select_btn.add_item("Last Whisker", SimConstants.GameMode.LAST_WHISKER)
 	mode_select_btn.add_item("Bare Paw", SimConstants.GameMode.BARE_PAW)
+	mode_select_btn.add_item("Testing Lab", TESTING_LAB_MODE)
+	mode_select_btn.add_item("Alley Crawl", ALLEY_CRAWL_MODE)
 	mode_select_btn.selected = current_mode
 	mode_select_btn.item_selected.connect(_on_mode_selected)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(mode_select_btn)
 
 func _on_mode_selected(idx: int) -> void:
-	current_mode = idx
+	current_mode = mode_select_btn.get_item_id(idx)
 	_on_results_retry()
+
+func _ensure_alley_crawl_run(force_new: bool = false, explicit_seed: int = -1) -> void:
+	alley_crawl_config = _load_json("res://content/grand_expansion/alley_crawl.json")
+	var restored := false
+	if not force_new and save_mgr != null:
+		var stored := save_mgr.get_alley_crawl_run()
+		if not stored.is_empty():
+			var candidate := SimAlleyCrawl.new()
+			if candidate.load_from_dict(stored, alley_crawl_config) and not candidate.completed and not candidate.failed:
+				alley_crawl = candidate
+				restored = true
+	if not restored:
+		alley_crawl = SimAlleyCrawl.new()
+		var run_seed := explicit_seed if explicit_seed >= 0 else int(Time.get_unix_time_from_system())
+		alley_crawl.setup(run_seed, alley_crawl_config)
+		_persist_alley_crawl()
+
+func _persist_alley_crawl() -> void:
+	if save_mgr == null or alley_crawl == null:
+		return
+	save_mgr.store_alley_crawl_run(alley_crawl.to_dict())
+	save_mgr.save_profile()
+
+func _setup_alley_crawl_panel() -> void:
+	crawl_panel = PanelContainer.new()
+	crawl_panel.position = Vector2(250, 105)
+	crawl_panel.custom_minimum_size = Vector2(780, 440)
+	$CanvasLayer/HUD.add_child(crawl_panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	crawl_panel.add_child(box)
+	crawl_title = Label.new()
+	crawl_title.add_theme_font_size_override("font_size", 26)
+	crawl_title.text = "Alley Crawl"
+	box.add_child(crawl_title)
+	crawl_details = Label.new()
+	crawl_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	crawl_details.custom_minimum_size = Vector2(740, 95)
+	box.add_child(crawl_details)
+	var relic_heading := Label.new()
+	relic_heading.text = "Choose one Relic"
+	box.add_child(relic_heading)
+	crawl_relic_box = HBoxContainer.new()
+	crawl_relic_box.add_theme_constant_override("separation", 8)
+	box.add_child(crawl_relic_box)
+	crawl_take_curse = CheckButton.new()
+	crawl_take_curse.text = "Accept the shown Risk Curse for completion Fishcoin"
+	box.add_child(crawl_take_curse)
+	var next_heading := Label.new()
+	next_heading.text = "Choose the next district"
+	box.add_child(next_heading)
+	crawl_next_box = HBoxContainer.new()
+	crawl_next_box.add_theme_constant_override("separation", 8)
+	box.add_child(crawl_next_box)
+	var close := Button.new()
+	close.text = "Review later"
+	close.pressed.connect(func(): crawl_panel.visible = false)
+	box.add_child(close)
+	crawl_panel.visible = false
+
+func _clear_control_children(container: Control) -> void:
+	for child in container.get_children():
+		child.queue_free()
+
+func _signed_value(value: float) -> String:
+	return ("+" if value >= 0.0 else "") + str(value)
+
+func _refresh_alley_crawl_panel(show_panel: bool = true) -> void:
+	if crawl_panel == null:
+		return
+	if current_mode != ALLEY_CRAWL_MODE or alley_crawl == null:
+		crawl_panel.visible = false
+		return
+	var node := alley_crawl.get_current_node()
+	var modifier_names: Array[String] = []
+	for modifier_id in node.get("modifiers", []):
+		modifier_names.append(str(alley_crawl_config.get("modifiers", {}).get(modifier_id, {}).get("name", modifier_id)))
+	crawl_title.text = "Alley Crawl — District %d of %d" % [alley_crawl.current_stage + 1, alley_crawl.stage_count]
+	crawl_details.text = "Map: %s\nModifiers: %s\nBanked starter Kibble: %d\nRelics: %s\nCurses: %s" % [
+		str(node.get("map_id", "")).capitalize(),
+		"None" if modifier_names.is_empty() else ", ".join(modifier_names),
+		alley_crawl.banked_kibble,
+		"None" if alley_crawl.relics.is_empty() else ", ".join(alley_crawl.relics),
+		"None" if alley_crawl.curses.is_empty() else ", ".join(alley_crawl.curses)
+	]
+	_clear_control_children(crawl_relic_box)
+	for relic_id in alley_crawl.pending_relic_offer:
+		var definition: Dictionary = alley_crawl_config.get("relics", {}).get(relic_id, {})
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(225, 70)
+		button.text = "%s\n%s %s" % [definition.get("name", relic_id), definition.get("effect", "effect"), _signed_value(float(definition.get("value", 0.0)))]
+		button.pressed.connect(_choose_crawl_relic.bind(relic_id))
+		crawl_relic_box.add_child(button)
+	crawl_take_curse.visible = not alley_crawl.pending_curse_offer.is_empty() and not alley_crawl.pending_relic_offer.is_empty()
+	if crawl_take_curse.visible:
+		var curse: Dictionary = alley_crawl_config.get("curses", {}).get(alley_crawl.pending_curse_offer, {})
+		crawl_take_curse.text = "Accept %s (%s %s) for +%d Fishcoin on completion" % [curse.get("name", "Risk Curse"), curse.get("effect", "effect"), _signed_value(float(curse.get("value", 0.0))), int(curse.get("fishcoin", 0))]
+		crawl_take_curse.set_pressed_no_signal(false)
+	_clear_control_children(crawl_next_box)
+	if alley_crawl.pending_relic_offer.is_empty() and not alley_crawl.completed:
+		for next_node in alley_crawl.get_next_nodes():
+			var button := Button.new()
+			button.custom_minimum_size = Vector2(260, 64)
+			button.text = "%s\n%s" % [str(next_node.get("map_id", "")).capitalize(), ", ".join(next_node.get("modifiers", []))]
+			button.pressed.connect(_choose_crawl_node.bind(str(next_node.id)))
+			crawl_next_box.add_child(button)
+	if show_panel:
+		crawl_panel.visible = true
+
+func _choose_crawl_relic(relic_id: String) -> void:
+	if alley_crawl != null and alley_crawl.choose_relic(relic_id, crawl_take_curse.button_pressed):
+		_persist_alley_crawl()
+		_refresh_alley_crawl_panel()
+
+func _choose_crawl_node(node_id: String) -> void:
+	if alley_crawl != null and alley_crawl.choose_next_node(node_id):
+		_persist_alley_crawl()
+		crawl_panel.visible = false
+		_init_simulation()
+		_update_ui()
+
+func _setup_testing_lab_controls() -> void:
+	lab_panel = PanelContainer.new()
+	lab_panel.position = Vector2(12, 104)
+	lab_panel.custom_minimum_size = Vector2(195, 0)
+	$CanvasLayer/HUD.add_child(lab_panel)
+	var box := VBoxContainer.new()
+	lab_panel.add_child(box)
+	var title := Label.new()
+	title.text = "Testing Lab (no rewards)"
+	box.add_child(title)
+	var unlimited := CheckButton.new()
+	unlimited.text = "Unlimited Kibble"
+	unlimited.toggled.connect(func(value: bool):
+		if testing_lab != null:
+			testing_lab.set_unlimited_kibble(value)
+	)
+	box.add_child(unlimited)
+	var pause := CheckButton.new()
+	pause.text = "Freeze simulation"
+	pause.toggled.connect(func(value: bool):
+		if testing_lab != null:
+			testing_lab.set_paused(value)
+	)
+	box.add_child(pause)
+	var step_btn := Button.new()
+	step_btn.text = "Step one tick"
+	step_btn.pressed.connect(func():
+		if testing_lab != null:
+			_lab_message("Advanced one tick" if testing_lab.step() else "Freeze the simulation first")
+	)
+	box.add_child(step_btn)
+	lab_round = SpinBox.new()
+	lab_round.min_value = 1
+	lab_round.max_value = 100
+	lab_round.step = 1
+	lab_round.value = 1
+	lab_round.tooltip_text = "Authored round number"
+	box.add_child(lab_round)
+	var round_btn := Button.new()
+	round_btn.text = "Start selected round"
+	round_btn.pressed.connect(func():
+		if testing_lab != null:
+			_lab_message("Round started" if testing_lab.start_round(int(lab_round.value)) else "Round unavailable or already active")
+	)
+	box.add_child(round_btn)
+	lab_enemy = OptionButton.new()
+	box.add_child(lab_enemy)
+	lab_path = OptionButton.new()
+	box.add_child(lab_path)
+	var spawn := Button.new()
+	spawn.text = "Spawn enemy"
+	spawn.pressed.connect(func():
+		if testing_lab != null and lab_enemy.selected >= 0 and lab_path.selected >= 0:
+			var item: Dictionary = lab_enemy.get_item_metadata(lab_enemy.selected)
+			_lab_message("Enemy spawned" if testing_lab.spawn_enemy(item.kind, item.id, lab_path.selected) else "Enemy could not be spawned")
+	)
+	box.add_child(spawn)
+	var dps_reset := Button.new()
+	dps_reset.text = "Reset DPS sample"
+	dps_reset.pressed.connect(func():
+		if testing_lab != null:
+			testing_lab.reset_dps_sample()
+	)
+	box.add_child(dps_reset)
+	lab_dps_label = Label.new()
+	lab_dps_label.text = "DPS: unavailable (0 ticks)"
+	box.add_child(lab_dps_label)
+	for overlay in [
+		{"label": "Show Land mask", "kind": "land"},
+		{"label": "Show Water mask", "kind": "water"},
+		{"label": "Show Perch mask", "kind": "perch"},
+		{"label": "Show Blockers", "kind": "blocker"},
+		{"label": "Show Path ribbon", "kind": "path"}
+	]:
+		var toggle := CheckButton.new()
+		toggle.text = overlay.label
+		toggle.toggled.connect(_set_lab_overlay.bind(str(overlay.kind)))
+		box.add_child(toggle)
+	lab_status = Label.new()
+	lab_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(lab_status)
+	_refresh_testing_lab_controls()
+
+func _lab_message(message: String) -> void:
+	if lab_status != null:
+		lab_status.text = message
+
+func _set_lab_overlay(enabled: bool, kind: String) -> void:
+	match kind:
+		"land": lab_overlay_land = enabled
+		"water": lab_overlay_water = enabled
+		"perch": lab_overlay_perch = enabled
+		"blocker": lab_overlay_blocker = enabled
+		"path": lab_overlay_path = enabled
+	queue_redraw()
+
+func _refresh_testing_lab_controls() -> void:
+	if lab_panel == null:
+		return
+	lab_panel.visible = testing_lab != null
+	if testing_lab == null:
+		return
+	# Rebuild controls on every new lab match so no stale setting is shown.
+	for child in lab_panel.get_child(0).get_children():
+		if child is CheckButton:
+			child.set_pressed_no_signal(false)
+	lab_overlay_land = false
+	lab_overlay_water = false
+	lab_overlay_perch = false
+	lab_overlay_blocker = false
+	lab_overlay_path = false
+	lab_round.max_value = sim.max_rounds
+	lab_round.value = 1
+	lab_enemy.clear()
+	for kind in ["mouse", "rat"]:
+		var entries: Dictionary = sim.mice_data.get("coats", {}) if kind == "mouse" else sim.rats_data.get("rats", {})
+		var ids: Array = entries.keys()
+		ids.sort()
+		for id in ids:
+			lab_enemy.add_item("%s: %s" % [kind.capitalize(), str(id).capitalize()])
+			lab_enemy.set_item_metadata(lab_enemy.item_count - 1, {"kind": kind, "id": str(id)})
+	lab_path.clear()
+	for i in range(sim.paths.size()):
+		lab_path.add_item("Path %d: %s" % [i + 1, str(sim.paths[i].get("id", ""))])
+	_lab_message("Lab sessions do not grant rewards.")
 
 func _setup_top_bar_extra_buttons() -> void:
 	auto_wave_btn = Button.new()
@@ -1073,6 +1404,8 @@ func _on_results_retry() -> void:
 	match_paused = false
 	inspector_panel.visible = false
 	previous_unit_s.clear()
+	if current_mode == ALLEY_CRAWL_MODE and alley_crawl != null and (alley_crawl.completed or alley_crawl.failed):
+		_ensure_alley_crawl_run(true)
 	_init_simulation(current_map_id)
 	_update_ui()
 	queue_redraw()
@@ -1193,7 +1526,10 @@ func _physics_process(_delta: float) -> void:
 	# Tick according to speed multiplier
 	if not feat_modal.visible and not match_paused:
 		for _i in range(game_speed):
-			sim.tick()
+			if testing_lab != null:
+				testing_lab.advance()
+			else:
+				sim.tick()
 	for unit in sim.units:
 		if not previous_unit_s.has(unit.id):
 			previous_unit_s[unit.id] = unit.s
@@ -1202,7 +1538,7 @@ func _physics_process(_delta: float) -> void:
 	# Check if round just finished and feats are pending
 	if not sim.round_in_progress and not feat_modal.visible:
 		_check_pending_feats()
-		if auto_wave_enabled and not match_paused and not sim.match_won and not sim.match_lost and not (results_modal != null and results_modal.visible):
+		if auto_wave_enabled and testing_lab == null and not match_paused and not sim.match_won and not sim.match_lost and not (results_modal != null and results_modal.visible):
 			if auto_start_timer < 0.0:
 				auto_start_timer = auto_wave_delay
 			else:
@@ -1349,7 +1685,7 @@ func _input(event: InputEvent) -> void:
 			if coop_mode_active:
 				_toggle_coop_player()
 		elif event.keycode == KEY_ESCAPE:
-			if placing_cat_id != "" or selected_tower != null or selected_is_hero:
+			if brew_selecting_source != null or placing_cat_id != "" or selected_tower != null or selected_is_hero:
 				_cancel_placement_or_selection()
 			else:
 				_toggle_pause()
@@ -1391,6 +1727,18 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 	if screen_pos.y > 600 or screen_pos.x > 970 or screen_pos.y < 65:
 		return
 	var click_pos := _screen_to_world(screen_pos)
+
+	if brew_selecting_source != null:
+		for candidate in sim.towers:
+			if click_pos.distance_to(candidate.position) <= candidate.footprint_radius + 6.0:
+				if sim.assign_brew(brew_selecting_source, candidate):
+					var source := brew_selecting_source
+					brew_selecting_source = null
+					_select_tower(source)
+				else:
+					brew_target_btn.text = "Invalid target — choose a cat in range"
+				return
+		return
 		
 	if placing_cat_id != "":
 		# Attempt placement
@@ -1438,6 +1786,7 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 
 func _cancel_placement_or_selection() -> void:
 	placing_cat_id = ""
+	brew_selecting_source = null
 	_deselect_tower()
 
 func _on_dock_button_pressed(cat_id: String, is_hero: bool) -> void:
@@ -1468,6 +1817,15 @@ func _deselect_tower() -> void:
 	selected_is_hero = false
 	inspector_panel.visible = false
 	right_info_panel.visible = true
+	brew_target_btn.visible = false
+
+func _on_brew_target_pressed() -> void:
+	if selected_tower == null or selected_tower.cat_id != "bub":
+		return
+	brew_selecting_source = selected_tower
+	placing_cat_id = ""
+	brew_target_btn.text = "Choose a cat on the map (Esc cancels)"
+	queue_redraw()
 
 func _update_inspector() -> void:
 	if selected_tower != null:
@@ -1502,6 +1860,15 @@ func _update_inspector() -> void:
 			]
 			if selected_tower.cat_id == "pudding" and selected_tower.freeze_assists > 0:
 				stats_lbl.text += " | Freeze Assists: %d" % selected_tower.freeze_assists
+			elif selected_tower.cat_id == "bub":
+				var bub_base: Dictionary = selected_tower.cat_data.get("base", {})
+				var corrosion_dps := sim._cat_tier_value(selected_tower, "corrosion_dps", float(bub_base.get("corrosion_dps", 1.0)))
+				var corrosion_duration := sim._cat_tier_value(selected_tower, "corrosion_duration", float(bub_base.get("corrosion_duration", 3.0))) + selected_tower.corrosion_duration_bonus
+				stats_lbl.text += "\nCorrosion: %.1f DPS / %.1fs" % [corrosion_dps, corrosion_duration]
+				var midas_cap := int(sim._cat_tier_value(selected_tower, "midas_cap")) + selected_tower.midas_cap_bonus
+				if midas_cap > 0:
+					var midas_ratio := sim._cat_tier_value(selected_tower, "midas_ratio") + selected_tower.midas_ratio_bonus
+					stats_lbl.text += " | Midas: %d%% (%d/%d)" % [int(round(midas_ratio * 100.0)), selected_tower.midas_kibble_this_round, midas_cap]
 		
 		var next_xp = SimFeats.THRESHOLD_I
 		if selected_tower.feat_rank == 1:
@@ -1511,6 +1878,15 @@ func _update_inspector() -> void:
 		feat_status_lbl.text = "Feat Rank: %d (XP: %d / %d)" % [selected_tower.feat_rank, int(selected_tower.feat_xp), next_xp]
 		
 		target_priority_btn.text = "Target: %s" % SimConstants.target_priority_to_string(selected_tower.target_priority)
+		var has_brew := selected_tower.cat_id == "bub" and int(selected_tower.tiers.get("path_b", 0)) >= 3
+		brew_target_btn.visible = has_brew
+		if has_brew:
+			var brew_target := sim._get_tower_by_id(selected_tower.brew_target_id)
+			if brew_selecting_source == selected_tower:
+				brew_target_btn.text = "Choose a cat on the map (Esc cancels)"
+			else:
+				brew_target_btn.text = "Reassign Brew: %s" % brew_target.cat_name if brew_target != null else "Select Brew Target"
+			brew_target_btn.disabled = sim.round_in_progress
 		
 		_update_upgrade_btn(path_a_btn, "path_a")
 		_update_upgrade_btn(path_b_btn, "path_b")
@@ -1533,6 +1909,7 @@ func _update_inspector() -> void:
 		path_a_btn.visible = false
 		path_b_btn.visible = false
 		path_c_btn.visible = false
+		brew_target_btn.visible = false
 		
 		var ability_1: Dictionary = h.hero_data.get("active_abilities", {}).get("ability_1", {})
 		ability1_btn.text = "%s (Lvl 3)" % ability_1.get("name", "Ability 1") if h.level >= 3 else "Locked until Lvl 3"
@@ -1549,6 +1926,7 @@ func _update_inspector() -> void:
 		path_a_btn.visible = true
 		path_b_btn.visible = true
 		path_c_btn.visible = true
+		brew_target_btn.visible = false
 
 func _get_mastery_text(_cat_id: String) -> String:
 	return "Mastery Rank 1 (Next: Rank 2 at 400 XP -> Unlocks Tier 3)"
@@ -1724,7 +2102,8 @@ func _on_start_round_pressed() -> void:
 		if match_paused:
 			_toggle_pause()
 			return
-		sim.start_next_round()
+		if sim.start_next_round():
+			brew_selecting_source = null
 		_update_ui()
 
 func _update_ui() -> void:
@@ -1732,8 +2111,14 @@ func _update_ui() -> void:
 		return
 	_update_profile_badge()
 	lives_label.text = "%s: %d" % [_t("ui.lives", "Lives"), sim.lives]
-	kibble_label.text = "%s: %d" % [_t("ui.kibble", "Kibble"), sim.economy.kibble]
-	round_label.text = "%s: %d / %d (%s)" % [_t("ui.round", "Round"), sim.current_round, sim.max_rounds, _t("map.%s" % current_map_id, current_map_id.capitalize())]
+	kibble_label.text = "%s: %s" % [_t("ui.kibble", "Kibble"), "Unlimited" if sim.economy.unlimited_kibble else str(sim.economy.kibble)]
+	if testing_lab != null and lab_dps_label != null:
+		var sample := testing_lab.get_dps_sample()
+		lab_dps_label.text = "DPS: unavailable (0 ticks)" if int(sample.elapsed_ticks) <= 0 else "DPS: %.1f | HP: %d | Ticks: %d" % [float(sample.dps), int(sample.hp_removed), int(sample.elapsed_ticks)]
+	var crawl_prefix := "District %d/%d · " % [alley_crawl.current_stage + 1, alley_crawl.stage_count] if alley_crawl_session != null else ""
+	round_label.text = "%s%s: %d / %d (%s)" % [crawl_prefix, _t("ui.round", "Round"), sim.current_round, sim.max_rounds, _t("map.%s" % current_map_id, current_map_id.capitalize())]
+	if map_select_btn != null:
+		map_select_btn.disabled = alley_crawl_session != null
 	_update_wave_strip()
 	_update_hero_commander_panel()
 	if not sim.round_in_progress and not match_paused:
@@ -1818,13 +2203,62 @@ func _draw() -> void:
 		return
 	if world_drawer != null:
 		world_drawer.draw_world(self, grass_tex, cobble_tex, prop_sprites, sim)
+	if testing_lab != null:
+		_draw_lab_overlays()
 	var displayed_s: Dictionary = {}
 	for unit in sim.units:
 		displayed_s[unit.id] = lerpf(float(previous_unit_s.get(unit.id, unit.s)), unit.s, interpolation_alpha)
 	actor_drawer.draw_actors(self, sim, displayed_s, selected_tower, selected_is_hero, cat_sprites, mouse_sprites, rat_sprites)
+	_draw_brew_targets()
 	if combat_vfx != null:
 		combat_vfx.draw(self)
 	_draw_placement_preview()
+
+func _draw_lab_overlays() -> void:
+	var colors := {
+		"land": Color(0.25, 0.85, 0.30, 0.14),
+		"water": Color(0.20, 0.65, 1.00, 0.25),
+		"perches": Color(1.00, 0.75, 0.20, 0.28)
+	}
+	for entry in [
+		{"enabled": lab_overlay_land, "key": "land"},
+		{"enabled": lab_overlay_water, "key": "water"},
+		{"enabled": lab_overlay_perch, "key": "perches"}
+	]:
+		if not bool(entry.enabled):
+			continue
+		for zone in sim.placement_zones.get(entry.key, []):
+			if not (zone is Dictionary):
+				continue
+			var color: Color = colors[entry.key]
+			if zone.has("radius"):
+				draw_circle(Vector2(float(zone.get("x", 0.0)), float(zone.get("y", 0.0))), float(zone.get("radius", 0.0)), color)
+			else:
+				draw_rect(Rect2(float(zone.get("x", 0.0)), float(zone.get("y", 0.0)), float(zone.get("width", 0.0)), float(zone.get("height", 0.0))), color, true)
+	if lab_overlay_blocker:
+		for blocker in sim.sight_blockers:
+			draw_rect(blocker, Color(0.95, 0.20, 0.20, 0.35), true)
+		for obstacle in sim.get_removable_obstacles():
+			var base: Dictionary = obstacle.get("base", {})
+			draw_rect(Rect2(float(base.get("x", 0.0)), float(base.get("y", 0.0)), float(base.get("width", 0.0)), float(base.get("height", 0.0))), Color(0.95, 0.20, 0.20, 0.35), true)
+	if lab_overlay_path:
+		var ribbon_width := float(sim.map_data.get("path_width", 40.0))
+		for path_info in sim.paths:
+			var points := PackedVector2Array()
+			for point in path_info.get("points", []):
+				points.append(point)
+			if points.size() >= 2:
+				draw_polyline(points, Color(0.95, 0.25, 0.80, 0.42), ribbon_width, true)
+
+func _draw_brew_targets() -> void:
+	if brew_selecting_source == null:
+		return
+	draw_arc(brew_selecting_source.position, brew_selecting_source.get_effective_range(), 0, TAU, 48, Color("88e09a"), 2.0)
+	for candidate in sim.towers:
+		if candidate == brew_selecting_source:
+			continue
+		var allowed := bool(sim.can_assign_brew(brew_selecting_source, candidate).get("allowed", false))
+		draw_arc(candidate.position, candidate.footprint_radius + 8.0, 0, TAU, 24, Color("79e68f") if allowed else Color("9b5555"), 2.5)
 
 func _path_points() -> PackedVector2Array:
 	return PackedVector2Array([

@@ -1,0 +1,57 @@
+﻿extends SceneTree
+
+const SimMatch = preload("res://sim/match.gd")
+const TestingLab = preload("res://sim/testing_lab.gd")
+const Constants = preload("res://sim/constants.gd")
+
+func read_data(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	return data if data is Dictionary else {}
+
+func _init() -> void:
+	var sim := SimMatch.new()
+	sim.setup(Constants.GameMode.SUNNY, 123, read_data("res://content/mice.json"), read_data("res://content/rats.json"), {}, {}, read_data("res://content/rounds/sunny.json"))
+	var lab := TestingLab.new()
+	assert(lab.setup(sim))
+	var original := sim.economy.kibble
+	lab.set_unlimited_kibble(true)
+	assert(sim.economy.spend(original + 100))
+	assert(sim.economy.kibble == original)
+	assert(not sim.economy.spend(-1))
+	lab.set_unlimited_kibble(false)
+	assert(not sim.economy.spend(original + 1))
+	assert(not lab.start_round(999))
+	assert(lab.start_round(5) and sim.current_round == 5)
+	assert(not lab.start_round(4))
+	assert(not lab.spawn_enemy("mouse", "missing"))
+	assert(not lab.spawn_enemy("rat", "matriarch", -1))
+	assert(lab.spawn_enemy("mouse", "rust"))
+	assert(lab.spawn_enemy("rat", "matriarch"))
+	lab.reset_dps_sample()
+	sim.total_hp_removed = 15
+	sim.tick_counter = 30
+	var sample := lab.get_dps_sample()
+	assert(sample.hp_removed == 15 and is_equal_approx(sample.dps, 15.0))
+	lab.set_paused(true)
+	lab.advance()
+	assert(sim.tick_counter == 30)
+	assert(lab.step() and sim.tick_counter == 31)
+	lab.set_paused(false)
+	assert(not lab.step())
+	lab.advance()
+	assert(sim.tick_counter == 32)
+	assert(sim.replay.actions.any(func(action): return action.type == "lab_spawn"))
+	var replay_sim := SimMatch.new()
+	replay_sim.setup(Constants.GameMode.SUNNY, 123, read_data("res://content/mice.json"), read_data("res://content/rats.json"), {}, {}, read_data("res://content/rounds/sunny.json"))
+	var replay_lab := TestingLab.new()
+	assert(replay_lab.setup(replay_sim))
+	assert(replay_lab.apply_replay_action({"type": "lab_unlimited_kibble", "payload": {"enabled": true}}))
+	assert(replay_lab.apply_replay_action({"type": "lab_spawn", "payload": {"kind": "mouse", "id": "rust", "path_index": 0}}))
+	assert(replay_sim.economy.unlimited_kibble and replay_sim.units.size() == 1)
+	assert(replay_sim.replay.actions.is_empty(), "Playback must not duplicate recorded actions")
+	var standard := SimMatch.new()
+	standard.setup(Constants.GameMode.SUNNY, 123, {}, {}, {}, {}, {})
+	assert(not standard.economy.unlimited_kibble)
+	print("[PASS] Isolated testing lab controls and standard economy")
+	quit(0)

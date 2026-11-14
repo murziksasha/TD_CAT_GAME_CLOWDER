@@ -11,6 +11,13 @@ var slows: Array[Dictionary] = [] # {"factor": 0.5, "time": 2.0}
 var burn_dps: float = 0.0
 var burn_time: float = 0.0
 var burn_type: int = SimConstants.DamageType.BITE
+var burn_source_id: int = -1
+var burn_accumulator: float = 0.0
+
+var corrosion_dps: float = 0.0
+var corrosion_time: float = 0.0
+var corrosion_source_id: int = -1
+var corrosion_accumulator: float = 0.0
 
 var mark_bonus: int = 0
 var mark_time: float = 0.0
@@ -18,6 +25,8 @@ var mark_time: float = 0.0
 var hex_dps: float = 0.0
 var hex_time: float = 0.0
 var hex_spread_count: int = 0
+var hex_source_id: int = -1
+var hex_accumulator: float = 0.0
 
 var knockback_this_second: float = 0.0
 var knockback_window: float = 0.0
@@ -51,19 +60,41 @@ func apply_slow(factor: float, duration: float) -> bool:
 	slows.append({"factor": clampf(factor, 0.05, 1.0), "time": duration})
 	return duration > 0.0
 
-func apply_burn(dps: float, duration: float, type: int = SimConstants.DamageType.BITE) -> void:
+func apply_burn(dps: float, duration: float, type: int = SimConstants.DamageType.BITE, source_id: int = -1) -> void:
 	var final_dps = dps
 	if is_matriarch:
 		final_dps = minf(final_dps, 15.0)
 	elif rat_type == "monarch" or rat_type == "bristle" or rat_type == "burrow":
 		final_dps = minf(final_dps, 40.0)
 	
-	if final_dps >= burn_dps:
+	if final_dps > burn_dps:
+		burn_accumulator = 0.0
 		burn_dps = final_dps
 		burn_type = type
+		burn_source_id = source_id
+		burn_time = max(burn_time, duration)
+	elif is_equal_approx(final_dps, burn_dps):
+		burn_type = type
+		burn_source_id = source_id
 		burn_time = max(burn_time, duration)
 	else:
 		burn_time = max(burn_time, duration)
+
+func apply_corrosion(dps: float, duration: float, source_id: int = -1) -> void:
+	var final_dps := dps
+	if is_matriarch:
+		final_dps = minf(final_dps, 15.0)
+	elif rat_type in ["monarch", "bristle", "burrow", "dusk"]:
+		final_dps = minf(final_dps, 40.0)
+	if final_dps > corrosion_dps:
+		corrosion_accumulator = 0.0
+		corrosion_dps = final_dps
+		corrosion_source_id = source_id
+		corrosion_time = maxf(corrosion_time, duration)
+	elif is_equal_approx(final_dps, corrosion_dps):
+		corrosion_time = maxf(corrosion_time, duration)
+	else:
+		corrosion_time = maxf(corrosion_time, duration)
 
 func apply_mark(bonus: int, duration: float) -> void:
 	var final_bonus = bonus
@@ -78,16 +109,19 @@ func apply_mark(bonus: int, duration: float) -> void:
 	elif final_bonus == mark_bonus:
 		mark_time = max(mark_time, final_dur)
 
-func apply_hex(total_damage: float, duration: float, spread: int = 0) -> void:
+func apply_hex(total_damage: float, duration: float, spread: int = 0, source_id: int = -1) -> void:
 	var final_dmg = total_damage
 	if is_matriarch:
 		final_dmg = minf(final_dmg, 20.0)
 		spread = 0
 	var dps = final_dmg / maxf(duration, 0.1)
 	if dps >= hex_dps:
+		if dps > hex_dps:
+			hex_accumulator = 0.0
 		hex_dps = dps
 		hex_time = max(hex_time, duration)
 		hex_spread_count = max(hex_spread_count, spread)
+		hex_source_id = source_id
 
 func can_apply_knockback(amount: float, cap_per_sec: float = 150.0) -> float:
 	if is_matriarch or rat_type == "monarch":
@@ -109,11 +143,7 @@ func get_speed_multiplier() -> float:
 	return min_factor
 
 func tick(delta: float) -> Dictionary:
-	var tick_result = {
-		"burn_damage": 0.0,
-		"burn_type": burn_type,
-		"hex_damage": 0.0
-	}
+	var damage_packets: Array[Dictionary] = []
 	
 	# Tick durations
 	if freeze_time > 0.0:
@@ -132,19 +162,45 @@ func tick(delta: float) -> Dictionary:
 	# Burn
 	if burn_time > 0.0:
 		var step = minf(delta, burn_time)
-		tick_result.burn_damage += burn_dps * step
+		burn_accumulator += burn_dps * step
+		var burn_damage := int(floor(burn_accumulator + 0.000001))
+		if burn_damage > 0:
+			burn_accumulator -= burn_damage
+			damage_packets.append({"amount": burn_damage, "damage_type": burn_type, "effect": "burn", "source_tower_id": burn_source_id})
 		burn_time -= delta
 		if burn_time <= 0.0:
 			burn_dps = 0.0
+			burn_source_id = -1
+			burn_accumulator = 0.0
+
+	# Corrosion is Acid damage, never a control effect.
+	if corrosion_time > 0.0:
+		var corrosion_step := minf(delta, corrosion_time)
+		corrosion_accumulator += corrosion_dps * corrosion_step
+		var acid_damage := int(floor(corrosion_accumulator + 0.000001))
+		if acid_damage > 0:
+			corrosion_accumulator -= acid_damage
+			damage_packets.append({"amount": acid_damage, "damage_type": SimConstants.DamageType.ACID, "effect": "corrosion", "source_tower_id": corrosion_source_id})
+		corrosion_time -= delta
+		if corrosion_time <= 0.0:
+			corrosion_dps = 0.0
+			corrosion_source_id = -1
+			corrosion_accumulator = 0.0
 			
 	# Hex
 	if hex_time > 0.0:
 		var step = minf(delta, hex_time)
-		tick_result.hex_damage += hex_dps * step
+		hex_accumulator += hex_dps * step
+		var hex_damage := int(floor(hex_accumulator + 0.000001))
+		if hex_damage > 0:
+			hex_accumulator -= hex_damage
+			damage_packets.append({"amount": hex_damage, "damage_type": SimConstants.DamageType.MAGIC, "effect": "hex", "source_tower_id": hex_source_id})
 		hex_time -= delta
 		if hex_time <= 0.0:
 			hex_dps = 0.0
 			hex_spread_count = 0
+			hex_source_id = -1
+			hex_accumulator = 0.0
 			
 	# Mark
 	if mark_time > 0.0:
@@ -158,5 +214,5 @@ func tick(delta: float) -> Dictionary:
 		knockback_window = 0.0
 		knockback_this_second = 0.0
 		
-	return tick_result
+	return {"damage_packets": damage_packets}
 

@@ -28,6 +28,9 @@ var pierce: int = 1
 var range_radius: float = 130.0
 var cooldown: float = 1.0
 var projectile_speed: float = 400.0
+var ruleset_range_mult: float = 0.0
+var ruleset_speed_mult: float = 0.0
+var ruleset_projectile_speed_mult: float = 0.0
 var see_shadow: bool = false
 var can_pop_iron: bool = false
 var full_track_range: bool = false
@@ -49,6 +52,14 @@ var aura_grant_night_eye: bool = false
 var aura_crit_bonus: float = 0.0
 var aura_sources: Array[int] = []
 
+# Persistent support received from Bub. Recomputed by SimMatch so it never
+# stacks additively with another Brew source.
+var brew_damage_bonus: int = 0
+var brew_range_mult: float = 0.0
+var brew_speed_mult: float = 0.0
+var brew_pierce_bonus: int = 0
+var brew_source_id: int = -1
+
 # Feat & Upgrade bonuses
 var bonus_vs_porcelain: int = 0
 var bonus_vs_rats: int = 0
@@ -66,10 +77,18 @@ var extra_round_kibble: int = 0
 var mark_duration_bonus: float = 0.0
 var burst_shot_interval: int = 5
 var cloud_duration_bonus: float = 0.0
+var corrosion_duration_bonus: float = 0.0
+var brew_primary_speed_bonus: float = 0.0
+var midas_ratio_bonus: float = 0.0
+var midas_cap_bonus: int = 0
 
 # Internal cooldown / attack tracking
 var attack_timer: float = 0.0
 var shot_counter: int = 0
+var successful_attacks: int = 0
+var brew_target_id: int = -1
+var midas_kibble_this_round: int = 0
+var midas_fraction: float = 0.0
 
 # Feats
 var feat_xp: float = 0.0
@@ -159,19 +178,37 @@ func apply_aura_buffs(
 	aura_sources = p_sources
 
 func get_effective_damage() -> int:
-	return damage + aura_damage_bonus
+	return damage + aura_damage_bonus + brew_damage_bonus
 
 func get_effective_pierce() -> int:
-	return pierce + aura_pierce_bonus
+	return pierce + aura_pierce_bonus + brew_pierce_bonus
 
 func get_effective_range() -> float:
-	return range_radius * (1.0 + aura_range_mult)
+	return range_radius * (1.0 + aura_range_mult + brew_range_mult + ruleset_range_mult)
 
 func get_effective_cooldown() -> float:
-	return cooldown / maxf(0.1, 1.0 + aura_speed_mult)
+	return cooldown / maxf(0.1, 1.0 + aura_speed_mult + brew_speed_mult + ruleset_speed_mult)
+
+func get_effective_projectile_speed() -> float:
+	return projectile_speed * maxf(0.1, 1.0 + ruleset_projectile_speed_mult)
 
 func get_effective_see_shadow() -> bool:
 	return see_shadow or aura_grant_night_eye
+
+func clear_brew_buff() -> void:
+	brew_damage_bonus = 0
+	brew_range_mult = 0.0
+	brew_speed_mult = 0.0
+	brew_pierce_bonus = 0
+	brew_source_id = -1
+
+func apply_brew_buff(damage_bonus: int, range_mult: float, speed_mult: float, pierce_bonus: int, source_id: int) -> void:
+	brew_damage_bonus = maxi(brew_damage_bonus, damage_bonus)
+	brew_range_mult = maxf(brew_range_mult, range_mult)
+	brew_speed_mult = maxf(brew_speed_mult, speed_mult)
+	brew_pierce_bonus = maxi(brew_pierce_bonus, pierce_bonus)
+	if brew_source_id < 0:
+		brew_source_id = source_id
 
 func apply_upgrade(path_key: String, cost_paid: int) -> bool:
 	if not can_upgrade(path_key):
@@ -253,6 +290,10 @@ func _recalculate_stats() -> void:
 	mark_duration_bonus = 0.0
 	burst_shot_interval = 5
 	cloud_duration_bonus = 0.0
+	corrosion_duration_bonus = 0.0
+	brew_primary_speed_bonus = 0.0
+	midas_ratio_bonus = 0.0
+	midas_cap_bonus = 0
 
 	# Apply Feat cards
 	for f in selected_feats:
@@ -262,6 +303,8 @@ func _recalculate_stats() -> void:
 			pierce += int(f["pierce_add"])
 		if f.has("range_mult"):
 			range_radius *= (1.0 + float(f["range_mult"]))
+		if f.has("range_add"):
+			range_radius += float(f["range_add"])
 		if f.has("speed_mult"):
 			cooldown /= maxf(0.1, (1.0 + float(f["speed_mult"])))
 		if f.has("grant_night_eye") and f["grant_night_eye"]:
@@ -298,6 +341,14 @@ func _recalculate_stats() -> void:
 			burst_shot_interval = int(f["burst_interval"])
 		if f.has("cloud_duration_bonus"):
 			cloud_duration_bonus += float(f["cloud_duration_bonus"])
+		if f.has("corrosion_duration_bonus"):
+			corrosion_duration_bonus += float(f["corrosion_duration_bonus"])
+		if f.has("brew_primary_speed_bonus"):
+			brew_primary_speed_bonus += float(f["brew_primary_speed_bonus"])
+		if f.has("midas_ratio_bonus"):
+			midas_ratio_bonus += float(f["midas_ratio_bonus"])
+		if f.has("midas_cap_bonus"):
+			midas_cap_bonus += int(f["midas_cap_bonus"])
 
 func tick_cooldown(delta: float) -> bool:
 	attack_timer -= delta

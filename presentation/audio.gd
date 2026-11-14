@@ -14,6 +14,7 @@ var last_played: Dictionary = {}
 var min_intervals: Dictionary = {
 	"pip_click": 0.04, "nibs_swipe": 0.05, "pudding_pulse": 0.12, "biscuit_thump": 0.08,
 	"sable_crack": 0.08, "nim_zap": 0.06, "goldie_net": 0.10, "miso_chime": 0.12,
+	"bub_clink": 0.08, "bub_hiss": 0.10,
 	"mittens_whistle": 0.10, "duchess_fan": 0.08, "baron_anchor": 0.12, "pebble_bell": 0.14,
 	"rust_pop": 0.035, "grain_pop": 0.035, "iron_clang": 0.06, "porcelain_pop": 0.05,
 	"slate_pop": 0.04, "moss_pop": 0.04, "sugar_pop": 0.04, "soot_pop": 0.05,
@@ -50,6 +51,7 @@ func note(event: Dictionary) -> void:
 				"nim": play("nim_zap", -1.0)
 				"goldie": play("goldie_net", -1.0)
 				"miso": play("miso_chime", -1.0)
+				"bub": play("bub_clink", -1.0)
 				"mittens": play("mittens_whistle", 0.0)
 				"duchess": play("duchess_fan", -2.0)
 				"baron": play("baron_anchor", 1.0)
@@ -60,6 +62,8 @@ func note(event: Dictionary) -> void:
 			play("nibs_swipe", -2.0)
 		"explosion":
 			play("biscuit_thump", 1.0)
+		"acid_splash", "acid_pool":
+			play("bub_hiss", -1.0)
 		"rat_enter":
 			var rat := str(event.get("rat", "")).to_lower()
 			if rat == "matriarch":
@@ -168,6 +172,16 @@ func _synthesize_all_sounds() -> void:
 		var env: float = exp(-t * 12.0) * (1.0 - t / d)
 		var chime: float = sin(TAU * 1046.5 * t) * 0.5 + sin(TAU * 1568.0 * t) * 0.35 + sin(TAU * 2093.0 * t) * 0.15
 		return chime * env
+	)
+	streams["bub_clink"] = _build_sound(0.10, func(t: float, d: float) -> float:
+		var env: float = exp(-t * 28.0) * (1.0 - t / d)
+		return (sin(TAU * 1900.0 * t) * 0.55 + sin(TAU * 2850.0 * t) * 0.30 + randf_range(-1.0, 1.0) * 0.15) * env
+	)
+	streams["bub_hiss"] = _build_sound(0.20, func(t: float, d: float) -> float:
+		var env: float = sin(PI * (t / d)) * exp(-t * 5.0)
+		var fizz: float = randf_range(-1.0, 1.0) * 0.65
+		var bubble: float = sin(TAU * (180.0 + 120.0 * t / d) * t) * 0.35
+		return (fizz + bubble) * env
 	)
 
 	# Group 4 Heroes

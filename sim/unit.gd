@@ -296,18 +296,17 @@ func _transition_to_child(new_coat: String, shadow: bool, gnaw: bool, plated: bo
 	_apply_mouse_coat_data(new_coat)
 
 func tick(delta: float) -> Dictionary:
-	var tick_res = status.tick(delta)
-	
+	var tick_res := tick_status(delta)
+	tick_movement(delta)
+	return tick_res
+
+func tick_status(delta: float) -> Dictionary:
+	var tick_res := status.tick(delta)
 	if revealed_timer > 0.0:
 		revealed_timer = maxf(0.0, revealed_timer - delta)
-		
-	# Apply DoTs from status
-	if is_alive:
-		if tick_res.burn_damage > 0.0:
-			hit(int(ceil(tick_res.burn_damage)), tick_res.burn_type)
-		if is_alive and tick_res.hex_damage > 0.0:
-			hit(int(ceil(tick_res.hex_damage)), SimConstants.DamageType.MAGIC)
-			
+	return tick_res
+
+func tick_movement(delta: float) -> void:
 	# Gnaw regrow logic
 	if is_alive and not is_rat and is_gnaw and gnaw_regrows_left > 0:
 		var cur_speed_mult = status.get_speed_multiplier()
@@ -322,8 +321,6 @@ func tick(delta: float) -> Dictionary:
 	if is_alive:
 		var actual_speed = base_speed * status.get_speed_multiplier()
 		s += actual_speed * delta
-		
-	return tick_res
 
 func _try_gnaw_regrow() -> void:
 	if unit_type == spawn_coat:

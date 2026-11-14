@@ -14,7 +14,26 @@ func _init() -> void:
 	assert(def["account"]["level"] == 1, "Initial level must be 1")
 	assert(def["economy"]["fishcoin"] == 0, "Initial fishcoin must be 0")
 	assert(def["economy"]["golden_bones"] == 0, "Initial golden bones must be 0")
+	assert(def["expansion_runs"]["alley_crawl"] == null, "No Alley Crawl is active on a fresh profile")
 	print("[PASS] Default profile schema verified")
+
+	var crawl_state := {"schema_version": 1, "seed": 7711, "current_stage": 2}
+	assert(mgr.store_alley_crawl_run(crawl_state))
+	var loaded_crawl := mgr.get_alley_crawl_run()
+	assert(loaded_crawl == crawl_state)
+	loaded_crawl["current_stage"] = 9
+	assert(mgr.get_alley_crawl_run().current_stage == 2, "Callers cannot mutate stored run state by reference")
+	mgr.clear_alley_crawl_run()
+	assert(mgr.get_alley_crawl_run().is_empty())
+	assert(not mgr.store_alley_crawl_run({"schema_version": 99}))
+	var reward_config := {"completion_fishcoin": 20, "curse_fishcoin_cap": 40, "curses": {"risk": {"fishcoin": 12}}}
+	var reward_run := {"completed": true, "generator_version": 1, "seed": 123, "curses": ["risk"]}
+	var fish_before_crawl := int(mgr.data.economy.fishcoin)
+	var crawl_reward := mgr.claim_alley_crawl_completion(reward_run, reward_config)
+	assert(crawl_reward.success and crawl_reward.fishcoin == 32)
+	assert(int(mgr.data.economy.fishcoin) == fish_before_crawl + 32)
+	assert(not mgr.claim_alley_crawl_completion(reward_run, reward_config).success, "Crawl result pays once")
+	print("[PASS] Alley Crawl run persistence is versioned and copy-safe")
 
 	# 2. TEST SAVE & LOAD INTEGRITY
 	assert(mgr.save_profile(), "save_profile must succeed")

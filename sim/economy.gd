@@ -5,14 +5,19 @@ extends RefCounted
 const SimConstants = preload("res://sim/constants.gd")
 
 var kibble: int = 650
+# Enabled only by the isolated testing lab; ordinary matches always start false.
+var unlimited_kibble: bool = false
 var mode: int = SimConstants.GameMode.ALLEY
 var mode_price_multiplier: float = 1.00
 var allow_selling: bool = true
 var sell_refund_ratio: float = 0.70
 var discount_floor_ratio: float = 0.60 # Can be improved to 0.55 via Den insight
+var ruleset_pop_income_multiplier: float = 1.0
 
 func setup(p_mode: int, start_kibble_bonus: int = 0, clean_sell: bool = false) -> void:
 	mode = p_mode
+	unlimited_kibble = false
+	ruleset_pop_income_multiplier = 1.0
 	match mode:
 		SimConstants.GameMode.SUNNY:
 			kibble = 850 + start_kibble_bonus
@@ -53,7 +58,7 @@ func get_pop_income_rate(round_num: int) -> float:
 
 func add_pop_damage(hp_removed: int, round_num: int, shell_bounty: int = 0) -> int:
 	var rate = get_pop_income_rate(round_num)
-	var earned = int(floor(hp_removed * rate)) + shell_bounty
+	var earned = int(floor(hp_removed * rate * ruleset_pop_income_multiplier)) + shell_bounty
 	kibble += earned
 	return earned
 
@@ -73,9 +78,13 @@ func calculate_price(base_cost: int, discounts: Array[float] = []) -> int:
 	return int(round(maxf(discounted, floor_price)))
 
 func can_afford(cost: int) -> bool:
-	return kibble >= cost
+	return cost >= 0 and (unlimited_kibble or kibble >= cost)
 
 func spend(amount: int) -> bool:
+	if amount < 0:
+		return false
+	if unlimited_kibble:
+		return true
 	if kibble >= amount:
 		kibble -= amount
 		return true

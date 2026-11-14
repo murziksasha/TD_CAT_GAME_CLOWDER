@@ -80,6 +80,14 @@ const CAT_CARDS: Dictionary = {
 		{"id": "miso_warm_hearth", "name": "Warm Hearth", "desc": "+1 pierce in aura", "pierce_add": 1, "weight": 10, "req_path": "path_b", "min_tier": 2},
 		{"id": "miso_loyal_customer", "name": "Loyal Customer", "desc": "5% higher aura discount", "thrifty_discount": 0.05, "weight": 12, "req_path": "path_c", "min_tier": 1},
 		{"id": "miso_quick_whisk", "name": "Quick Whisk", "desc": "Bell cooldown -10%", "speed_mult": 0.10, "weight": 10, "req_path": "path_c", "min_tier": 2}
+	],
+	"bub": [
+		{"id": "bub_thick_glass", "name": "Thick Glass", "desc": "+1 flask pierce", "pierce_add": 1, "weight": 12, "req_path": "path_a", "min_tier": 1},
+		{"id": "bub_lingering_fizz", "name": "Lingering Fizz", "desc": "+1s corrosion duration", "corrosion_duration_bonus": 1.0, "weight": 10, "req_path": "path_a", "min_tier": 2},
+		{"id": "bub_longer_ladle", "name": "Longer Ladle", "desc": "+15 range", "range_add": 15.0, "weight": 12, "req_path": "path_b", "min_tier": 1},
+		{"id": "bub_extra_pinch", "name": "Extra Pinch", "desc": "+5% primary Brew speed", "brew_primary_speed_bonus": 0.05, "weight": 10, "req_path": "path_b", "min_tier": 2},
+		{"id": "bub_fine_filter", "name": "Fine Filter", "desc": "+2% Midas conversion", "midas_ratio_bonus": 0.02, "weight": 12, "req_path": "path_c", "min_tier": 1},
+		{"id": "bub_deep_pockets", "name": "Deep Pockets", "desc": "+75 Midas cap", "midas_cap_bonus": 75, "weight": 10, "req_path": "path_c", "min_tier": 2}
 	]
 }
 

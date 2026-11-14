@@ -25,13 +25,16 @@ func note(event: Dictionary) -> void:
 		var is_rat := bool(event.get("is_rat", false)) or unit_type in ["burrow", "bristle", "monarch", "dusk", "matriarch"]
 		_spawn_pop_debris(pos, coat, unit_type, is_rat)
 
-	if kind in ["pop", "blocked", "hit", "kibble", "status", "ability", "upgrade", "child", "explosion", "frost_pulse", "slash"]:
+	if kind in ["pop", "blocked", "hit", "kibble", "status", "ability", "upgrade", "child", "explosion", "acid_splash", "acid_pool", "brew", "frost_pulse", "slash"]:
 		var effect := event.duplicate(true)
 		effect["age"] = 0.0
 		var life := 0.55
 		match kind:
 			"child": life = 0.27
 			"explosion": life = 0.38
+			"acid_splash": life = 0.42
+			"acid_pool": life = 0.48
+			"brew": life = 0.55
 			"frost_pulse": life = 0.35
 			"slash": life = 0.24
 			"pop": life = 0.32
@@ -204,6 +207,9 @@ func draw(canvas: CanvasItem) -> void:
 			"ability", "upgrade": _draw_starburst(canvas, pos, t)
 			"child": canvas.draw_arc(pos, 10.0 + t * 7.0, 0, TAU, 12, Color(1, 1, 1, 1.0 - t), 1.5)
 			"explosion": _draw_explosion(canvas, pos, float(effect.get("radius", 45.0)), t)
+			"acid_splash": _draw_acid_splash(canvas, pos, float(effect.get("radius", 35.0)), t)
+			"acid_pool": _draw_acid_splash(canvas, pos, float(effect.get("radius", 60.0)), t)
+			"brew": _draw_starburst(canvas, pos, t)
 			"frost_pulse": _draw_frost_pulse(canvas, pos, float(effect.get("radius", 90.0)), t)
 			"slash": _draw_slash(canvas, pos, float(effect.get("radius", 40.0)), t)
 
@@ -298,6 +304,15 @@ func _draw_explosion(canvas: CanvasItem, pos: Vector2, radius: float, t: float) 
 		var ang := float(i) * TAU / 5.0 + 0.3
 		var puff_pos := pos + Vector2(cos(ang), sin(ang)) * (r * 0.65 * t)
 		canvas.draw_circle(puff_pos, maxf(3.0, 12.0 * (1.0 - t)), Color(0.35, 0.32, 0.30, alpha * 0.45))
+
+func _draw_acid_splash(canvas: CanvasItem, pos: Vector2, radius: float, t: float) -> void:
+	var alpha := 1.0 - t
+	var current_r := radius * (0.25 + 0.75 * sqrt(t))
+	canvas.draw_arc(pos, current_r, 0, TAU, 32, Color(0.55, 0.94, 0.32, alpha), 3.0)
+	for i in range(7):
+		var angle := float(i) * TAU / 7.0 + 0.25
+		var droplet := pos + Vector2.from_angle(angle) * current_r * (0.45 + 0.35 * t)
+		canvas.draw_circle(droplet, maxf(1.5, 4.5 * alpha), Color(0.72, 1.0, 0.38, alpha * 0.9))
 
 func _draw_frost_pulse(canvas: CanvasItem, pos: Vector2, radius: float, t: float) -> void:
 	var current_r := radius * (0.2 + 0.8 * sqrt(t))

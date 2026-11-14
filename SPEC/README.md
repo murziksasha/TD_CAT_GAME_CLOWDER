@@ -32,7 +32,9 @@ These specifications govern all simulation logic, data authorship in `content/`,
     - Godot 4 + GDScript architecture, sim/presentation separation, JSON content schemas, deterministic replay action format, save profile with checksum, test runner gates, and phased build order.
 12. **[12. Ward Atlas (100 New Maps)](12_WARD_ATLAS.md)**
     - Post-launch expansion: 100 new maps across 10 wards, 8 map verbs, 6 round families, trial contracts, 7 fairness gates, and multi-path simulation.
-13. **[Master Design Plan](MASTER_DESIGN_PLAN.md)**
+13. **[13. Grand Expansion Systems](13_GRAND_EXPANSION_SYSTEMS.md)**
+    - Post-v1 design proposal: onboarding, co-op lockstep, expedition, additional modes, progression, narrative, ledger, and explicit release blockers. Existing canon takes precedence until amendments are ratified.
+14. **[Master Design Plan](MASTER_DESIGN_PLAN.md)**
     - The complete unified source document encompassing all sections in a single canonical reference.
 
 ---
@@ -43,5 +45,5 @@ These specifications govern all simulation logic, data authorship in `content/`,
 - **Authoritative Headless Simulation**: All game rules, combat calculations, and economics reside in `sim/` and read from `content/`. The simulation must run headlessly without any Godot scene-tree or display server dependency.
 - **Zero Monetization Surfaces**: Free and fair forever. No ads, no premium currencies, no loot boxes, no paid continues, no real-money transactions. Fishcoin is purely gameplay-earned.
 - **Bare Paw as Mastery Truth**: Every map must be beatable on Bare Paw (no Insights, no tricks, no continues, no selling) using only mastery tiers available by natural play.
-- **Deterministic Sim**: Seeded RNG; no wall-clock or asynchronous timing in `sim/`.
+- **Deterministic Sim**: Seeded RNG; no wall-clock or asynchronous timing in `sim/`. Proposed multiplayer requires verified cross-platform determinism and versioned, synchronized inputs; see SPEC 11 and the unratified SPEC 13.
 

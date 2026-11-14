@@ -1,0 +1,53 @@
+{
+  "id": "bub",
+  "name": "Bub",
+  "title": "Potion Cat",
+  "category": "Myth",
+  "placement_mask": ["Land"],
+  "footprint_radius": 20.0,
+  "cost": 450,
+  "base": {
+    "damage": 1,
+    "damage_type": "Acid",
+    "pierce": 1,
+    "radius": 18.0,
+    "cooldown": 1.2,
+    "range": 145.0,
+    "travel_time": 0.35,
+    "corrosion_dps": 1.0,
+    "corrosion_duration": 3.0,
+    "see_shadow": false
+  },
+  "paths": {
+    "path_a": {
+      "name": "Acid",
+      "tiers": [
+        {"tier": 1, "name": "Concentrated Brew", "cost": 250, "damage": 2, "corrosion_dps": 2.0},
+        {"tier": 2, "name": "Etching Salts", "cost": 550, "radius": 28.0, "pierce": 3, "corrosion_duration": 4.0},
+        {"tier": 3, "name": "Spill Flask", "cost": 1700, "radius": 45.0, "pierce": 8},
+        {"tier": 4, "name": "Caustic Rain", "cost": 6000, "damage": 5, "corrosion_dps": 6.0, "radius": 55.0, "pierce": 14, "cooldown": 1.0},
+        {"tier": 5, "name": "Meltdown", "cost": 28000, "damage": 10, "corrosion_dps": 12.0, "corrosion_duration": 5.0, "radius": 70.0, "pierce": 24, "puddle_every": 5, "puddle_radius": 75.0, "puddle_dps": 8.0, "puddle_duration": 6.0}
+      ]
+    },
+    "path_b": {
+      "name": "Brew",
+      "tiers": [
+        {"tier": 1, "name": "Long Ladle", "cost": 300, "range": 175.0},
+        {"tier": 2, "name": "Quick Stir", "cost": 650, "cooldown": 0.95},
+        {"tier": 3, "name": "Taster's Brew", "cost": 2000, "brew_speed_ratio": 0.10, "brew_range_ratio": 0.10},
+        {"tier": 4, "name": "Potent Brew", "cost": 6500, "brew_speed_ratio": 0.15, "brew_range_ratio": 0.15, "brew_damage_bonus": 1},
+        {"tier": 5, "name": "Master Brew", "cost": 28000, "brew_speed_ratio": 0.25, "brew_range_ratio": 0.20, "brew_damage_bonus": 1, "brew_pierce_bonus": 2, "brew_splash_radius": 90.0, "brew_splash_speed_ratio": 0.10, "brew_splash_range_ratio": 0.10, "brew_splash_pierce_bonus": 1}
+      ]
+    },
+    "path_c": {
+      "name": "Midas",
+      "tiers": [
+        {"tier": 1, "name": "Copper Flask", "cost": 250, "midas_ratio": 0.05, "midas_cap": 40},
+        {"tier": 2, "name": "Gilded Drip", "cost": 600, "midas_ratio": 0.08, "midas_cap": 90},
+        {"tier": 3, "name": "Alchemist's Ledger", "cost": 2000, "damage": 3, "corrosion_dps": 2.0, "midas_ratio": 0.12, "midas_cap": 180},
+        {"tier": 4, "name": "Profit Catalyst", "cost": 6000, "damage": 5, "corrosion_dps": 4.0, "corrosion_duration": 4.0, "midas_ratio": 0.15, "midas_cap": 400},
+        {"tier": 5, "name": "Midas Mitt", "cost": 26000, "damage": 8, "corrosion_dps": 8.0, "corrosion_duration": 5.0, "midas_ratio": 0.20, "midas_cap": 800}
+      ]
+    }
+  }
+}

@@ -44,6 +44,7 @@ func _run_tests() -> void:
 	assert(main.almanac_modal.visible == true, "Almanac becomes visible")
 	main.almanac_modal._select_tab("cats")
 	assert(main.almanac_modal.cats_data.size() >= 8, "Almanac loads all 8 launch cats from JSON")
+	assert(main.almanac_modal.cats_data.has("marlow") and main.almanac_modal.cats_data.has("bub"), "Almanac follows the cat index for post-launch cats")
 	main.almanac_modal._select_tab("enemies")
 	assert(main.almanac_modal.mice_data.get("coats", {}).size() == 12, "Almanac loads 12 mouse coats")
 	assert(main.almanac_modal.rats_data.get("rats", {}).size() == 5, "Almanac loads 5 rat bosses")

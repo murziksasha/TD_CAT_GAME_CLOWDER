@@ -30,6 +30,7 @@ var mark_duration: float = 0.0
 var freeze_duration: float = 0.0
 var burn_dps: float = 0.0
 var burn_duration: float = 0.0
+var payload: Dictionary = {}
 
 var already_hit_unit_ids: Dictionary = {} # Set of unit_ids hit
 var is_active: bool = true
@@ -65,7 +66,8 @@ func setup_lob(
 	p_pierce: int,
 	p_radius: float,
 	p_travel_time: float,
-	p_start_pos: Vector2 = Vector2.ZERO
+	p_start_pos: Vector2 = Vector2.ZERO,
+	p_payload: Dictionary = {}
 ) -> void:
 	id = p_id
 	source_cat_id = cat_id
@@ -78,6 +80,7 @@ func setup_lob(
 	radius = p_radius
 	travel_time_left = p_travel_time
 	total_travel_time = p_travel_time
+	payload = p_payload.duplicate(true)
 	is_explosion = true
 	is_active = true
 

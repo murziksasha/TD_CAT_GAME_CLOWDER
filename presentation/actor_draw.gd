@@ -4,7 +4,7 @@ extends RefCounted
 const CAT_COLORS := {
 	"pip": Color("e67d22"), "nibs": Color("343c47"), "pudding": Color("d9ecf7"),
 	"biscuit": Color("d0692c"), "sable": Color("252b31"), "nim": Color("9a55b5"),
-	"goldie": Color("f2a23a"), "miso": Color("94705d"), "mittens": Color("5c6b7d"),
+	"goldie": Color("f2a23a"), "miso": Color("94705d"), "bub": Color("6f9f4d"), "mittens": Color("5c6b7d"),
 	"duchess": Color("9b59b6"), "baron": Color("c0392b"), "pebble": Color("27ae60")
 }
 const COAT_COLORS := {
@@ -47,6 +47,8 @@ func draw_actors(canvas: CanvasItem, sim, displayed_s: Dictionary, selected_towe
 	else:
 		between_rounds_timer = 0.0
 
+	_draw_ground_zones(canvas, sim)
+	_draw_brew_links(canvas, sim)
 	for tower in sim.towers:
 		_draw_tower(canvas, tower, tower == selected_tower, cats, round_in_progress)
 	if sim.hero != null:
@@ -148,6 +150,11 @@ func _draw_between_round_comedy(canvas: CanvasItem, tower) -> void:
 				var cup_p: Vector2 = tower.position + Vector2(10, -10)
 				canvas.draw_circle(cup_p, 3.0, Color(0.95, 0.92, 0.85))
 				canvas.draw_arc(cup_p, 4.0, 0, PI, 6, Color(1, 1, 1, 0.7), 1.5)
+		"bub":
+			if phase >= 1.4 and phase <= 3.8:
+				var bubble_p: Vector2 = tower.position + Vector2(12 + sin(time * 5.0) * 2.0, -18 - fmod(time * 8.0, 10.0))
+				canvas.draw_circle(bubble_p, 2.2, Color(0.55, 0.9, 0.38, 0.75))
+				canvas.draw_arc(bubble_p, 3.0, 0, TAU, 10, Color(0.9, 1.0, 0.65, 0.8), 1.0)
 
 func _draw_hero(canvas: CanvasItem, hero, selected: bool, cats: Dictionary) -> void:
 	if selected:
@@ -281,11 +288,17 @@ func _draw_projectiles(canvas: CanvasItem, sim) -> void:
 			var arc_y := -sin(prog * PI) * 55.0
 			var flight_pos := ground_p + Vector2(0, arc_y)
 
-			# Flying tumbling fishbone
 			canvas.draw_set_transform(flight_pos, prog * TAU * 2.0, Vector2.ONE)
-			canvas.draw_line(Vector2(-7, 0), Vector2(7, 0), Color(0.96, 0.94, 0.90), 3.0)
-			canvas.draw_line(Vector2(-3, -4), Vector2(1, 4), Color(0.96, 0.94, 0.90), 2.0)
-			canvas.draw_line(Vector2(2, -4), Vector2(6, 4), Color(0.96, 0.94, 0.90), 2.0)
+			if projectile.damage_type == 4:
+				# Bub's readable round potion flask with cork and bright acid fill.
+				canvas.draw_circle(Vector2.ZERO, 6.0, Color(0.28, 0.48, 0.20, 0.95))
+				canvas.draw_circle(Vector2(0, 1), 4.2, Color(0.52, 0.92, 0.32, 0.9))
+				canvas.draw_rect(Rect2(-2, -10, 4, 5), Color(0.76, 0.62, 0.38), true)
+			else:
+				# Flying tumbling fishbone
+				canvas.draw_line(Vector2(-7, 0), Vector2(7, 0), Color(0.96, 0.94, 0.90), 3.0)
+				canvas.draw_line(Vector2(-3, -4), Vector2(1, 4), Color(0.96, 0.94, 0.90), 2.0)
+				canvas.draw_line(Vector2(2, -4), Vector2(6, 4), Color(0.96, 0.94, 0.90), 2.0)
 			canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 			# Target landing reticle
@@ -341,6 +354,9 @@ func _draw_status(canvas: CanvasItem, pos: Vector2, status, unit_type: String = 
 
 	if status.burn_time > 0:
 		canvas.draw_circle(pos + Vector2(0, -15), 4, Color("f07b37"))
+	if status.corrosion_time > 0:
+		canvas.draw_circle(pos + Vector2(-4, -15), 3.5, Color("75d94c"))
+		canvas.draw_arc(pos + Vector2(4, -20), 2.5, 0, TAU, 9, Color("d8ff87"), 1.2)
 	if status.mark_time > 0:
 		canvas.draw_arc(pos, 11, 0, TAU, 12, Color("f5d557"), 1.5)
 	if status.hex_time > 0:
@@ -392,6 +408,28 @@ func _draw_aura(canvas: CanvasItem, tower) -> void:
 		canvas.draw_arc(tower.position, radius, 0, TAU, 40, Color(0.54, 0.85, 0.75, 0.28), 1.5)
 	if tower.cat_id == "pudding" and _tier_flag(tower, "permanent_zone_radius"):
 		canvas.draw_circle(tower.position, _tier_value(tower, "permanent_zone_radius", 80.0), Color(0.55, 0.83, 1.0, 0.12))
+
+func _draw_ground_zones(canvas: CanvasItem, sim) -> void:
+	for zone in sim.ground_zones:
+		if str(zone.get("kind", "")) != "acid":
+			continue
+		var pos: Vector2 = zone.get("position", Vector2.ZERO)
+		var radius := float(zone.get("radius", 0.0))
+		canvas.draw_circle(pos, radius, Color(0.34, 0.67, 0.20, 0.16))
+		canvas.draw_arc(pos, radius, 0, TAU, 32, Color(0.68, 0.93, 0.35, 0.62), 2.0)
+		for i in range(5):
+			var angle := time * (0.7 + i * 0.08) + float(i) * TAU / 5.0
+			canvas.draw_circle(pos + Vector2(cos(angle), sin(angle)) * radius * 0.55, 2.0 + float(i % 2), Color(0.77, 1.0, 0.43, 0.55))
+
+func _draw_brew_links(canvas: CanvasItem, sim) -> void:
+	for bub in sim.towers:
+		if bub.cat_id != "bub" or bub.brew_target_id < 0:
+			continue
+		var target = sim._get_tower_by_id(bub.brew_target_id)
+		if target == null:
+			continue
+		canvas.draw_dashed_line(bub.position, target.position, Color(0.54, 0.88, 0.50, 0.34), 1.5, 7.0)
+		canvas.draw_arc(target.position, target.footprint_radius + 4.0, 0, TAU, 24, Color(0.61, 0.94, 0.58, 0.46), 1.4)
 
 func _draw_cooldown_ring(canvas: CanvasItem, pos: Vector2, left: float, total: float) -> void:
 	canvas.draw_circle(pos, 9, Color("201812"))

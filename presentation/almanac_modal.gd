@@ -31,8 +31,12 @@ func setup(p_cat_sprites: Dictionary, p_mouse_sprites: Dictionary, p_rat_sprites
 	_select_tab("cats")
 
 func _load_content_data() -> void:
-	for cid in ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso"]:
-		cats_data[cid] = _read_json("res://content/cats/%s.json" % cid)
+	var cat_index := _read_json("res://content/cats/index.json")
+	for raw_id in cat_index.get("ids", ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso"]):
+		var cid := str(raw_id)
+		var data := _read_json("res://content/cats/%s.json" % cid)
+		if not data.is_empty():
+			cats_data[cid] = data
 	for hid in ["mittens", "duchess", "baron", "pebble"]:
 		heroes_data[hid] = _read_json("res://content/heroes/%s.json" % hid)
 	mice_data = _read_json("res://content/mice.json")

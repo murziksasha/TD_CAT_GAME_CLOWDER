@@ -381,6 +381,15 @@ def test_atlas_headless_sim():
     assert "Stall Row sight obstruction" in res.stdout
     print("[PASS] [14/14] Ward Atlas headless simulation (Twin Gutters B-leak & Stall Row sight) validated.")
 
+def test_bub_headless_sim():
+    import subprocess
+    godot_exe = find_godot_executable()
+    cmd = [godot_exe, "--headless", "--path", BASE_DIR, "-s", "tools/test_bub_sim.gd"]
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=BASE_DIR)
+    assert res.returncode == 0, f"Headless Bub simulation failed:\n{res.stdout}\n{res.stderr}"
+    assert "Bub Acid, Corrosion, Brew, Midas, Meltdown, and art verified" in res.stdout
+    print("[PASS] [new] Bub Acid/Brew/Midas headless integration validated.")
+
 if __name__ == "__main__":
     print("==================================================")
     print("   CLOWDER: ALLEY SIEGE -- BALANCE HARNESS CHECKS  ")
@@ -401,6 +410,7 @@ if __name__ == "__main__":
     test_tide_lift_100_refund()
     test_locale_catalogue_parity()
     test_atlas_headless_sim()
+    test_bub_headless_sim()
     print("==================================================")
     print("   ALL 14 BALANCE & ATLAS GATES PASSED CLEANLY    ")
     print("==================================================")

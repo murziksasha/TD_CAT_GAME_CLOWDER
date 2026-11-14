@@ -124,6 +124,11 @@ text = "Feat Rank: 0 (XP: 0/100)"
 layout_mode = 2
 text = "Target: FIRST"
 
+[node name="BrewTargetBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+visible = false
+layout_mode = 2
+text = "Select Brew Target"
+
 [node name="HSeparator1" type="HSeparator" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
 

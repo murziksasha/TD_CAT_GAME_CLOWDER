@@ -47,7 +47,8 @@ func get_default_profile() -> Dictionary:
 			"sable": 0,
 			"nim": 0,
 			"goldie": 0,
-			"miso": 0
+			"miso": 0,
+			"bub": 0
 		},
 		"mastery_rank10_claimed": {},
 		"medals": {
@@ -84,8 +85,48 @@ func get_default_profile() -> Dictionary:
 			"audio_volume": 0.8,
 			"language": "en"
 		},
+		"expansion_runs": {
+			"alley_crawl": null,
+			"claimed_alley_crawl_results": []
+		},
 		"current_match": null
 	}
+
+func store_alley_crawl_run(run_state: Dictionary) -> bool:
+	if run_state.is_empty() or int(run_state.get("schema_version", 0)) != 1:
+		return false
+	var expansion_runs: Dictionary = data.get("expansion_runs", {})
+	expansion_runs["alley_crawl"] = run_state.duplicate(true)
+	data["expansion_runs"] = expansion_runs
+	return true
+
+func get_alley_crawl_run() -> Dictionary:
+	var stored = data.get("expansion_runs", {}).get("alley_crawl", null)
+	return stored.duplicate(true) if stored is Dictionary else {}
+
+func clear_alley_crawl_run() -> void:
+	var expansion_runs: Dictionary = data.get("expansion_runs", {})
+	expansion_runs["alley_crawl"] = null
+	data["expansion_runs"] = expansion_runs
+
+func claim_alley_crawl_completion(run_state: Dictionary, crawl_config: Dictionary) -> Dictionary:
+	if not bool(run_state.get("completed", false)):
+		return {"success": false, "reason": "Run is not complete"}
+	var result_id := "%d:%d" % [int(run_state.get("generator_version", 0)), int(run_state.get("seed", 0))]
+	var expansion_runs: Dictionary = data.get("expansion_runs", {})
+	var claimed: Array = expansion_runs.get("claimed_alley_crawl_results", [])
+	if result_id in claimed:
+		return {"success": false, "reason": "Result already claimed", "result_id": result_id}
+	var curse_bonus := 0
+	for curse_id in run_state.get("curses", []):
+		curse_bonus += int(crawl_config.get("curses", {}).get(curse_id, {}).get("fishcoin", 0))
+	curse_bonus = mini(curse_bonus, int(crawl_config.get("curse_fishcoin_cap", 0)))
+	var reward := int(crawl_config.get("completion_fishcoin", 0)) + curse_bonus
+	add_fishcoin(reward)
+	claimed.append(result_id)
+	expansion_runs["claimed_alley_crawl_results"] = claimed
+	data["expansion_runs"] = expansion_runs
+	return {"success": true, "result_id": result_id, "fishcoin": reward, "curse_bonus": curse_bonus}
 
 static func canonical_serialize(val: Variant) -> String:
 	if val is Dictionary:
@@ -157,6 +198,10 @@ func load_profile() -> bool:
 	for k in def.keys():
 		if not data.has(k):
 			data[k] = def[k]
+	var mastery: Dictionary = data.get("mastery", {})
+	if not mastery.has("bub"):
+		mastery["bub"] = 0
+	data["mastery"] = mastery
 	return true
 
 func save_profile() -> bool:

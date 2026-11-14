@@ -59,6 +59,10 @@ var miso_bell_speed: float = 0.0
 var miso_bell_damage: int = 0
 var miso_shadow_reveal_timer: float = 0.0
 var peak_kibble: int = 0
+# Total authoritative HP removed by every damage source. Testing and statistics
+# consume this counter instead of presentation events or nominal attack damage.
+var total_hp_removed: int = 0
+var expansion_effects: Dictionary = {}
 var tricks_data: Dictionary = {}
 var trick_cooldowns: Dictionary = {}
 var lantern_reveal_time: float = 0.0
@@ -133,6 +137,10 @@ func setup(
 
 func load_tricks_data(p_tricks_data: Dictionary) -> void:
 	tricks_data = p_tricks_data
+
+func configure_expansion_effects(effects: Dictionary) -> void:
+	expansion_effects = effects.duplicate(true)
+	economy.ruleset_pop_income_multiplier = 1.0 + float(expansion_effects.get("pop_kibble_percent", 0.0)) / 100.0
 
 func _init_default_sunny_path() -> void:
 	map_id = "sunny_gutter"
@@ -322,6 +330,10 @@ func place_tower(cat_id: String, pos: Vector2, owner_id: int = 1) -> SimTower:
 	unit_id_counter += 1
 	var tower = SimTower.new()
 	tower.setup(unit_id_counter, cdata, pos, price)
+	tower.ruleset_range_mult = float(expansion_effects.get("cat_range_percent", 0.0)) / 100.0
+	tower.ruleset_speed_mult = float(expansion_effects.get("attack_speed_percent", 0.0)) / 100.0
+	tower.ruleset_projectile_speed_mult = float(expansion_effects.get("projectile_speed_percent", 0.0)) / 100.0
+	tower.footprint_radius *= 1.0 + float(expansion_effects.get("footprint_percent", 0.0)) / 100.0
 	tower.owner_id = owner_id
 	towers.append(tower)
 	_update_aura_buffs()
@@ -389,6 +401,7 @@ func sell_tower(tower: SimTower) -> int:
 	if not economy.allow_selling:
 		return 0
 	var refund = economy.refund_sell(tower.total_spent)
+	_remove_tower_side_effects(tower)
 	towers.erase(tower)
 	_update_aura_buffs()
 	replay.log_action(tick_counter, "sell_tower", {"tower_id": tower.instance_id})
@@ -398,11 +411,45 @@ func lift_tower_tide(tower: SimTower) -> int:
 	# Fairness Gate 6 / Spec 12: Lift refund is 100% of total spent
 	var refund = tower.total_spent
 	economy.kibble += refund
+	_remove_tower_side_effects(tower)
 	towers.erase(tower)
 	_update_aura_buffs()
 	_note_presentation("tide_lift", {"id": tower.instance_id, "refund": refund})
 	replay.log_action(tick_counter, "tide_lift", {"tower_id": tower.instance_id, "refund": refund})
 	return refund
+
+func _remove_tower_side_effects(tower: SimTower) -> void:
+	var kept_zones: Array[Dictionary] = []
+	for zone in ground_zones:
+		if int(zone.get("source_tower_id", -1)) != tower.instance_id:
+			kept_zones.append(zone)
+	ground_zones = kept_zones
+	for other in towers:
+		if other.brew_target_id == tower.instance_id:
+			other.brew_target_id = -1
+
+func can_assign_brew(bub: SimTower, target: SimTower) -> Dictionary:
+	if round_in_progress:
+		return {"allowed": false, "reason": "BETWEEN_ROUNDS_ONLY"}
+	if bub == null or not towers.has(bub) or bub.cat_id != "bub":
+		return {"allowed": false, "reason": "INVALID_BUB"}
+	if int(bub.tiers.get("path_b", 0)) < 3:
+		return {"allowed": false, "reason": "BREW_NOT_UNLOCKED"}
+	if target == null or not towers.has(target) or target == bub:
+		return {"allowed": false, "reason": "INVALID_TARGET"}
+	if bub.position.distance_to(target.position) > bub.get_effective_range():
+		return {"allowed": false, "reason": "OUT_OF_RANGE"}
+	return {"allowed": true, "reason": "OK"}
+
+func assign_brew(bub: SimTower, target: SimTower) -> bool:
+	var check := can_assign_brew(bub, target)
+	if not bool(check.get("allowed", false)):
+		return false
+	bub.brew_target_id = target.instance_id
+	_update_aura_buffs()
+	_note_presentation("brew", {"id": bub.instance_id, "target": target.instance_id, "x": target.position.x, "y": target.position.y})
+	replay.log_action(tick_counter, "assign_brew", {"tower_id": bub.instance_id, "target_id": target.instance_id})
+	return true
 
 func get_tower_discounts(tower: SimTower) -> Array[float]:
 	var discounts: Array[float] = []
@@ -458,7 +505,19 @@ func _get_miso_discount(miso_tower: SimTower) -> float:
 		return 0.05
 	return 0.0
 
+func _cat_tier_value(tower: SimTower, key: String, fallback: float = 0.0) -> float:
+	var value := fallback
+	var paths_data: Dictionary = tower.cat_data.get("paths", {})
+	for path_key in paths_data:
+		var tier_rows: Array = paths_data[path_key].get("tiers", [])
+		for tier_index in range(mini(int(tower.tiers.get(path_key, 0)), tier_rows.size())):
+			if tier_rows[tier_index].has(key):
+				value = float(tier_rows[tier_index][key])
+	return value
+
 func _update_aura_buffs() -> void:
+	for tower in towers:
+		tower.clear_brew_buff()
 	for t in towers:
 		var best_dmg = 0
 		var best_rng = 0.0
@@ -534,6 +593,33 @@ func _update_aura_buffs() -> void:
 				if t != m and m.position.distance_to(t.position) <= rad:
 					count += 1
 			m.buffed_cats_count = count
+
+	# Bub Brew is persistent while its source and selected target remain on-map.
+	# Multiple sources never add; SimTower keeps the strongest value per stat.
+	for bub in towers:
+		if bub.cat_id != "bub" or int(bub.tiers.get("path_b", 0)) < 3:
+			continue
+		var target := _get_tower_by_id(bub.brew_target_id)
+		if target == null or target == bub:
+			bub.brew_target_id = -1
+			continue
+		var speed := _cat_tier_value(bub, "brew_speed_ratio") + bub.brew_primary_speed_bonus
+		var range_mult := _cat_tier_value(bub, "brew_range_ratio")
+		var damage_bonus := int(_cat_tier_value(bub, "brew_damage_bonus"))
+		var pierce_bonus := int(_cat_tier_value(bub, "brew_pierce_bonus"))
+		target.apply_brew_buff(damage_bonus, range_mult, speed, pierce_bonus, bub.instance_id)
+		var splash_radius := _cat_tier_value(bub, "brew_splash_radius")
+		if splash_radius > 0.0:
+			for ally in towers:
+				if ally == bub or ally == target or ally.position.distance_to(target.position) > splash_radius:
+					continue
+				ally.apply_brew_buff(
+					0,
+					_cat_tier_value(bub, "brew_splash_range_ratio"),
+					_cat_tier_value(bub, "brew_splash_speed_ratio"),
+					int(_cat_tier_value(bub, "brew_splash_pierce_bonus")),
+					bub.instance_id
+				)
 			
 	if hero != null:
 		var best_rng = 0.0
@@ -572,6 +658,9 @@ func start_next_round() -> bool:
 	current_round += 1
 	round_in_progress = true
 	pending_spawns.clear()
+	for tower in towers:
+		tower.midas_kibble_this_round = 0
+		tower.midas_fraction = 0.0
 	
 	var rkey = str(current_round)
 	var rgroups: Array = round_data.get("rounds", {}).get(rkey, [])
@@ -580,15 +669,26 @@ func start_next_round() -> bool:
 	var cur_delay = 0.0
 	var active_paths = get_active_paths_for_round(current_round)
 	var spawn_seq_idx = 0
+	var group_index := 0
 	for grp in rgroups:
+		group_index += 1
 		var configured_group: Dictionary = grp.duplicate(true)
 		if not configured_group.has("rat"):
 			if map_modifier.has("force_coat"):
 				configured_group["coat"] = map_modifier["force_coat"]
 			if map_modifier.get("shadow", false):
 				configured_group["shadow"] = true
+			var ink_interval := int(expansion_effects.get("ink_interval_rounds", 0))
+			if ink_interval > 0 and current_round % ink_interval == 0:
+				configured_group["coat"] = "ink"
+		var shadow_n := int(expansion_effects.get("shadow_every_nth_group", 0))
+		if shadow_n > 0 and group_index % shadow_n == 0:
+			configured_group["shadow"] = true
+		var plated_n := int(expansion_effects.get("plated_every_nth_group", 0))
+		if plated_n > 0 and group_index % plated_n == 0:
+			configured_group["plated"] = true
 		var count = int(configured_group.get("count", 1))
-		var spacing = float(configured_group.get("spacing", 0.5))
+		var spacing = float(configured_group.get("spacing", 0.5)) * (1.0 + float(expansion_effects.get("round_spacing_percent", 0.0)) / 100.0)
 		for _i in range(count):
 			var spawn_item = configured_group.duplicate()
 			spawn_item.erase("count")
@@ -632,6 +732,14 @@ func spawn_unit(config: Dictionary, path_s: float = 0.0) -> SimUnit:
 		var gnaw = config.get("gnaw", false)
 		var plated = config.get("plated", false)
 		u.setup_mouse(unit_id_counter, coat, mice_data, shadow, gnaw, plated, is_super)
+	if not u.is_rat:
+		u.base_speed *= 1.0 + float(expansion_effects.get("mouse_speed_percent", 0.0)) / 100.0
+	else:
+		var rat_hp_mult := 1.0 + float(expansion_effects.get("rat_body_hp_percent", 0.0)) / 100.0
+		u.body_hp = maxi(1, int(round(float(u.body_hp) * rat_hp_mult)))
+		u.max_body_hp = u.body_hp
+		u.layer_hp = u.body_hp
+		u.max_layer_hp = u.body_hp
 		
 	u.path_index = int(config.get("path_index", 0))
 	if u.path_index >= 0 and u.path_index < paths.size():
@@ -709,7 +817,17 @@ func tick() -> void:
 	for u in units:
 		if not u.is_alive:
 			continue
-		u.tick(dt)
+		var tick_result := u.tick_status(dt)
+		for packet in tick_result.get("damage_packets", []):
+			if not u.is_alive:
+				break
+			var source_tower := _get_tower_by_id(int(packet.get("source_tower_id", -1)))
+			var packet_type := int(packet.get("damage_type", SimConstants.DamageType.TRUE))
+			var hit_res := u.hit(int(packet.get("amount", 0)), packet_type)
+			_process_hit_result(source_tower, u, hit_res, packet_type)
+		if not u.is_alive:
+			continue
+		u.tick_movement(dt)
 		var p_len = get_path_length(u.path_index)
 		if u.s >= p_len:
 			# Unit leaks!
@@ -758,6 +876,9 @@ func tick() -> void:
 
 func _on_round_completed() -> void:
 	economy.add_end_of_round_bonus(current_round)
+	var extra_round_kibble := int(expansion_effects.get("end_round_kibble_flat", 0))
+	if extra_round_kibble != 0:
+		economy.kibble = maxi(0, economy.kibble + extra_round_kibble)
 	pebble_leak_reduction_used_this_round = false
 	
 	# Sister Pebble end of round bonus
@@ -819,13 +940,18 @@ func _tick_ground_zones(dt: float) -> void:
 		var radius = float(z.get("radius", 60.0))
 		var zpos: Vector2 = z.position
 		var dtype = int(z.get("damage_type", SimConstants.DamageType.BITE))
+		var source_id := int(z.get("source_tower_id", -1))
+		var zone_kind := str(z.get("kind", "burn"))
 		for u in units:
 			if not u.is_alive:
 				continue
 			var upos = get_point_on_path(u.s, u.path_index)
 			if upos.distance_to(zpos) <= radius:
 				if dps > 0.0:
-					u.status.apply_burn(dps, 1.0, dtype)
+					if zone_kind == "acid":
+						u.status.apply_corrosion(dps, 1.0, source_id)
+					else:
+						u.status.apply_burn(dps, 1.0, dtype, source_id)
 				var slow_val = float(z.get("slow", 0.0))
 				if slow_val > 0.0:
 					u.status.apply_slow(1.0 - slow_val, 1.0)
@@ -957,6 +1083,8 @@ func _fire_tower_attack(tower: SimTower, target: SimUnit) -> void:
 				hits += 1
 				if hits >= max_targets:
 					break
+	elif tower.cat_id == "bub":
+		_fire_bub_attack(tower, target_pos)
 	elif tower.cat_id == "biscuit":
 		# Lobbed explosion
 		proj_id_counter += 1
@@ -991,10 +1119,40 @@ func _fire_tower_attack(tower: SimTower, target: SimUnit) -> void:
 			tower.damage,
 			tower.damage_type,
 			tower.pierce,
-			tower.projectile_speed,
+			tower.get_effective_projectile_speed(),
 			tower.tiers.get("path_c", 0) >= 3
 		)
 		projectiles.append(p)
+
+func _fire_bub_attack(tower: SimTower, target_pos: Vector2) -> void:
+	tower.successful_attacks += 1
+	var base: Dictionary = tower.cat_data.get("base", {})
+	var puddle_every := int(_cat_tier_value(tower, "puddle_every"))
+	var creates_puddle := puddle_every > 0 and tower.successful_attacks % puddle_every == 0
+	var payload := {
+		"effect": "corrosion",
+		"corrosion_dps": _cat_tier_value(tower, "corrosion_dps", float(base.get("corrosion_dps", 1.0))),
+		"corrosion_duration": _cat_tier_value(tower, "corrosion_duration", float(base.get("corrosion_duration", 3.0))) + tower.corrosion_duration_bonus,
+		"spawn_puddle": creates_puddle,
+		"puddle_radius": _cat_tier_value(tower, "puddle_radius"),
+		"puddle_dps": _cat_tier_value(tower, "puddle_dps"),
+		"puddle_duration": _cat_tier_value(tower, "puddle_duration")
+	}
+	proj_id_counter += 1
+	var projectile := SimProjectile.new()
+	projectile.setup_lob(
+		proj_id_counter,
+		tower.instance_id,
+		target_pos,
+		tower.get_effective_damage(),
+		SimConstants.DamageType.ACID,
+		tower.get_effective_pierce(),
+		_cat_tier_value(tower, "radius", float(base.get("radius", 18.0))),
+		float(base.get("travel_time", 0.35)),
+		tower.position,
+		payload
+	)
+	projectiles.append(projectile)
 
 func _marlow_tier_value(tower: SimTower, key: String, fallback: float = 0.0) -> float:
 	var value := fallback
@@ -1016,7 +1174,7 @@ func _fire_marlow_attack(tower: SimTower, target: SimUnit, target_pos: Vector2) 
 	for _shot in range(shots):
 		proj_id_counter += 1
 		var projectile := SimProjectile.new()
-		projectile.setup_linear(proj_id_counter, tower.instance_id, tower.position, target_pos, tower.damage, tower.damage_type, tower.pierce, tower.projectile_speed, _marlow_tier_value(tower, "dive") > 0.0)
+		projectile.setup_linear(proj_id_counter, tower.instance_id, tower.position, target_pos, tower.damage, tower.damage_type, tower.pierce, tower.get_effective_projectile_speed(), _marlow_tier_value(tower, "dive") > 0.0)
 		projectiles.append(projectile)
 
 func _fire_marlow_harpoon(tower: SimTower, target: SimUnit) -> void:
@@ -1049,8 +1207,10 @@ func _tick_projectiles(dt: float) -> void:
 		var detonated = p.tick(dt)
 		if p.is_explosion and detonated:
 			# Explosion detonates: hits units within radius up to pierce
-			_note_presentation("explosion", {"x": p.target_position.x, "y": p.target_position.y, "radius": p.radius, "cat": "biscuit"})
+			var is_acid_flask := str(p.payload.get("effect", "")) == "corrosion"
+			_note_presentation("acid_splash" if is_acid_flask else "explosion", {"x": p.target_position.x, "y": p.target_position.y, "radius": p.radius, "cat": "bub" if is_acid_flask else "biscuit"})
 			var hits = 0
+			var src_tower = _get_tower_by_id(p.source_cat_id)
 			for u in units:
 				if not u.is_alive or p.already_hit_unit_ids.has(u.id):
 					continue
@@ -1058,11 +1218,23 @@ func _tick_projectiles(dt: float) -> void:
 				if upos.distance_to(p.target_position) <= p.radius:
 					p.already_hit_unit_ids[u.id] = true
 					var hit_res = u.hit(p.damage, p.damage_type)
-					var src_tower = _get_tower_by_id(p.source_cat_id)
+					if is_acid_flask and u.is_alive:
+						u.status.apply_corrosion(float(p.payload.get("corrosion_dps", 0.0)), float(p.payload.get("corrosion_duration", 0.0)), p.source_cat_id)
 					_process_hit_result(src_tower, u, hit_res)
 					hits += 1
 					if hits >= p.pierce_left:
 						break
+			if is_acid_flask and bool(p.payload.get("spawn_puddle", false)):
+				ground_zones.append({
+					"kind": "acid",
+					"position": p.target_position,
+					"radius": float(p.payload.get("puddle_radius", 0.0)),
+					"dps": float(p.payload.get("puddle_dps", 0.0)),
+					"duration": float(p.payload.get("puddle_duration", 0.0)),
+					"damage_type": SimConstants.DamageType.ACID,
+					"source_tower_id": p.source_cat_id
+				})
+				_note_presentation("acid_pool", {"x": p.target_position.x, "y": p.target_position.y, "radius": float(p.payload.get("puddle_radius", 0.0))})
 			p.is_active = false
 		elif not p.is_explosion:
 			# Check sight blockers collision
@@ -1101,10 +1273,12 @@ func _process_hit_result(src_tower: SimTower, unit: SimUnit, hit_res: Dictionary
 		var visual_damage_type := src_tower.damage_type if src_tower != null else event_damage_type
 		_note_presentation("hit", {"id": unit.id, "damage": hit_res.damage_dealt, "damage_type": visual_damage_type, "s": unit.s})
 	if hit_res.damage_dealt > 0:
+		total_hp_removed += int(hit_res.hp_removed)
 		var bonus_mult = 1.20 if skim_bonus_active else 1.00
 		var kibble_earned := int(round(float(economy.add_pop_damage(hit_res.hp_removed, current_round, hit_res.shell_bounty)) * bonus_mult))
 		_note_presentation("kibble", {"amount": kibble_earned, "s": unit.s})
 		if src_tower != null:
+			_award_bub_midas(src_tower, int(hit_res.hp_removed), unit.s)
 			src_tower.damage_dealt += hit_res.damage_dealt
 			if hit_res.coat_popped:
 				src_tower.pops_count += 1
@@ -1123,6 +1297,25 @@ func _process_hit_result(src_tower: SimTower, unit: SimUnit, hit_res: Dictionary
 	for coat in hit_res.get("popped_coats", []):
 		_note_presentation("pop", {"id": unit.id, "coat": coat, "s": unit.s, "is_rat": unit.is_rat, "unit_type": unit.unit_type})
 	_spawn_hit_children(unit.s, hit_res.children_to_spawn, unit.path_index, unit.path_id)
+
+func _award_bub_midas(tower: SimTower, hp_removed: int, path_s: float) -> void:
+	if tower.cat_id != "bub" or hp_removed <= 0:
+		return
+	var ratio := _cat_tier_value(tower, "midas_ratio") + tower.midas_ratio_bonus
+	var cap := int(_cat_tier_value(tower, "midas_cap")) + tower.midas_cap_bonus
+	var remaining := maxi(0, cap - tower.midas_kibble_this_round)
+	if ratio <= 0.0 or remaining <= 0:
+		return
+	tower.midas_fraction += float(hp_removed) * ratio
+	var earned := mini(remaining, int(floor(tower.midas_fraction + 0.000001)))
+	if earned <= 0:
+		return
+	tower.midas_fraction -= earned
+	tower.midas_kibble_this_round += earned
+	tower.total_kibble_produced += earned
+	economy.kibble += earned
+	tower.add_feat_xp(float(earned) * 0.15)
+	_note_presentation("kibble", {"amount": earned, "s": path_s, "source": "midas", "tower_id": tower.instance_id})
 
 func _spawn_hit_children(path_s: float, children_configs: Array, path_idx: int = 0, p_id: String = "") -> void:
 	for ch in children_configs:
@@ -1287,7 +1480,7 @@ func can_place_tower_at(cat_id: String, pos: Vector2) -> Dictionary:
 	var base_cost = int(cdata.get("cost", 200))
 	var discounts = get_placement_discounts(pos)
 	var price = economy.calculate_price(base_cost, discounts)
-	var footprint = float(cdata.get("footprint_radius", 20.0))
+	var footprint = float(cdata.get("footprint_radius", 20.0)) * (1.0 + float(expansion_effects.get("footprint_percent", 0.0)) / 100.0)
 	
 	if not economy.can_afford(price):
 		return {"valid": false, "reason": "Need %d Kibble" % price, "code": "kibble", "price": price}

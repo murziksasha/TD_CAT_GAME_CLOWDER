@@ -19,7 +19,7 @@ func _init() -> void:
 	sim.economy.kibble = 999999
 
 	# 1. VERIFY ALL CATS & HEROES SHEETS
-	var all_cats = ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "mittens", "duchess", "baron", "pebble"]
+	var all_cats = ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "bub", "mittens", "duchess", "baron", "pebble"]
 	for cat in all_cats:
 		var tex: Texture2D = main.cat_sprites.get(cat)
 		assert(tex != null, "Missing cat texture for: " + cat)
