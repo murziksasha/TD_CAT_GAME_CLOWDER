@@ -1,0 +1,36 @@
+{
+  "id": "herring_square",
+  "name": "Herring Square",
+  "ward": "copper_market",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "loop",
+  "path_length": 1300.0,
+  "family": "standard",
+  "verb": "",
+  "lesson": "Sit inside the square or outside it. Clean concentric sightlines.",
+  "paths": [
+    {
+      "id": "square_loop",
+      "points": [
+        {"x": 100.0, "y": 140.0},
+        {"x": 750.0, "y": 140.0},
+        {"x": 750.0, "y": 490.0},
+        {"x": 450.0, "y": 490.0}
+      ],
+      "length": 1300.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [
+      {"x": 860.0, "y": 300.0, "radius": 60.0}
+    ],
+    "perches": [
+      {"x": 450.0, "y": 300.0, "radius": 35.0}
+    ]
+  },
+  "sight_blockers": []
+}

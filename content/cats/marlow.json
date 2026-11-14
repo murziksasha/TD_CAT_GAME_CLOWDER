@@ -1,0 +1,33 @@
+{
+  "id": "marlow",
+  "name": "Marlow",
+  "title": "Trough Hunter",
+  "category": "Harbor",
+  "placement_mask": ["Water"],
+  "footprint_radius": 23.0,
+  "cost": 500,
+  "base": {"damage": 2, "damage_type": "Bite", "pierce": 3, "cooldown": 0.7, "range": 145.0, "projectile_speed": 430.0, "see_shadow": false, "can_pop_iron": false},
+  "paths": {
+    "path_a": {"name": "Spit", "tiers": [
+      {"tier": 1, "name": "Double Spit", "cost": 220, "double_spit": true},
+      {"tier": 2, "name": "Barbed Water", "cost": 500, "damage": 3, "pierce": 4},
+      {"tier": 3, "name": "Trough Volley", "cost": 1400, "damage": 5, "double_spit": true, "projectiles": 3},
+      {"tier": 4, "name": "Flood Volley", "cost": 4800, "damage": 8, "pierce": 7, "projectiles": 4},
+      {"tier": 5, "name": "Undertow", "cost": 22000, "damage": 14, "pierce": 12, "projectiles": 6}
+    ]},
+    "path_b": {"name": "Harpoon", "tiers": [
+      {"tier": 1, "name": "Rat Harpoon", "cost": 260, "harpoon_rat_damage": 3},
+      {"tier": 2, "name": "Hooked Bite", "cost": 650, "harpoon_rat_damage": 7, "pierce": 4},
+      {"tier": 3, "name": "Deep Hook", "cost": 1900, "harpoon_rat_damage": 16, "damage": 4},
+      {"tier": 4, "name": "Line Breaker", "cost": 6000, "harpoon_rat_damage": 35, "damage": 7},
+      {"tier": 5, "name": "Rat Wrangler", "cost": 28000, "harpoon_rat_damage": 80, "damage": 12, "pierce": 8}
+    ]},
+    "path_c": {"name": "Dive", "tiers": [
+      {"tier": 1, "name": "Quick Dive", "cost": 240, "dive": true, "cooldown": 0.62},
+      {"tier": 2, "name": "Dark Water", "cost": 600, "see_shadow": true},
+      {"tier": 3, "name": "Deep Dive", "cost": 1700, "dive": true, "damage": 4, "pierce": 5},
+      {"tier": 4, "name": "Echo Pool", "cost": 5800, "sonar_interval": 12.0},
+      {"tier": 5, "name": "Gutter Sonar", "cost": 26000, "sonar_interval": 10.0, "sonar_reveal": 2.5, "see_shadow": true}
+    ]}
+  }
+}

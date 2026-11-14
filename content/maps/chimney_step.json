@@ -1,0 +1,36 @@
+{
+  "id": "chimney_step",
+  "name": "Chimney Step",
+  "ward": "sunwash",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "bend",
+  "path_length": 1050.0,
+  "family": "standard",
+  "verb": "",
+  "lesson": "Perch pads over a hairpin. Sable's placement is the choice.",
+  "paths": [
+    {
+      "id": "hairpin_bend",
+      "points": [
+        {"x": 60.0, "y": 150.0},
+        {"x": 700.0, "y": 150.0},
+        {"x": 700.0, "y": 360.0},
+        {"x": 500.0, "y": 360.0}
+      ],
+      "length": 1050.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [],
+    "perches": [
+      {"x": 760.0, "y": 250.0, "radius": 32.0},
+      {"x": 640.0, "y": 250.0, "radius": 32.0},
+      {"x": 700.0, "y": 80.0, "radius": 32.0}
+    ]
+  },
+  "sight_blockers": []
+}

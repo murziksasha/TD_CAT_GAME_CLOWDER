@@ -1,0 +1,6 @@
+{
+  "id": "canal_night", "name": "Canal Night", "ward": "canal", "band": "I", "difficulty": "intermediate", "shape": "canal", "path_length": 960.0, "family": "canal", "lesson": "From round 18 shadows need Night Eye. Water is a safe harbor for Marlow.",
+  "verbs": {"round_modifiers": {"18": {"shadow": true}}, "night": true},
+  "paths": [{"id": "main_loop", "points": [{"x": 55, "y": 130}, {"x": 610, "y": 130}, {"x": 610, "y": 420}, {"x": 300, "y": 420}], "length": 960.0}],
+  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [{"x": 900, "y": 250, "radius": 150}, {"x": 460, "y": 560, "radius": 90}], "perches": [{"x": 700, "y": 80, "radius": 30}]}, "sight_blockers": []
+}

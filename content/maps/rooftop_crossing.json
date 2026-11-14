@@ -1,0 +1,6 @@
+{
+  "id": "rooftop_crossing", "name": "Rooftop Crossing", "ward": "rooftops", "band": "I", "difficulty": "intermediate", "shape": "crossing", "path_length": 920.0, "family": "rooftop", "lesson": "Ink coats appear from round 26; use a cat with the right answer.",
+  "verbs": {"round_modifiers": {"26": {"force_coat": "ink"}}},
+  "paths": [{"id": "main_loop", "points": [{"x": 55, "y": 90}, {"x": 760, "y": 90}, {"x": 760, "y": 360}, {"x": 450, "y": 360}], "length": 920.0}],
+  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [], "perches": [{"x": 340, "y": 150, "radius": 32}, {"x": 820, "y": 260, "radius": 32}]}, "sight_blockers": []
+}

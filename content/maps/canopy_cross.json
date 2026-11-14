@@ -1,0 +1,37 @@
+{
+  "id": "canopy_cross",
+  "name": "Canopy Cross",
+  "ward": "copper_market",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "split_merge",
+  "path_length": 1050.0,
+  "family": "standard",
+  "verb": "sight",
+  "lesson": "Canvas awnings block sight. The fabric flap is only animation.",
+  "paths": [
+    {
+      "id": "canopy_a",
+      "points": [
+        {"x": 60.0, "y": 160.0},
+        {"x": 560.0, "y": 160.0},
+        {"x": 560.0, "y": 380.0},
+        {"x": 860.0, "y": 380.0},
+        {"x": 860.0, "y": 590.0}
+      ],
+      "length": 1050.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [],
+    "perches": [
+      {"x": 700.0, "y": 280.0, "radius": 32.0}
+    ]
+  },
+  "sight_blockers": [
+    {"x": 480.0, "y": 240.0, "width": 70.0, "height": 60.0}
+  ]
+}

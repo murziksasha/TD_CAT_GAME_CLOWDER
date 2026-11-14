@@ -1,0 +1,37 @@
+{
+  "id": "stall_row",
+  "name": "Stall Row",
+  "ward": "sunwash",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "line",
+  "path_length": 1300.0,
+  "family": "standard",
+  "verb": "sight",
+  "lesson": "Stalls block needles. Bones and perch shots pass.",
+  "paths": [
+    {
+      "id": "main_line",
+      "points": [
+        {"x": 50.0, "y": 220.0},
+        {"x": 1050.0, "y": 220.0},
+        {"x": 1050.0, "y": 520.0}
+      ],
+      "length": 1300.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [],
+    "perches": [
+      {"x": 450.0, "y": 140.0, "radius": 32.0},
+      {"x": 750.0, "y": 320.0, "radius": 32.0}
+    ]
+  },
+  "sight_blockers": [
+    {"x": 400.0, "y": 260.0, "width": 90.0, "height": 50.0},
+    {"x": 700.0, "y": 140.0, "width": 90.0, "height": 50.0}
+  ]
+}

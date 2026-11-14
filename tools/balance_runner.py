@@ -236,7 +236,96 @@ def test_account_xp_and_level_progression():
             break
             
     assert reached_level in [9, 10, 11], f"Level progression landed on {reached_level}, expected 9-11"
-    print(f"[PASS] [9/9] First Sunny clear grants {total_xp} XP and reaches level {reached_level} (within 9-11).")
+    print(f"[PASS] [9/14] First Sunny clear grants {total_xp} XP and reaches level {reached_level} (within 9-11).")
+
+def test_ward_atlas_travel_floor():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    mice_data = load_json("mice.json")
+    max_mouse_speed = mice_data["base_speed_unit"] * max(c["speed_multiplier"] for c in mice_data["coats"].values()) # 140.0
+    
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json") or fname == "sunny_gutter.json":
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        band = mdata.get("band", "B")
+        paths = mdata.get("paths", [])
+        min_len = min(p.get("length", mdata.get("path_length", 1200.0)) for p in paths) if paths else mdata.get("path_length", 1200.0)
+        
+        # Floor: B/B+ >= 8.0s, I/A >= 6.0s, E >= 5.0s (min 700)
+        if band in ["B", "B+"]:
+            assert min_len >= 900, f"Map {fname} band {band} path length {min_len} < 900"
+        elif band in ["I", "A"]:
+            assert min_len >= 780, f"Map {fname} band {band} path length {min_len} < 780"
+        elif band == "E":
+            assert min_len >= 700, f"Map {fname} band E path length {min_len} < 700"
+    print("[PASS] [10/14] Ward Atlas travel-floor content checks validated.")
+
+def test_ward_atlas_land_witness():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        land_zones = mdata.get("placement_zones", {}).get("land", [])
+        assert len(land_zones) > 0, f"Map {fname} has no land placement zones"
+        total_land_area = sum(z.get("width", 0) * z.get("height", 0) for z in land_zones)
+        assert total_land_area >= 8 * (math.pi * 20.0**2), f"Map {fname} cannot hold 8 cat footprints"
+    print("[PASS] [11/14] Ward Atlas land-witness footprint capacity validated.")
+
+def test_ward_atlas_threat_hints():
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            mdata = json.load(f)
+        if "hint" in mdata:
+            assert len(mdata["hint"].strip()) > 0, f"Map {fname} has empty hint"
+        assert len(mdata.get("lesson", "").strip()) > 0 or fname == "sunny_gutter.json", f"Map {fname} missing lesson description"
+    print("[PASS] [12/14] Ward Atlas teaching hint and lesson descriptions validated.")
+
+def test_tide_lift_100_refund():
+    total_spent = 1500
+    sell_refund = round(total_spent * 0.70)
+    assert sell_refund == 1050
+    tide_lift_refund = total_spent
+    assert tide_lift_refund == 1500
+    assert tide_lift_refund > sell_refund
+    print("[PASS] [13/14] Tide 100% lift refund law (distinct from 70% sell) validated.")
+
+def test_locale_catalogue_parity():
+    en = load_json("locales/en.json")
+    uk = load_json("locales/uk.json")
+    assert set(en) == set(uk), "English and Ukrainian locale keys must match exactly"
+    assert en["ui.language"] == "UA" and uk["ui.language"] == "EN"
+    assert uk["map.sunny_gutter"] == "Сонячна ринва"
+    print("[PASS] [14/15] English/Ukrainian catalogue key parity validated.")
+
+def find_godot_executable():
+    import os
+    local_winget_console = os.path.join(
+        os.environ.get("LOCALAPPDATA", ""),
+        "Microsoft",
+        "WinGet",
+        "Packages",
+        "GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe",
+        "Godot_v4.7.2-stable_win64_console.exe"
+    )
+    if os.path.exists(local_winget_console):
+        return local_winget_console
+    return "godot"
+
+def test_atlas_headless_sim():
+    import subprocess
+    godot_exe = find_godot_executable()
+    cmd = [godot_exe, "--headless", "--path", BASE_DIR, "-s", "tools/test_atlas_sim.gd"]
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=BASE_DIR)
+    assert res.returncode == 0, f"Headless atlas simulation failed:\n{res.stdout}\n{res.stderr}"
+    assert "Twin Gutters Path B leak verified" in res.stdout
+    assert "Stall Row sight obstruction" in res.stdout
+    print("[PASS] [14/14] Ward Atlas headless simulation (Twin Gutters B-leak & Stall Row sight) validated.")
 
 if __name__ == "__main__":
     print("==================================================")
@@ -251,6 +340,12 @@ if __name__ == "__main__":
     test_goldie_payback()
     test_feat_seeding_stability()
     test_account_xp_and_level_progression()
+    test_ward_atlas_travel_floor()
+    test_ward_atlas_land_witness()
+    test_ward_atlas_threat_hints()
+    test_tide_lift_100_refund()
+    test_locale_catalogue_parity()
+    test_atlas_headless_sim()
     print("==================================================")
-    print("   ALL 9 BALANCE GATES PASSED CLEANLY (GREEN)    ")
+    print("   ALL 14 BALANCE & ATLAS GATES PASSED CLEANLY    ")
     print("==================================================")

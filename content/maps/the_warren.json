@@ -1,0 +1,10 @@
+{
+  "id": "the_warren", "name": "The Warren", "ward": "warren", "band": "I", "difficulty": "intermediate", "shape": "three_lanes", "path_length": 810.0, "family": "warren", "lesson": "Only the scheduled burrow trail is live each round.",
+  "verbs": {"schedule": {"default_paths": [0], "round_paths": {"2": [1], "3": [2], "5": [1], "7": [2], "9": [1], "11": [2]}}},
+  "paths": [
+    {"id": "burrow_a", "points": [{"x": 45, "y": 130}, {"x": 430, "y": 130}, {"x": 430, "y": 500}], "length": 810.0},
+    {"id": "burrow_b", "points": [{"x": 45, "y": 320}, {"x": 610, "y": 320}, {"x": 610, "y": 500}], "length": 810.0},
+    {"id": "burrow_c", "points": [{"x": 45, "y": 510}, {"x": 780, "y": 510}], "length": 810.0}
+  ],
+  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [], "perches": []}, "sight_blockers": []
+}

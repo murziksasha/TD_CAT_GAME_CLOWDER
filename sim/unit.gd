@@ -12,6 +12,7 @@ var spawn_coat: String = ""
 
 # Path progress
 var path_id: String = "main_loop"
+var path_index: int = 0
 var s: float = 0.0 # distance along path
 
 # Combat stats
@@ -166,7 +167,9 @@ func hit(
 		"overflow_damage": 0,
 		"children_to_spawn": [],
 		"shell_bounty": 0,
-		"coat_popped": false
+		"coat_popped": false,
+		"popped_coats": [],
+		"blocked_by": ""
 	}
 	
 	if not is_alive:
@@ -174,6 +177,7 @@ func hit(
 		
 	# Immunity check
 	if SimConstants.is_immune_to_damage(immunities, damage_type):
+		result.blocked_by = SimConstants.immunity_cue_for_damage(damage_type)
 		return result
 		
 	# Damage calculation
@@ -220,6 +224,7 @@ func hit(
 		
 		if layer_hp <= 0:
 			result.coat_popped = true
+			result.popped_coats.append(unit_type)
 			var remaining_dmg = effective_damage - dmg_applied
 			result.overflow_damage = remaining_dmg
 			
@@ -276,6 +281,7 @@ func hit(
 						result.hp_removed += sub_hit.hp_removed
 						result.shell_bounty += sub_hit.shell_bounty
 						result.children_to_spawn.append_array(sub_hit.children_to_spawn)
+						result.popped_coats.append_array(sub_hit.popped_coats)
 						result.overflow_damage = sub_hit.overflow_damage
 						if sub_hit.killed:
 							result.killed = true

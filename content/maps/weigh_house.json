@@ -1,0 +1,36 @@
+{
+  "id": "weigh_house",
+  "name": "Weigh House",
+  "ward": "copper_market",
+  "band": "I",
+  "difficulty": "intermediate",
+  "shape": "loop",
+  "path_length": 1350.0,
+  "family": "standard",
+  "verb": "sight",
+  "lesson": "A fat center building blocks line of sight. Lobs and full-track shots matter.",
+  "paths": [
+    {
+      "id": "weigh_loop",
+      "points": [
+        {"x": 60.0, "y": 140.0},
+        {"x": 760.0, "y": 140.0},
+        {"x": 760.0, "y": 510.0},
+        {"x": 360.0, "y": 510.0}
+      ],
+      "length": 1350.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [],
+    "perches": [
+      {"x": 460.0, "y": 300.0, "radius": 36.0}
+    ]
+  },
+  "sight_blockers": [
+    {"x": 380.0, "y": 240.0, "width": 160.0, "height": 120.0}
+  ]
+}

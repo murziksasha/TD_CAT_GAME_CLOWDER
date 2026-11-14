@@ -30,7 +30,9 @@ These specifications govern all simulation logic, data authorship in `content/`,
     - Screen structure, match HUD layout, keyboard/mouse controls, colorblind visual shapes, audio design, pop pitch escalation, and accessibility options.
 11. **[11. Technical Architecture & Build Order](11_TECHNICAL_ARCHITECTURE.md)**
     - Godot 4 + GDScript architecture, sim/presentation separation, JSON content schemas, deterministic replay action format, save profile with checksum, test runner gates, and phased build order.
-12. **[Master Design Plan](MASTER_DESIGN_PLAN.md)**
+12. **[12. Ward Atlas (100 New Maps)](12_WARD_ATLAS.md)**
+    - Post-launch expansion: 100 new maps across 10 wards, 8 map verbs, 6 round families, trial contracts, 7 fairness gates, and multi-path simulation.
+13. **[Master Design Plan](MASTER_DESIGN_PLAN.md)**
     - The complete unified source document encompassing all sections in a single canonical reference.
 
 ---

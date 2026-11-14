@@ -1,0 +1,47 @@
+{
+  "id": "twin_gutters",
+  "name": "Twin Gutters",
+  "ward": "sunwash",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "split_merge",
+  "path_length": 1150.0,
+  "family": "standard",
+  "verb": "",
+  "lesson": "Two entrances, one exit, time to recover after the merge.",
+  "paths": [
+    {
+      "id": "path_a",
+      "points": [
+        {"x": 40.0, "y": 120.0},
+        {"x": 500.0, "y": 120.0},
+        {"x": 500.0, "y": 380.0},
+        {"x": 700.0, "y": 380.0},
+        {"x": 700.0, "y": 610.0}
+      ],
+      "length": 1150.0
+    },
+    {
+      "id": "path_b",
+      "points": [
+        {"x": 40.0, "y": 380.0},
+        {"x": 700.0, "y": 380.0},
+        {"x": 700.0, "y": 620.0}
+      ],
+      "length": 900.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [
+      {"x": 260.0, "y": 250.0, "radius": 50.0}
+    ],
+    "perches": [
+      {"x": 460.0, "y": 80.0, "radius": 30.0},
+      {"x": 750.0, "y": 340.0, "radius": 30.0}
+    ]
+  },
+  "sight_blockers": []
+}

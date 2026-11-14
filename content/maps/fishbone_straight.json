@@ -1,0 +1,36 @@
+{
+  "id": "fishbone_straight",
+  "name": "Fishbone Straight",
+  "ward": "sunwash",
+  "band": "B",
+  "difficulty": "beginner",
+  "shape": "line",
+  "path_length": 1500.0,
+  "family": "standard",
+  "verb": "",
+  "lesson": "A long walk. Goldie pays back without pressure.",
+  "paths": [
+    {
+      "id": "long_straight",
+      "points": [
+        {"x": 40.0, "y": 300.0},
+        {"x": 1140.0, "y": 300.0},
+        {"x": 1140.0, "y": 700.0}
+      ],
+      "length": 1500.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [
+      {"x": 600.0, "y": 500.0, "radius": 70.0}
+    ],
+    "perches": [
+      {"x": 550.0, "y": 230.0, "radius": 30.0},
+      {"x": 850.0, "y": 230.0, "radius": 30.0}
+    ]
+  },
+  "sight_blockers": []
+}

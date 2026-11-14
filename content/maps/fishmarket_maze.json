@@ -1,0 +1,5 @@
+{
+  "id": "fishmarket_maze", "name": "Fishmarket Maze", "ward": "harbor", "band": "B+", "difficulty": "beginner_plus", "shape": "maze", "path_length": 1180.0, "family": "harbor", "lesson": "The fish stalls obscure sight but provide broad turns.",
+  "paths": [{"id": "main_loop", "points": [{"x": 35, "y": 110}, {"x": 620, "y": 110}, {"x": 620, "y": 260}, {"x": 300, "y": 260}, {"x": 300, "y": 510}], "length": 1180.0}],
+  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [{"x": 900, "y": 330, "radius": 85}], "perches": [{"x": 690, "y": 200, "radius": 28}]}, "sight_blockers": [{"x": 420, "y": 340, "width": 115, "height": 65}]
+}

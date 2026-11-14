@@ -145,3 +145,10 @@ Non-milestone rounds are procedurally filled by content generators and must adhe
   - Rat Matriarch: **Round 98**
 - **Gnaw Mutation**: Exactly one enemy group every 5 rounds gains the Gnaw property.
 
+---
+
+## 8. Post-Launch Expansion: The Ward Atlas
+
+For the post-launch catalog of 100 neighboring maps across 10 distinct wards, along with the 8 simulation map verbs (`Schedule`, `Sight`, `Tide`, `Lever`, `Lantern`, `Zone`, `Rewrite`, `Offset`), the 6 round families, trial contracts, and 7 new balance gates, see **[SPEC/12_WARD_ATLAS.md](12_WARD_ATLAS.md)**.
+
+

@@ -1,0 +1,40 @@
+{
+  "id": "puddle_court",
+  "name": "Puddle Court",
+  "ward": "sunwash",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "loop",
+  "path_length": 1200.0,
+  "family": "harbor",
+  "verb": "",
+  "lesson": "Several ponds, docks all around them. Marlow is optional.",
+  "paths": [
+    {
+      "id": "main_loop",
+      "points": [
+        {"x": 80.0, "y": 160.0},
+        {"x": 680.0, "y": 160.0},
+        {"x": 680.0, "y": 460.0},
+        {"x": 380.0, "y": 460.0}
+      ],
+      "length": 1200.0
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+    ],
+    "water": [
+      {"x": 380.0, "y": 300.0, "radius": 75.0},
+      {"x": 850.0, "y": 250.0, "radius": 80.0},
+      {"x": 850.0, "y": 480.0, "radius": 60.0}
+    ],
+    "perches": [
+      {"x": 280.0, "y": 300.0, "radius": 30.0},
+      {"x": 480.0, "y": 300.0, "radius": 30.0},
+      {"x": 750.0, "y": 250.0, "radius": 30.0}
+    ]
+  },
+  "sight_blockers": []
+}

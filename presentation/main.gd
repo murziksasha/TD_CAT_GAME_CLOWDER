@@ -7,12 +7,19 @@ const SimHero = preload("res://sim/hero.gd")
 const SimFeats = preload("res://sim/feats.gd")
 const SimUnit = preload("res://sim/unit.gd")
 const SimProjectile = preload("res://sim/projectile.gd")
+const WorldDraw = preload("res://presentation/world_draw.gd")
+const ActorDraw = preload("res://presentation/actor_draw.gd")
+const CombatVfx = preload("res://presentation/vfx.gd")
+const PresentationAudio = preload("res://presentation/audio.gd")
+const ClowderLocalization = preload("res://presentation/localization.gd")
 
 # UI node references
 @onready var lives_label: Label = $CanvasLayer/HUD/TopBar/HBox/LivesLabel
 @onready var kibble_label: Label = $CanvasLayer/HUD/TopBar/HBox/KibbleLabel
 @onready var round_label: Label = $CanvasLayer/HUD/TopBar/HBox/RoundLabel
 @onready var start_round_btn: Button = $CanvasLayer/HUD/TopBar/HBox/StartRoundButton
+var map_select_btn: OptionButton = null
+var language_btn: Button = null
 
 @onready var speed1_btn: Button = $CanvasLayer/HUD/TopBar/HBox/SpeedContainer/Speed1Btn
 @onready var speed2_btn: Button = $CanvasLayer/HUD/TopBar/HBox/SpeedContainer/Speed2Btn
@@ -21,6 +28,7 @@ const SimProjectile = preload("res://sim/projectile.gd")
 @onready var cat_buttons_container: HBoxContainer = $CanvasLayer/HUD/BottomDock/Scroll/CatButtons
 @onready var inspector_panel: PanelContainer = $CanvasLayer/HUD/InspectorPanel
 @onready var right_info_panel: PanelContainer = $CanvasLayer/HUD/RightInfoPanel
+@onready var incoming_info: Label = $CanvasLayer/HUD/RightInfoPanel/VBox/IncomingInfo
 
 # Inspector controls
 @onready var cat_title_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/CatTitleLabel
@@ -71,6 +79,19 @@ var rat_sprites: Dictionary = {}
 var prop_sprites: Dictionary = {}
 var grass_tex: Texture2D
 var cobble_tex: Texture2D
+var world_drawer: WorldDraw
+var actor_drawer: ActorDraw
+var combat_vfx: CombatVfx
+var presentation_audio: PresentationAudio
+var previous_unit_s: Dictionary = {}
+var interpolation_alpha: float = 1.0
+var current_map_id: String = "sunny_gutter"
+var localization: ClowderLocalization
+var match_paused := false
+var world_camera: Camera2D
+var right_drag_origin := Vector2.ZERO
+var right_dragged := false
+var balcony_hint_time := 0.0
 
 # Colors for Mice coats
 const COAT_COLORS: Dictionary = {
@@ -101,9 +122,18 @@ const CAT_COLORS: Dictionary = {
 }
 
 func _ready() -> void:
+	localization = ClowderLocalization.new()
+	localization.setup(_load_language_setting())
 	_init_simulation()
+	world_drawer = WorldDraw.new()
+	actor_drawer = ActorDraw.new()
+	combat_vfx = CombatVfx.new()
+	presentation_audio = PresentationAudio.new()
+	_setup_balcony_camera()
 	_load_art()
 	_build_cat_dock()
+	_setup_map_select()
+	_setup_language_toggle()
 	_connect_ui_signals()
 	_apply_wood_theme()
 	_update_ui()
@@ -114,16 +144,20 @@ func _load_tex(path: String) -> Texture2D:
 	return null
 
 func _load_art() -> void:
-	for id in ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "mittens"]:
-		cat_sprites[id] = _load_tex("res://presentation/art/cats/%s.png" % id)
+	for id in ["pip", "nibs", "pudding", "biscuit", "sable", "nim", "goldie", "miso", "marlow", "mittens", "duchess", "baron", "pebble"]:
+		cat_sprites[id] = _load_sheet_or_static("res://presentation/art/cats/%s" % id)
 	for id in ["rust", "slate", "moss", "grain", "sugar", "soot", "frost", "ink", "iron", "marble", "prism", "porcelain"]:
-		mouse_sprites[id] = _load_tex("res://presentation/art/mice/%s.png" % id)
+		mouse_sprites[id] = _load_sheet_or_static("res://presentation/art/mice/%s" % id, "_walk")
 	for id in ["burrow", "bristle", "monarch", "dusk", "matriarch"]:
-		rat_sprites[id] = _load_tex("res://presentation/art/rats/%s.png" % id)
+		rat_sprites[id] = _load_sheet_or_static("res://presentation/art/rats/%s" % id, "_walk")
 	for id in ["stall", "lantern", "crates", "puddle"]:
 		prop_sprites[id] = _load_tex("res://presentation/art/props/%s.png" % id)
 	grass_tex = _load_tex("res://presentation/art/tiles/grass.png")
 	cobble_tex = _load_tex("res://presentation/art/tiles/cobble.png")
+
+func _load_sheet_or_static(stem: String, sheet_suffix: String = "_sheet") -> Texture2D:
+	var sheet := _load_tex("%s%s.png" % [stem, sheet_suffix])
+	return sheet if sheet != null else _load_tex("%s.png" % stem)
 
 func _apply_wood_theme() -> void:
 	var panel := _wood_panel()
@@ -185,11 +219,14 @@ func _theme_controls(node: Node, normal: StyleBox, hover: StyleBox, pressed: Sty
 	for child in node.get_children():
 		_theme_controls(child, normal, hover, pressed)
 
-func _init_simulation() -> void:
+func _init_simulation(p_map_id: String = "") -> void:
+	if p_map_id != "":
+		current_map_id = p_map_id
 	sim = SimMatch.new()
 	var mice_data = _load_json("res://content/mice.json")
 	var rats_data = _load_json("res://content/rats.json")
 	var sunny_rounds = _load_json("res://content/rounds/sunny.json")
+	var map_data = _load_json("res://content/maps/%s.json" % current_map_id)
 	
 	var cat_bps = {
 		"pip": _load_json("res://content/cats/pip.json"),
@@ -199,7 +236,8 @@ func _init_simulation() -> void:
 		"sable": _load_json("res://content/cats/sable.json"),
 		"nim": _load_json("res://content/cats/nim.json"),
 		"goldie": _load_json("res://content/cats/goldie.json"),
-		"miso": _load_json("res://content/cats/miso.json")
+		"miso": _load_json("res://content/cats/miso.json"),
+		"marlow": _load_json("res://content/cats/marlow.json")
 	}
 	
 	var hero_bps = {
@@ -216,7 +254,9 @@ func _init_simulation() -> void:
 		rats_data,
 		cat_bps,
 		hero_bps,
-		sunny_rounds
+		sunny_rounds,
+		0,
+		map_data
 	)
 
 func _build_cat_dock() -> void:
@@ -232,6 +272,7 @@ func _build_cat_dock() -> void:
 		{"id": "nim", "name": "Nim", "cost": 475, "is_hero": false},
 		{"id": "goldie", "name": "Goldie", "cost": 1250, "is_hero": false},
 		{"id": "miso", "name": "Miso", "cost": 700, "is_hero": false},
+		{"id": "marlow", "name": "Marlow", "cost": 500, "is_hero": false},
 		{"id": "mittens", "name": "Mittens ★", "cost": 600, "is_hero": true}
 	]
 	
@@ -269,6 +310,97 @@ func _connect_ui_signals() -> void:
 	feat_card3_btn.pressed.connect(func(): _pick_feat_card(2))
 	feat_reroll_btn.pressed.connect(_on_feat_reroll_pressed)
 
+func _setup_map_select() -> void:
+	map_select_btn = OptionButton.new()
+	map_select_btn.custom_minimum_size = Vector2(170, 0)
+	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
+	hbox.add_child(map_select_btn)
+	
+	var maps_list = [
+		{"id": "sunny_gutter", "name": "Sunny Gutter (Canon)"},
+		{"id": "lantern_stoop", "name": "1. Lantern Stoop (B)"},
+		{"id": "crabapple_bend", "name": "2. Crabapple Bend (B)"},
+		{"id": "twin_gutters", "name": "3. Twin Gutters (B+)"},
+		{"id": "stall_row", "name": "4. Stall Row (B+)"},
+		{"id": "puddle_court", "name": "5. Puddle Court (B+)"},
+		{"id": "chimney_step", "name": "6. Chimney Step (I)"},
+		{"id": "fishbone_straight", "name": "7. Fishbone Straight (B)"},
+		{"id": "sack_corner", "name": "8. Sack Corner (B+)"},
+		{"id": "welcome_bridge", "name": "9. Welcome Bridge (I)"},
+		{"id": "morning_arch", "name": "10. Morning Arch ★"},
+		{"id": "spice_arcade", "name": "11. Spice Arcade (B+)"},
+		{"id": "herring_square", "name": "12. Herring Square (B+)"},
+		{"id": "copper_scale", "name": "13. Copper Scale (I)"},
+		{"id": "basket_bridge", "name": "14. Basket Bridge (I)"},
+		{"id": "fig_and_twine", "name": "15. Fig and Twine (B+)"},
+		{"id": "weigh_house", "name": "16. Weigh House (I)"},
+		{"id": "two_purse_lane", "name": "17. Two-Purse Lane (I)"},
+		{"id": "canopy_cross", "name": "18. Canopy Cross (I)"},
+		{"id": "night_onion", "name": "19. Night Onion (A)"},
+		{"id": "grand_bazaar", "name": "20. Grand Bazaar ★"},
+		{"id": "market_lane", "name": "21. Market Lane"},
+		{"id": "rooftop_crossing", "name": "22. Rooftop Crossing"},
+		{"id": "fishmarket_maze", "name": "23. Fishmarket Maze"},
+		{"id": "canal_night", "name": "24. Canal Night"},
+		{"id": "the_warren", "name": "25. The Warren"}
+	]
+	
+	for i in range(maps_list.size()):
+		var m = maps_list[i]
+		map_select_btn.add_item(_t("map.%s" % m.id, m.name), i)
+		map_select_btn.set_item_metadata(i, m.id)
+		if m.id == current_map_id:
+			map_select_btn.selected = i
+			
+	map_select_btn.item_selected.connect(_on_map_selected)
+
+func _setup_language_toggle() -> void:
+	language_btn = Button.new()
+	language_btn.custom_minimum_size = Vector2(48, 0)
+	language_btn.pressed.connect(_on_language_toggled)
+	$CanvasLayer/HUD/TopBar/HBox.add_child(language_btn)
+	_apply_wood_theme()
+	_refresh_language_ui()
+
+func _load_language_setting() -> String:
+	var settings := ConfigFile.new()
+	if settings.load("user://settings.cfg") == OK:
+		return str(settings.get_value("settings", "language", "en"))
+	return "en"
+
+func _save_language_setting() -> void:
+	var settings := ConfigFile.new()
+	settings.set_value("settings", "language", localization.language)
+	settings.save("user://settings.cfg")
+
+func _on_language_toggled() -> void:
+	localization.toggle()
+	_save_language_setting()
+	_refresh_language_ui()
+	_update_ui()
+
+func _refresh_language_ui() -> void:
+	if language_btn != null:
+		language_btn.text = localization.text("ui.language", "UA")
+	if start_round_btn != null and not sim.round_in_progress:
+		start_round_btn.text = localization.text("ui.start_round", "Start round")
+
+func _t(key: String, fallback: String, replacements: Dictionary = {}) -> String:
+	return localization.text(key, fallback, replacements) if localization != null else fallback
+
+func _on_map_selected(idx: int) -> void:
+	var chosen_id = map_select_btn.get_item_metadata(idx)
+	selected_tower = null
+	selected_is_hero = false
+	placing_cat_id = ""
+	is_placing_hero = false
+	match_paused = false
+	inspector_panel.visible = false
+	previous_unit_s.clear()
+	_init_simulation(chosen_id)
+	_update_ui()
+	queue_redraw()
+
 func _set_speed(spd: int) -> void:
 	game_speed = spd
 	speed1_btn.disabled = (spd == 1)
@@ -279,10 +411,16 @@ func _physics_process(_delta: float) -> void:
 	if sim == null:
 		return
 		
+	for unit in sim.units:
+		previous_unit_s[unit.id] = unit.s
 	# Tick according to speed multiplier
-	if not feat_modal.visible:
+	if not feat_modal.visible and not match_paused:
 		for _i in range(game_speed):
 			sim.tick()
+	for unit in sim.units:
+		if not previous_unit_s.has(unit.id):
+			previous_unit_s[unit.id] = unit.s
+	interpolation_alpha = 0.0
 			
 	# Check if round just finished and feats are pending
 	if not sim.round_in_progress and not feat_modal.visible:
@@ -291,19 +429,85 @@ func _physics_process(_delta: float) -> void:
 	_update_ui()
 	queue_redraw()
 
+func _process(delta: float) -> void:
+	if sim == null:
+		return
+	interpolation_alpha = minf(1.0, interpolation_alpha + delta / maxf(0.001, get_physics_process_delta_time()))
+	actor_drawer.advance(delta)
+	combat_vfx.advance(delta)
+	_drain_presentation_log()
+	balcony_hint_time = maxf(0.0, balcony_hint_time - delta)
+	queue_redraw()
+
+func _drain_presentation_log() -> void:
+	for event in sim.drain_presentation_log():
+		if event.has("s") and not event.has("x"):
+			var pos := sim.get_point_on_path(float(event.s))
+			event["x"] = pos.x
+			event["y"] = pos.y
+		actor_drawer.note(event)
+		combat_vfx.note(event)
+		presentation_audio.note(event)
+
+func _setup_balcony_camera() -> void:
+	world_camera = Camera2D.new()
+	world_camera.position = Vector2(640.0, 360.0)
+	world_camera.zoom = Vector2.ONE
+	world_camera.position_smoothing_enabled = true
+	world_camera.position_smoothing_speed = 9.0
+	add_child(world_camera)
+
+func _restore_balcony_view() -> void:
+	if world_camera == null:
+		return
+	world_camera.position = Vector2(640.0, 360.0)
+	world_camera.rotation = 0.0
+	world_camera.zoom = Vector2.ONE
+	balcony_hint_time = 0.0
+
+func _screen_to_world(screen_pos: Vector2) -> Vector2:
+	return get_canvas_transform().affine_inverse() * screen_pos
+
+func _toggle_pause() -> void:
+	match_paused = not match_paused
+	start_round_btn.text = _t("ui.resume", "Resume") if match_paused else _t("ui.start_round", "Start round")
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		mouse_pos = event.position
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
+		mouse_pos = _screen_to_world(event.position)
+		if world_camera != null and (event.button_mask & MOUSE_BUTTON_MASK_RIGHT) != 0:
+			if event.relative.length() > 0.5:
+				right_dragged = true
+				world_camera.rotation = clampf(world_camera.rotation + event.relative.x * 0.003, -0.34, 0.34)
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if world_camera != null:
+				var focus := _screen_to_world(event.position)
+				world_camera.position = world_camera.position.lerp(focus, 0.12)
+				var factor := 1.12 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.89
+				var next_zoom := clampf(world_camera.zoom.x * factor, 0.75, 2.25)
+				world_camera.zoom = Vector2(next_zoom, next_zoom)
+				balcony_hint_time = 3.0
+			return
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if event.pressed:
+				right_drag_origin = event.position
+				right_dragged = false
+			elif not right_dragged:
+				_cancel_placement_or_selection()
+			return
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_handle_left_click(event.position)
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_cancel_placement_or_selection()
 	elif event is InputEventKey and event.pressed:
 		if event.keycode == KEY_SPACE:
 			_on_start_round_pressed()
 		elif event.keycode == KEY_ESCAPE:
-			_cancel_placement_or_selection()
+			if placing_cat_id != "" or selected_tower != null or selected_is_hero:
+				_cancel_placement_or_selection()
+			else:
+				_toggle_pause()
+		elif event.keycode == KEY_HOME:
+			_restore_balcony_view()
 		elif event.keycode == KEY_1:
 			_set_speed(1)
 		elif event.keycode == KEY_2:
@@ -311,10 +515,11 @@ func _input(event: InputEvent) -> void:
 		elif event.keycode == KEY_3:
 			_set_speed(3)
 
-func _handle_left_click(click_pos: Vector2) -> void:
+func _handle_left_click(screen_pos: Vector2) -> void:
 	# Ignore clicks on UI panels
-	if click_pos.y > 600 or click_pos.x > 970 or click_pos.y < 65:
+	if screen_pos.y > 600 or screen_pos.x > 970 or screen_pos.y < 65:
 		return
+	var click_pos := _screen_to_world(screen_pos)
 		
 	if placing_cat_id != "":
 		# Attempt placement
@@ -424,12 +629,14 @@ func _update_inspector() -> void:
 		path_b_btn.visible = false
 		path_c_btn.visible = false
 		
-		ability1_btn.text = "⚡ Pin Cushion (Lvl 3)" if h.level >= 3 else "Locked until Lvl 3"
+		var ability_1: Dictionary = h.hero_data.get("active_abilities", {}).get("ability_1", {})
+		ability1_btn.text = "%s (Lvl 3)" % ability_1.get("name", "Ability 1") if h.level >= 3 else "Locked until Lvl 3"
 		ability1_btn.disabled = not h.can_use_ability(1)
 		if h.ability_1_cooldown_left > 0.0:
 			ability1_btn.text += " (%.1fs)" % h.ability_1_cooldown_left
 			
-		ability2_btn.text = "⚡ Spool Barrage (Lvl 10)" if h.level >= 10 else "Locked until Lvl 10"
+		var ability_2: Dictionary = h.hero_data.get("active_abilities", {}).get("ability_2", {})
+		ability2_btn.text = "%s (Lvl 10)" % ability_2.get("name", "Ability 2") if h.level >= 10 else "Locked until Lvl 10"
 		ability2_btn.disabled = not h.can_use_ability(2)
 		if h.ability_2_cooldown_left > 0.0:
 			ability2_btn.text += " (%.1fs)" % h.ability_2_cooldown_left
@@ -456,20 +663,35 @@ func _update_upgrade_btn(btn: Button, path_key: String) -> void:
 	var base_cost = int(next_tier_data.get("cost", 100))
 	var price = sim.economy.calculate_price(base_cost)
 	
-	btn.text = "%s [Tier %d/5]\n%s ($%d)" % [path_name, cur_tier, tier_name, price]
+	var pips := "●".repeat(cur_tier) + "○".repeat(5 - cur_tier)
+	btn.text = "%s  %s\n%s — %s\n%d Kibble" % [path_name, pips, tier_name, _upgrade_delta(next_tier_data), price]
 	
 	if not selected_tower.can_upgrade(path_key):
 		btn.disabled = true
-		btn.text += " [LOCKED]"
+		btn.text += "\n%s" % _crosspath_reason(path_key)
 	elif not sim.economy.can_afford(price):
 		btn.disabled = true
 		btn.text += " [NO KIBBLE]"
 	else:
 		btn.disabled = false
 
+func _upgrade_delta(tier: Dictionary) -> String:
+	var chunks: Array[String] = []
+	for key in ["damage", "pierce", "range", "projectiles", "freeze", "cooldown"]:
+		if tier.has(key):
+			chunks.append("%s %s" % [key.capitalize(), str(tier[key])])
+	return ", ".join(chunks) if not chunks.is_empty() else "New technique"
+
+func _crosspath_reason(path_key: String) -> String:
+	for other in ["path_a", "path_b", "path_c"]:
+		if other != path_key and selected_tower.tiers.get(other, 0) >= 3:
+			return "%s is Tier 3, so this path stops at Tier 2" % other.capitalize()
+	return "Two paths are already chosen"
+
 func _upgrade_selected(path_key: String) -> void:
 	if selected_tower != null:
 		if sim.upgrade_tower(selected_tower, path_key):
+			combat_vfx.note({"type": "upgrade", "x": selected_tower.position.x, "y": selected_tower.position.y})
 			_update_inspector()
 			_update_ui()
 
@@ -532,6 +754,7 @@ func _open_feat_dialog(t: SimTower) -> void:
 
 func _pick_feat_card(idx: int) -> void:
 	if pending_feat_tower != null and idx < current_feat_offer.size():
+		combat_vfx.note({"type": "ability", "x": pending_feat_tower.position.x, "y": pending_feat_tower.position.y})
 		pending_feat_tower.apply_feat(current_feat_offer[idx])
 		pending_feat_tower = null
 		feat_modal.visible = false
@@ -545,6 +768,9 @@ func _on_feat_reroll_pressed() -> void:
 
 func _on_start_round_pressed() -> void:
 	if sim != null and not feat_modal.visible:
+		if match_paused:
+			_toggle_pause()
+			return
 		sim.start_next_round()
 		_update_ui()
 
@@ -554,19 +780,39 @@ func _update_ui() -> void:
 	lives_label.text = "❤️ Lives: %d" % sim.lives
 	kibble_label.text = "🐟 Kibble: %d" % sim.economy.kibble
 	round_label.text = "Round: %d / %d (Sunny)" % [sim.current_round, sim.max_rounds]
+	_update_wave_strip()
+	lives_label.text = "%s: %d" % [_t("ui.lives", "Lives"), sim.lives]
+	kibble_label.text = "%s: %d" % [_t("ui.kibble", "Kibble"), sim.economy.kibble]
+	round_label.text = "%s: %d / %d (%s)" % [_t("ui.round", "Round"), sim.current_round, sim.max_rounds, _t("map.%s" % current_map_id, current_map_id.capitalize())]
+	if not sim.round_in_progress and not match_paused:
+		start_round_btn.text = _t("ui.start_round", "Start round")
 	start_round_btn.disabled = sim.round_in_progress or sim.match_won or sim.match_lost or feat_modal.visible
 	if selected_tower != null or selected_is_hero:
 		_update_inspector()
+
+func _update_wave_strip() -> void:
+	var next_round := sim.current_round if sim.round_in_progress else sim.current_round + 1
+	var groups: Array = sim.round_data.get("rounds", {}).get(str(next_round), [])
+	if groups.is_empty():
+		incoming_info.text = _t("ui.trail_clear", "Trail clear") if sim.match_won else _t("ui.no_wave", "No wave authored yet")
+		return
+	var chunks: Array[String] = []
+	for group in groups:
+		var kind := str(group.get("rat", group.get("coat", "mouse"))).capitalize()
+		chunks.append("%s x%d" % [kind, int(group.get("count", 1))])
+	incoming_info.text = _t("ui.next_trail", "Next trail") + ": " + " / ".join(chunks)
 
 # ==================== DRAWING & VISUALIZATION ====================
 
 func _draw() -> void:
 	if sim == null:
 		return
-	_draw_world()
-	_draw_towers()
-	_draw_units()
-	_draw_projectiles()
+	world_drawer.draw_world(self, grass_tex, cobble_tex, prop_sprites, sim)
+	var displayed_s: Dictionary = {}
+	for unit in sim.units:
+		displayed_s[unit.id] = lerpf(float(previous_unit_s.get(unit.id, unit.s)), unit.s, interpolation_alpha)
+	actor_drawer.draw_actors(self, sim, displayed_s, selected_tower, selected_is_hero, cat_sprites, mouse_sprites, rat_sprites)
+	combat_vfx.draw(self)
 	_draw_placement_preview()
 
 func _path_points() -> PackedVector2Array:

@@ -1,0 +1,6 @@
+{
+  "id": "market_lane", "name": "Market Lane", "ward": "market", "band": "B+", "difficulty": "beginner_plus", "shape": "zigzag", "path_length": 1120.0, "family": "market", "lesson": "A long market turn rewards coverage of both corners.",
+  "paths": [{"id": "main_loop", "points": [{"x": 40, "y": 130}, {"x": 540, "y": 130}, {"x": 540, "y": 500}, {"x": 900, "y": 500}], "length": 1120.0}],
+  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [], "perches": [{"x": 500, "y": 80, "radius": 30}]},
+  "sight_blockers": [{"x": 680, "y": 150, "width": 100, "height": 60}]
+}

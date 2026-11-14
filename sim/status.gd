@@ -29,24 +29,27 @@ func setup(p_rat_type: String = "", p_is_matriarch: bool = false) -> void:
 	rat_type = p_rat_type
 	is_matriarch = p_is_matriarch
 
-func apply_freeze(duration: float) -> void:
+func apply_freeze(duration: float) -> bool:
 	if is_matriarch:
-		return
+		return false
 	var d = duration
 	if rat_type == "monarch" or rat_type == "burrow" or rat_type == "bristle" or rat_type == "dusk":
 		d = min(d, 0.6)
 	freeze_time = max(freeze_time, d)
+	return d > 0.0
 
-func apply_stun(duration: float, mult: float = 1.0) -> void:
+func apply_stun(duration: float, mult: float = 1.0) -> bool:
 	if is_matriarch:
-		return
+		return false
 	var d = duration * mult
 	stun_time = max(stun_time, d)
+	return d > 0.0
 
-func apply_slow(factor: float, duration: float) -> void:
+func apply_slow(factor: float, duration: float) -> bool:
 	if is_matriarch:
-		return
+		return false
 	slows.append({"factor": clampf(factor, 0.05, 1.0), "time": duration})
+	return duration > 0.0
 
 func apply_burn(dps: float, duration: float, type: int = SimConstants.DamageType.BITE) -> void:
 	var final_dps = dps
