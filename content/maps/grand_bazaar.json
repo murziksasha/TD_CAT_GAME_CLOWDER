@@ -1,50 +1,127 @@
 {
   "id": "grand_bazaar",
   "name": "Grand Bazaar",
-  "ward": "copper_market",
+  "map_revision": 2,
+  "ward": "night_market",
   "band": "A",
   "difficulty": "advanced",
-  "shape": "cross",
-  "path_length": 1500.0,
-  "family": "standard",
-  "verb": "sight_lever",
-  "is_signature": true,
-  "lesson": "Signature map. Lever drops the central awning: sight opens, and that build pocket goes with it.",
+  "shape": "split_merge",
+  "path_width": 40,
+  "path_length": 1040,
+  "family": "redesigned",
+  "lesson": "Two entries circle the central market and join on a single late exit.",
   "paths": [
     {
-      "id": "bazaar_cross",
+      "id": "east_entry",
       "points": [
-        {"x": 60.0, "y": 340.0},
-        {"x": 640.0, "y": 340.0},
-        {"x": 640.0, "y": 100.0},
-        {"x": 640.0, "y": 600.0},
-        {"x": 1040.0, "y": 600.0}
-      ],
-      "length": 1500.0
+        {
+          "x": 40,
+          "y": 140
+        },
+        {
+          "x": 420,
+          "y": 140
+        },
+        {
+          "x": 420,
+          "y": 360
+        },
+        {
+          "x": 700,
+          "y": 360
+        },
+        {
+          "x": 700,
+          "y": 520
+        }
+      ]
+    },
+    {
+      "id": "west_entry",
+      "points": [
+        {
+          "x": 40,
+          "y": 580
+        },
+        {
+          "x": 420,
+          "y": 580
+        },
+        {
+          "x": 420,
+          "y": 360
+        },
+        {
+          "x": 700,
+          "y": 360
+        },
+        {
+          "x": 700,
+          "y": 520
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
     "water": [],
     "perches": [
-      {"x": 540.0, "y": 240.0, "radius": 32.0},
-      {"x": 740.0, "y": 440.0, "radius": 32.0}
+      {
+        "x": 555,
+        "y": 270,
+        "radius": 30
+      }
     ]
   },
   "sight_blockers": [
-    {"x": 580.0, "y": 280.0, "width": 120.0, "height": 120.0}
-  ],
-  "verbs": {
-    "lever": {
-      "cost": 100,
-      "cooldown_rounds": 5,
-      "action": "drop_central_awning"
+    {
+      "id": "grand_bazaar_permanent_1",
+      "x": 480,
+      "y": 250,
+      "width": 110,
+      "height": 80
     }
-  },
-  "trials": [
-    {"type": "clean_whisker", "max_lives_lost": 15, "reward_fishcoin": 60},
-    {"type": "district_bench", "banned_category": "myth", "reward_fishcoin": 50}
+  ],
+  "obstacles": [
+    {
+      "id": "grand_bazaar_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "grand_bazaar_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "grand_bazaar_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
   ]
 }

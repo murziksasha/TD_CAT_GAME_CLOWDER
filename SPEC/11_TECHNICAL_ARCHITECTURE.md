@@ -195,3 +195,70 @@ The following features are explicitly excluded from v1:
 - Mid-round feat draft pauses.
 - Random Fishcoin drops.
 
+
+
+## 8. Post-v1 expansion interfaces (proposed)
+
+These interfaces support the unratified [SPEC 13](13_GRAND_EXPANSION_SYSTEMS.md). They do not enable multiplayer, change v1 saves, or establish that cross-platform determinism has been achieved. Existing replay and profile formats remain valid; an implementation requires explicit versioned migrations and compatibility tests.
+
+### Lockstep frames and snapshots
+
+A session handshake compares protocol, sim build, ruleset, map revision, content digest, seed, player roster and negotiated input delay. Refuse a mismatch. Authentication and transport are separate from simulation; TLS or equivalent, identity, NAT traversal and relay support require a separate threat model. No peer may submit actions as another player.
+
+```json
+{
+  "protocol_version": 1,
+  "player_id": 0,
+  "tick": 1420,
+  "actions": [{"sequence": 0, "type": "place_cat", "payload": {"cat_id": "pip", "position": [240, 180]}}],
+  "checksum_tick": 1410,
+  "state_checksum": "sha256-of-canonical-state-at-checksum-tick"
+}
+```
+
+A frame covers exactly one player and tick; empty `actions` means no action, not missing input. Sequences are nonnegative, unique and strictly increasing within the frame. Validate lengths, types, bounds, identity and permitted action types before accepting; retransmission of identical frames is idempotent, while conflicting frames abort the session. All players advance only after receiving every frame for that tick, sorted by player ID then sequence. Sim validates costs, ownership, placement and phase; an invalid action has a deterministic no-op result. Instance IDs are assigned by the sim, never trusted from the network. Speed controls are local presentation; pause and round-start votes are synchronized actions.
+
+The checksum describes the complete authoritative state *after* `checksum_tick`, not the future input frame. Hash a canonical byte serialization with specified integer widths, ordering, PRNG state, content identity and all future-affecting state; exclude rendering and wall-clock data. JSON key order and platform-dependent float formatting are not a canonical encoding. Hash periodically at a protocol-defined interval and compare identical ticks. A mismatch pauses and records diagnostics, never silently continues. Recovery uses a mutually verified snapshot at an agreed tick plus the ordered frames after it; reject mismatched versions or hash. Cap frame, snapshot and history sizes. Cross-platform numeric behavior and PRNG must be audited and tested before lockstep is enabled; fixed ticks alone do not ensure determinism.
+
+### Map export envelope
+
+This proposed interchange envelope is independent of the current runtime map format and requires an explicit validated adapter. Coordinates are integer map units; arrays preserve authored order and IDs are unique within their collection.
+
+```json
+{
+  "schema_version": 1, "id": "custom_example", "name": "Example",
+  "bounds": [680, 480],
+  "paths": [{"id": "main", "points": [[40, 100], [640, 100], [640, 400]]}],
+  "masks": [{"id": "yard", "kind": "land", "polygon": [[0, 0], [680, 0], [680, 480], [0, 480]]}],
+  "blockers": [], "props": []
+}
+```
+
+Kinds are `land`, `water`, or `perch`; blockers are separately identified bounded polygons and take precedence over placement masks. Paths need at least two distinct consecutive points; reject zero-length segments, out-of-bounds coordinates, invalid or self-intersecting polygons, unknown fields or IDs and excessive counts or payload sizes according to published limits. A map must have a reachable exit and placement-clear track ribbon; multi-path routing and overlaps use the existing map rules. Props reference bundled allowlisted art IDs and integer positions and have no collision without a blocker. The editor and import validator share rules. Share-code encoding, compression format and exact size limits must be versioned and specified before implementation; checksum is corruption detection, not a security boundary.
+
+### Dialogue script envelope
+
+```json
+{
+  "schema_version": 1, "id": "burrow_intro",
+  "trigger": {"event": "before_boss", "boss_id": "burrow"},
+  "lines": [{"speaker": "mittens", "emotion": "alert", "line": "The pier needs us.", "sfx": null}]
+}
+```
+
+IDs resolve only to bundled content; line is plain display text and optional SFX is an allowlisted ID or null. Bound line count and length. Trigger occurs at a defined simulation event; display and dismissal do not pause, mutate or sample the simulation. Localization and subtitles can substitute presentation text while preserving script IDs.
+
+### Ledger profile extension
+
+This is a candidate extension inside the checksummed profile `payload`; bump the profile version and migrate old profiles with an empty ledger when implemented.
+
+```json
+{
+  "active_track_id": "harvest_01",
+  "tracks": {
+    "harvest_01": {"ledger_xp": 1200, "claimed_tiers": [1, 2], "applied_result_ids": ["match-unique-id"]}
+  }
+}
+```
+
+Ledger XP is a nonnegative integer copy of eligible Account XP, not a subtraction or additional Account XP grant. Thresholds and the 50 tier rewards live in versioned content. Track IDs, claimed tier integers 1?50 and result IDs are unique; a claim must be eligible and atomically grant its reward exactly once. Result IDs must be stable across retries and reconnects. Archive progression and outstanding claims persist after the published season ends; switching tracks cannot duplicate XP or rewards. Save migrations and atomic writes must preserve existing currencies and unlocks. Offline calendar reconciliation and bounded durable deduplication need a specified design before release.

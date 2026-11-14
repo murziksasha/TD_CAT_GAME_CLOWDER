@@ -56,8 +56,8 @@ func _init() -> void:
 	)
 	
 	assert(sim.paths.size() == 2, "Twin gutters must have 2 paths")
-	assert(sim.get_path_length(0) == 1150.0, "Path A length must be 1150")
-	assert(sim.get_path_length(1) == 900.0, "Path B length must be 900")
+	assert(is_equal_approx(sim.get_path_length(0), 1140.0), "Path A must use its measured 1140-unit polyline")
+	assert(is_equal_approx(sim.get_path_length(1), 1100.0), "Path B must use its measured 1100-unit polyline")
 	
 	var initial_lives = sim.lives
 	# Spawn mouse on Path B (index 1)
@@ -65,9 +65,8 @@ func _init() -> void:
 	assert(u.path_index == 1, "Unit must be on path_index 1")
 	assert(u.path_id == "path_b", "Unit path_id must be path_b")
 	
-	# Rust mouse speed is 40.0 u/s. 900 / 40 = 22.5s. At 30 Hz = 675 ticks.
-	# Tick 680 ticks to ensure leak
-	for i in range(680):
+	# Rust mouse speed is 40.0 u/s. 1100 / 40 = 27.5s. At 30 Hz = 825 ticks.
+	for i in range(830):
 		sim.tick()
 		if sim.lives < initial_lives:
 			break
@@ -78,10 +77,10 @@ func _init() -> void:
 	for ev in log:
 		if ev.get("type") == "leak" and ev.get("path_index") == 1:
 			found_leak = true
-			assert(ev.get("s") == 900.0, "Leak distance must match Path B length 900")
+			assert(is_equal_approx(ev.get("s"), 1100.0), "Leak distance must match measured Path B length")
 			break
 	assert(found_leak, "Expected leak event on path_index 1")
-	print("[PASS] Twin Gutters Path B leak verified at s=900.0 (lives: %d -> %d)." % [initial_lives, sim.lives])
+	print("[PASS] Twin Gutters Path B leak verified at measured s=1100 (lives: %d -> %d)." % [initial_lives, sim.lives])
 	
 	# TEST 2: Stall Row Sight Blocker
 	var sim_stall = SimMatch.new()
@@ -113,7 +112,22 @@ func _init() -> void:
 	assert(not place_check.valid, "Cannot place cat inside or overlapping stall prop")
 	print("[PASS] Stall Row sight obstruction and placement clearance verified.")
 
-	# TEST 3: Water-mask placement. Marlow is water-only; land cats remain off water.
+	# TEST 3: Fixed-price clutter clears only between rounds and exposes its pad.
+	var clutter := sim_stall.get_removable_obstacles()[0]
+	var clutter_id := str(clutter.get("id"))
+	var base: Dictionary = clutter.get("base", {})
+	var clutter_pos := Vector2(float(base.get("x", 0.0)) + 12.0, float(base.get("y", 0.0)) + 12.0)
+	var blocked := sim_stall.can_place_tower_at("pip", clutter_pos)
+	assert(not blocked.valid and blocked.get("code") == "removable_obstacle", "Clutter must name itself as the placement blocker")
+	var before_kibble: int = sim_stall.economy.kibble
+	assert(sim_stall.clear_obstacle(clutter_id), "Affordable clutter must clear between rounds")
+	assert(sim_stall.economy.kibble == before_kibble - int(clutter.get("cost")), "Clearing must use exact fixed Kibble")
+	assert(not sim_stall.clear_obstacle(clutter_id), "Clearing twice must not charge again")
+	var replay_data: Dictionary = sim_stall.replay.to_dict()
+	assert(replay_data.get("map_revision") == 2, "Replay records map geometry revision")
+	print("[PASS] Removable clutter has fixed cost, an id reason, and replay revision.")
+
+	# TEST 4: Water-mask placement. Marlow is water-only; land cats remain off water.
 	var sim_water = SimMatch.new()
 	sim_water.setup(SimConstants.GameMode.SUNNY, 42, mice_data, rats_data, cat_bps, hero_bps, sunny_rounds, 0, sunny_map)
 	var marlow_water = sim_water.can_place_tower_at("marlow", Vector2(800.0, 200.0))
@@ -125,7 +139,7 @@ func _init() -> void:
 	assert(not marlow_land.valid, "Marlow must not be placeable on land")
 	print("[PASS] Authoritative water mask and Marlow placement verified.")
 	
-	# TEST 4: Schedule Querying (Fairness Gate 7)
+	# TEST 5: Schedule Querying (Fairness Gate 7)
 	var sched = sim.get_upcoming_schedule(1, 3)
 	assert(sched.size() == 3, "Schedule preview should return 3 rounds")
 	assert(sched[0].round == 1, "Schedule preview starts at current round")

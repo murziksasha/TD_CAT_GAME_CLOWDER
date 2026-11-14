@@ -1,0 +1,79 @@
+{
+  "currency": "golden_bones",
+  "items": [
+    {
+      "id": "pip_golden_dandy",
+      "name": "Pip: Golden Dandy",
+      "category": "mythic_skin",
+      "target_cat": "pip",
+      "price": 25,
+      "desc": "Pip's velvet vest, gilded needle, and pure silk thread."
+    },
+    {
+      "id": "duchess_bazaar_empress",
+      "name": "Duchess: Bazaar Empress",
+      "category": "mythic_skin",
+      "target_cat": "duchess",
+      "price": 35,
+      "desc": "Brocade mantle, jade folding fan, and noble amber sparks."
+    },
+    {
+      "id": "baron_storm_captain",
+      "name": "Baron Salt: Storm Captain",
+      "category": "mythic_skin",
+      "target_cat": "baron",
+      "price": 35,
+      "desc": "Deep navy commander coat, maritime compass, and storm gale pipes."
+    },
+    {
+      "id": "pebble_zen_keeper",
+      "name": "Sister Pebble: Zen Keeper",
+      "category": "mythic_skin",
+      "target_cat": "pebble",
+      "price": 35,
+      "desc": "Silk sash, luminescent prayer bell, and floating petal aura."
+    },
+    {
+      "id": "trail_starlight",
+      "name": "Starlight Projectile Trail",
+      "category": "trail",
+      "price": 15,
+      "desc": "Projectiles shimmer with the twilight stars of the alley."
+    },
+    {
+      "id": "trail_aurora",
+      "name": "Aurora Chill Trail",
+      "category": "trail",
+      "price": 15,
+      "desc": "Frost pulses gleam with an emerald northern light gradient."
+    },
+    {
+      "id": "frame_gilded_brass",
+      "name": "Gilded Brass & Oak UI Frame",
+      "category": "frame",
+      "price": 20,
+      "desc": "Hand-carved oak border with inlaid polished brass accents."
+    },
+    {
+      "id": "emote_royal_purr",
+      "name": "Royal Purr Victory Flair",
+      "category": "flair",
+      "price": 10,
+      "desc": "Celebratory majestic purr stinger and bowing pose at match victory."
+    },
+    {
+      "id": "title_matriarch_scourge",
+      "name": "Title: Scourge of the Matriarch",
+      "category": "title",
+      "price": 5,
+      "desc": "Prestigious title shown on player profile badge and victory reports."
+    },
+    {
+      "id": "title_silk_paw",
+      "name": "Title: Silk Paw",
+      "category": "title",
+      "price": 5,
+      "desc": "Legendary stealth title of alley masters."
+    }
+  ]
+}

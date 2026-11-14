@@ -8,6 +8,7 @@
 # ------------------------------------------------------------------------------
 # Godot-specific cache, imported binary assets, shader caches, and metadata
 .godot/
+*.uid
 # Export credentials (passwords, keystores)
 export_credentials.cfg
 # Binary compiled translation files (keep text-based translations if added)
