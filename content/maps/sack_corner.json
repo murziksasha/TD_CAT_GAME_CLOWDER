@@ -1,35 +1,90 @@
 {
   "id": "sack_corner",
   "name": "Sack Corner",
-  "ward": "sunwash",
+  "map_revision": 2,
+  "ward": "alley",
   "band": "B+",
   "difficulty": "beginner_plus",
-  "shape": "bend",
-  "path_length": 1000.0,
-  "family": "standard",
-  "verb": "sight",
-  "lesson": "Crates hug a corner. Close range owns the pocket.",
+  "shape": "corner",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "The tight corner is dangerous, but the broad exit gives a reliable recovery zone.",
   "paths": [
     {
-      "id": "corner_bend",
+      "id": "main_path",
       "points": [
-        {"x": 60.0, "y": 160.0},
-        {"x": 660.0, "y": 160.0},
-        {"x": 660.0, "y": 560.0}
-      ],
-      "length": 1000.0
+        {
+          "x": 50,
+          "y": 140
+        },
+        {
+          "x": 700,
+          "y": 140
+        },
+        {
+          "x": 700,
+          "y": 540
+        },
+        {
+          "x": 500,
+          "y": 540
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
     "water": [],
     "perches": [
-      {"x": 720.0, "y": 100.0, "radius": 30.0}
+      {
+        "x": 620,
+        "y": 270,
+        "radius": 30
+      }
     ]
   },
-  "sight_blockers": [
-    {"x": 570.0, "y": 210.0, "width": 75.0, "height": 75.0}
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "sack_corner_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "sack_corner_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "sack_corner_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
   ]
 }

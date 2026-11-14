@@ -1,6 +1,90 @@
 {
-  "id": "market_lane", "name": "Market Lane", "ward": "market", "band": "B+", "difficulty": "beginner_plus", "shape": "zigzag", "path_length": 1120.0, "family": "market", "lesson": "A long market turn rewards coverage of both corners.",
-  "paths": [{"id": "main_loop", "points": [{"x": 40, "y": 130}, {"x": 540, "y": 130}, {"x": 540, "y": 500}, {"x": 900, "y": 500}], "length": 1120.0}],
-  "placement_zones": {"land": [{"x": 0, "y": 0, "width": 1280, "height": 720}], "water": [], "perches": [{"x": 500, "y": 80, "radius": 30}]},
-  "sight_blockers": [{"x": 680, "y": 150, "width": 100, "height": 60}]
+  "id": "market_lane",
+  "name": "Market Lane",
+  "map_revision": 2,
+  "ward": "alley",
+  "band": "B+",
+  "difficulty": "beginner_plus",
+  "shape": "market_turn",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "The market straight runs into a clean turnaround; keep firing lanes open between the stalls.",
+  "paths": [
+    {
+      "id": "main_path",
+      "points": [
+        {
+          "x": 50,
+          "y": 180
+        },
+        {
+          "x": 820,
+          "y": 180
+        },
+        {
+          "x": 820,
+          "y": 480
+        },
+        {
+          "x": 640,
+          "y": 480
+        }
+      ]
+    }
+  ],
+  "placement_zones": {
+    "land": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
+    ],
+    "water": [],
+    "perches": [
+      {
+        "x": 500,
+        "y": 95,
+        "radius": 30
+      }
+    ]
+  },
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "market_lane_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "market_lane_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "market_lane_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
 }

@@ -34,6 +34,22 @@ var current_damage: int = 1
 var current_cooldown: float = 0.8
 var current_range: float = 160.0
 
+# Hero-specific mechanic variables
+var burn_dps: float = 0.0
+var burn_duration: float = 0.0
+var explosion_radius: float = 0.0
+var keelhaul_timer: float = 0.0
+var spool_barrage_timer: float = 0.0
+var last_thread_used: bool = false
+var skim_active: bool = false
+var end_round_kibble_base: int = 0
+var end_round_kibble_per_lvl: int = 0
+
+# Aura buffs from support cats (heroes get 50% aura benefits)
+var aura_damage_bonus: int = 0
+var aura_range_mult: float = 0.0
+var aura_speed_mult: float = 0.0
+
 # Timers & cooldowns
 var attack_timer: float = 0.0
 var ability_1_cooldown_left: float = 0.0
@@ -61,8 +77,20 @@ func setup(p_hero_data: Dictionary, pos: Vector2, start_level: int = 1) -> void:
 	range_radius = float(base.get("range", 160.0))
 	cooldown = float(base.get("cooldown", 0.8))
 	see_shadow = base.get("see_shadow", false)
+	burn_dps = float(base.get("burn_dps", 0.0))
+	burn_duration = float(base.get("burn_duration", 0.0))
+	explosion_radius = float(base.get("radius", 0.0))
 	
 	_recalculate_stats()
+
+func add_xp(amount: float) -> int:
+	xp += amount
+	var old_lvl = level
+	while level < 20 and xp >= XP_TABLE[level]:
+		level += 1
+	if level > old_lvl:
+		_recalculate_stats()
+	return level
 
 func add_round_xp(round_num: int, xp_bonus_mult: float = 1.0) -> int:
 	var round_xp = (20.0 + 3.0 * float(round_num) + 0.02 * damage_this_round) * xp_bonus_mult
@@ -87,6 +115,11 @@ func _recalculate_stats() -> void:
 	current_cooldown = cooldown / spd_scale
 	current_range = range_radius + range_bonus
 	
+	var base = hero_data.get("base", {})
+	burn_dps = float(base.get("burn_dps", 0.0))
+	burn_duration = float(base.get("burn_duration", 0.0))
+	explosion_radius = float(base.get("radius", 0.0))
+	
 	# Kit specific level milestones
 	if id == "mittens":
 		if level >= 4:
@@ -96,15 +129,39 @@ func _recalculate_stats() -> void:
 		if level >= 7:
 			current_cooldown /= 1.20
 	elif id == "duchess":
+		if level >= 7:
+			burn_duration += 2.0
 		if level >= 8:
-			see_shadow = false
 			damage_type = SimConstants.DamageType.VOID
+	elif id == "baron":
+		if level >= 20:
+			pass
+	elif id == "pebble":
+		if level >= 20:
+			end_round_kibble_base = 40
+			end_round_kibble_per_lvl = 4
+		else:
+			end_round_kibble_base = 10
+			end_round_kibble_per_lvl = 2
+
+func get_effective_damage() -> int:
+	return current_damage + aura_damage_bonus
+
+func get_effective_range() -> float:
+	return current_range * (1.0 + aura_range_mult)
+
+func get_effective_cooldown() -> float:
+	return current_cooldown / maxf(0.1, 1.0 + aura_speed_mult)
 
 func tick(delta: float) -> void:
 	if ability_1_cooldown_left > 0.0:
 		ability_1_cooldown_left = maxf(0.0, ability_1_cooldown_left - delta)
 	if ability_2_cooldown_left > 0.0:
 		ability_2_cooldown_left = maxf(0.0, ability_2_cooldown_left - delta)
+	if spool_barrage_timer > 0.0:
+		spool_barrage_timer = maxf(0.0, spool_barrage_timer - delta)
+	if id == "baron" and level >= 20:
+		keelhaul_timer = maxf(0.0, keelhaul_timer - delta)
 
 func can_use_ability(slot: int) -> bool:
 	if slot == 1:

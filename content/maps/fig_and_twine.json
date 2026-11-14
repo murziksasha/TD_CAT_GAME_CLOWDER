@@ -1,35 +1,96 @@
 {
   "id": "fig_and_twine",
   "name": "Fig and Twine",
-  "ward": "copper_market",
+  "map_revision": 2,
+  "ward": "alley",
   "band": "B+",
   "difficulty": "beginner_plus",
-  "shape": "bend",
-  "path_length": 1150.0,
-  "family": "standard",
-  "verb": "sight",
-  "lesson": "One crate can be built against. The rest is open space.",
+  "shape": "curved_street",
+  "path_width": 40,
+  "path_length": 1250,
+  "family": "redesigned",
+  "lesson": "A curved street leaves several small open pockets for carefully placed cats.",
   "paths": [
     {
-      "id": "main_bend",
+      "id": "main_path",
       "points": [
-        {"x": 60.0, "y": 140.0},
-        {"x": 760.0, "y": 140.0},
-        {"x": 760.0, "y": 590.0}
-      ],
-      "length": 1150.0
+        {
+          "x": 60,
+          "y": 200
+        },
+        {
+          "x": 600,
+          "y": 200
+        },
+        {
+          "x": 600,
+          "y": 520
+        },
+        {
+          "x": 210,
+          "y": 520
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
-    "water": [],
+    "water": [
+      {
+        "x": 910,
+        "y": 420,
+        "radius": 55
+      }
+    ],
     "perches": [
-      {"x": 680.0, "y": 80.0, "radius": 32.0}
+      {
+        "x": 460,
+        "y": 350,
+        "radius": 30
+      }
     ]
   },
-  "sight_blockers": [
-    {"x": 660.0, "y": 240.0, "width": 60.0, "height": 60.0}
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "fig_and_twine_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "fig_and_twine_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "fig_and_twine_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
   ]
 }

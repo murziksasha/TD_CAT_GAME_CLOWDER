@@ -1,36 +1,95 @@
 {
   "id": "chimney_step",
   "name": "Chimney Step",
-  "ward": "sunwash",
+  "map_revision": 2,
+  "ward": "alley",
   "band": "I",
   "difficulty": "intermediate",
-  "shape": "bend",
-  "path_length": 1050.0,
-  "family": "standard",
-  "verb": "",
-  "lesson": "Perch pads over a hairpin. Sable's placement is the choice.",
+  "shape": "rooftop_turn",
+  "path_width": 40,
+  "path_length": 1100,
+  "family": "redesigned",
+  "lesson": "A sharp turnaround winds between chimneys; perch space reads clearly above the roofs.",
   "paths": [
     {
-      "id": "hairpin_bend",
+      "id": "main_path",
       "points": [
-        {"x": 60.0, "y": 150.0},
-        {"x": 700.0, "y": 150.0},
-        {"x": 700.0, "y": 360.0},
-        {"x": 500.0, "y": 360.0}
-      ],
-      "length": 1050.0
+        {
+          "x": 60,
+          "y": 120
+        },
+        {
+          "x": 620,
+          "y": 120
+        },
+        {
+          "x": 620,
+          "y": 500
+        },
+        {
+          "x": 460,
+          "y": 500
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
     "water": [],
     "perches": [
-      {"x": 760.0, "y": 250.0, "radius": 32.0},
-      {"x": 640.0, "y": 250.0, "radius": 32.0},
-      {"x": 700.0, "y": 80.0, "radius": 32.0}
+      {
+        "x": 420,
+        "y": 80,
+        "radius": 30
+      },
+      {
+        "x": 680,
+        "y": 340,
+        "radius": 30
+      }
     ]
   },
-  "sight_blockers": []
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "chimney_step_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "chimney_step_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "chimney_step_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
 }

@@ -17,6 +17,32 @@
 ```
 Props, market stalls, and houses must remain completely outside this ribbon.
 
+### Map Geometry Revision 2 — Clear Yards
+
+All 26 shipped maps now use `map_revision: 2`. The route polyline is the sole
+source of truth for movement, leaks, timing, and track placement clearance;
+`path_length` is an informative content value measured from that polyline.
+
+| Band | Shortest-route target | Maps |
+| :--- | :---: | :--- |
+| B | 1,200 (+/-5%) | Sunny Gutter, Lantern Stoop, Crabapple Bend, Fishbone Straight, Morning Arch |
+| B+ | 1,250 (+/-5%) | Market Lane, Stall Row, Puddle Court, Sack Corner, Herring Square, Fig and Twine, Spice Arcade |
+| I | 1,100 (+/-5%) | Welcome Bridge, Chimney Step, Twin Gutters, Basket Bridge, Rooftop Crossing, Copper Scale, Canopy Cross, Weigh House |
+| A | 1,000 (+/-5%) | Two-Purse Lane, Fishmarket Maze, Canal Night, Night Onion, Grand Bazaar |
+| E | 900 (+/-5%) | The Warren |
+
+Every map supplies a land mask, water and perch masks where applicable, fixed
+permanent blockers, and three optional placement-only clutter obstacles. Each
+path includes a recovery stretch after its key turn or merge. Crossings never
+transfer a mouse to another path, and bridge geometry creates no height rule.
+
+Each obstacle has a stable id, rectangular base, visual style, and a fixed
+price: small crates 50 Kibble, medium baskets 100 Kibble, and large debris 150
+Kibble. Clearing is available before a round or between rounds, including Bare
+Paw. It has no discount, refund, or reward; it is recorded as a replay action.
+Old replay actions must not silently run against this geometry: replay data
+contains the map revision.
+
 ---
 
 ## 2. Round Scripting Grammar

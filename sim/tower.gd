@@ -6,6 +6,7 @@ const SimConstants = preload("res://sim/constants.gd")
 const SimFeats = preload("res://sim/feats.gd")
 
 var instance_id: int = 0
+var owner_id: int = 1
 var cat_id: String = ""
 var cat_name: String = ""
 var category: String = "Alley"
@@ -30,6 +31,41 @@ var projectile_speed: float = 400.0
 var see_shadow: bool = false
 var can_pop_iron: bool = false
 var full_track_range: bool = false
+
+# Support & Contribution tracking
+var damage_dealt: int = 0
+var pops_count: int = 0
+var total_kibble_produced: int = 0
+var total_buff_damage_assisted: float = 0.0
+var buffed_cats_count: int = 0
+var freeze_assists: int = 0
+
+# Aura Buffs received from support cats
+var aura_damage_bonus: int = 0
+var aura_range_mult: float = 0.0
+var aura_speed_mult: float = 0.0
+var aura_pierce_bonus: int = 0
+var aura_grant_night_eye: bool = false
+var aura_crit_bonus: float = 0.0
+var aura_sources: Array[int] = []
+
+# Feat & Upgrade bonuses
+var bonus_vs_porcelain: int = 0
+var bonus_vs_rats: int = 0
+var crit_chance: float = 0.0
+var extra_projectiles: int = 0
+var burn_dps_bonus: float = 0.0
+var burn_duration_bonus: float = 0.0
+var freeze_duration_bonus: float = 0.0
+var slow_duration_bonus: float = 0.0
+var explosion_radius_bonus: float = 0.0
+var shatter_damage_bonus: int = 0
+var hex_duration_bonus: float = 0.0
+var hex_dps_bonus: float = 0.0
+var extra_round_kibble: int = 0
+var mark_duration_bonus: float = 0.0
+var burst_shot_interval: int = 5
+var cloud_duration_bonus: float = 0.0
 
 # Internal cooldown / attack tracking
 var attack_timer: float = 0.0
@@ -70,21 +106,72 @@ func can_upgrade(path_key: String) -> bool:
 	# 1. At most two paths can have upgrades (> 0)
 	# 2. If one path is >= 3, other path cannot exceed 2
 	var upgraded_paths = 0
-	var has_path_above_2 = false
+	var other_path_above_2 = false
 	for p in ["path_a", "path_b", "path_c"]:
 		if tiers[p] > 0:
 			upgraded_paths += 1
-		if tiers[p] >= 3:
-			has_path_above_2 = true
+		if p != path_key and tiers[p] >= 3:
+			other_path_above_2 = true
 			
 	if tiers[path_key] == 0 and upgraded_paths >= 2:
 		return false
 		
-	if has_path_above_2 and current_tier >= 2:
+	if other_path_above_2 and current_tier >= 2:
 		# If another path is >= 3 and this one is already 2, cannot go to 3
 		return false
 		
 	return true
+
+func get_crosspath_block_reason(path_key: String) -> String:
+	var current_tier = tiers.get(path_key, 0)
+	if current_tier >= 5:
+		return "MAX_TIER"
+	var upgraded_paths = 0
+	var other_path_above_2 = false
+	var blocking_path = ""
+	for p in ["path_a", "path_b", "path_c"]:
+		if tiers[p] > 0:
+			upgraded_paths += 1
+		if p != path_key and tiers[p] >= 3:
+			other_path_above_2 = true
+			blocking_path = p
+	if tiers[path_key] == 0 and upgraded_paths >= 2:
+		return "TWO_PATHS_CHOSEN"
+	if other_path_above_2 and current_tier >= 2:
+		return "LOCKED_BY_OTHER_TIER3:" + blocking_path
+	return ""
+
+func apply_aura_buffs(
+	p_damage_bonus: int,
+	p_range_mult: float,
+	p_speed_mult: float,
+	p_pierce_bonus: int,
+	p_grant_night_eye: bool,
+	p_crit_bonus: float,
+	p_sources: Array[int]
+) -> void:
+	aura_damage_bonus = p_damage_bonus
+	aura_range_mult = p_range_mult
+	aura_speed_mult = p_speed_mult
+	aura_pierce_bonus = p_pierce_bonus
+	aura_grant_night_eye = p_grant_night_eye
+	aura_crit_bonus = p_crit_bonus
+	aura_sources = p_sources
+
+func get_effective_damage() -> int:
+	return damage + aura_damage_bonus
+
+func get_effective_pierce() -> int:
+	return pierce + aura_pierce_bonus
+
+func get_effective_range() -> float:
+	return range_radius * (1.0 + aura_range_mult)
+
+func get_effective_cooldown() -> float:
+	return cooldown / maxf(0.1, 1.0 + aura_speed_mult)
+
+func get_effective_see_shadow() -> bool:
+	return see_shadow or aura_grant_night_eye
 
 func apply_upgrade(path_key: String, cost_paid: int) -> bool:
 	if not can_upgrade(path_key):
@@ -149,6 +236,24 @@ func _recalculate_stats() -> void:
 				# Ink immunity bypassed
 				pass
 				
+	# Reset specialized feat/upgrade bonuses
+	bonus_vs_porcelain = 0
+	bonus_vs_rats = 0
+	crit_chance = 0.0
+	extra_projectiles = 0
+	burn_dps_bonus = 0.0
+	burn_duration_bonus = 0.0
+	freeze_duration_bonus = 0.0
+	slow_duration_bonus = 0.0
+	explosion_radius_bonus = 0.0
+	shatter_damage_bonus = 0
+	hex_duration_bonus = 0.0
+	hex_dps_bonus = 0.0
+	extra_round_kibble = 0
+	mark_duration_bonus = 0.0
+	burst_shot_interval = 5
+	cloud_duration_bonus = 0.0
+
 	# Apply Feat cards
 	for f in selected_feats:
 		if f.has("damage_add"):
@@ -161,11 +266,43 @@ func _recalculate_stats() -> void:
 			cooldown /= maxf(0.1, (1.0 + float(f["speed_mult"])))
 		if f.has("grant_night_eye") and f["grant_night_eye"]:
 			see_shadow = true
+		if f.has("bonus_porcelain"):
+			bonus_vs_porcelain += int(f["bonus_porcelain"])
+		if f.has("bonus_rats"):
+			bonus_vs_rats += int(f["bonus_rats"])
+		if f.has("crit_chance"):
+			crit_chance += float(f["crit_chance"])
+		if f.has("extra_projectiles"):
+			extra_projectiles += int(f["extra_projectiles"])
+		if f.has("burn_dps_bonus"):
+			burn_dps_bonus += float(f["burn_dps_bonus"])
+		if f.has("burn_duration_bonus"):
+			burn_duration_bonus += float(f["burn_duration_bonus"])
+		if f.has("freeze_duration_bonus"):
+			freeze_duration_bonus += float(f["freeze_duration_bonus"])
+		if f.has("slow_duration_bonus"):
+			slow_duration_bonus += float(f["slow_duration_bonus"])
+		if f.has("explosion_radius_bonus"):
+			explosion_radius_bonus += float(f["explosion_radius_bonus"])
+		if f.has("shatter_damage_bonus"):
+			shatter_damage_bonus += int(f["shatter_damage_bonus"])
+		if f.has("hex_duration_bonus"):
+			hex_duration_bonus += float(f["hex_duration_bonus"])
+		if f.has("hex_dps_bonus"):
+			hex_dps_bonus += float(f["hex_dps_bonus"])
+		if f.has("extra_round_kibble"):
+			extra_round_kibble += int(f["extra_round_kibble"])
+		if f.has("mark_duration_bonus"):
+			mark_duration_bonus += float(f["mark_duration_bonus"])
+		if f.has("burst_interval"):
+			burst_shot_interval = int(f["burst_interval"])
+		if f.has("cloud_duration_bonus"):
+			cloud_duration_bonus += float(f["cloud_duration_bonus"])
 
 func tick_cooldown(delta: float) -> bool:
 	attack_timer -= delta
 	if attack_timer <= 0.0:
-		attack_timer = cooldown
+		attack_timer = get_effective_cooldown()
 		shot_counter += 1
 		return true
 	return false

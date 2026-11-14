@@ -1,36 +1,98 @@
 {
   "id": "weigh_house",
   "name": "Weigh House",
-  "ward": "copper_market",
+  "map_revision": 2,
+  "ward": "alley",
   "band": "I",
   "difficulty": "intermediate",
-  "shape": "loop",
-  "path_length": 1350.0,
-  "family": "standard",
-  "verb": "sight",
-  "lesson": "A fat center building blocks line of sight. Lobs and full-track shots matter.",
+  "shape": "warehouse_loop",
+  "path_width": 40,
+  "path_length": 1150,
+  "family": "redesigned",
+  "lesson": "Walk around the weigh house and choose an inner or outer side of the defense.",
   "paths": [
     {
-      "id": "weigh_loop",
+      "id": "main_loop",
       "points": [
-        {"x": 60.0, "y": 140.0},
-        {"x": 760.0, "y": 140.0},
-        {"x": 760.0, "y": 510.0},
-        {"x": 360.0, "y": 510.0}
-      ],
-      "length": 1350.0
+        {
+          "x": 60,
+          "y": 150
+        },
+        {
+          "x": 610,
+          "y": 150
+        },
+        {
+          "x": 610,
+          "y": 470
+        },
+        {
+          "x": 330,
+          "y": 470
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
     "water": [],
     "perches": [
-      {"x": 460.0, "y": 300.0, "radius": 36.0}
+      {
+        "x": 420,
+        "y": 300,
+        "radius": 30
+      }
     ]
   },
   "sight_blockers": [
-    {"x": 380.0, "y": 240.0, "width": 160.0, "height": 120.0}
+    {
+      "id": "weigh_house_permanent_1",
+      "x": 400,
+      "y": 270,
+      "width": 100,
+      "height": 75
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "weigh_house_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "weigh_house_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "weigh_house_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
   ]
 }

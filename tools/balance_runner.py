@@ -274,6 +274,60 @@ def test_ward_atlas_land_witness():
         assert total_land_area >= 8 * (math.pi * 20.0**2), f"Map {fname} cannot hold 8 cat footprints"
     print("[PASS] [11/14] Ward Atlas land-witness footprint capacity validated.")
 
+def test_map_revision_two_geometry_and_clearance():
+    """Content-side guard for measured routes and unlockable, genuinely usable pads."""
+    maps_dir = os.path.join(CONTENT_DIR, "maps")
+    targets = {"B": 1200.0, "B+": 1250.0, "I": 1100.0, "A": 1000.0, "E": 900.0}
+
+    def route_length(points):
+        return sum(math.hypot(b["x"] - a["x"], b["y"] - a["y"])
+                   for a, b in zip(points, points[1:]))
+
+    def segment_distance(p, a, b):
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        denom = dx * dx + dy * dy
+        t = 0.0 if denom == 0 else max(0.0, min(1.0, ((p[0] - a["x"]) * dx + (p[1] - a["y"]) * dy) / denom))
+        return math.hypot(p[0] - (a["x"] + t * dx), p[1] - (a["y"] + t * dy))
+
+    for fname in os.listdir(maps_dir):
+        if not fname.endswith(".json"):
+            continue
+        with open(os.path.join(maps_dir, fname), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        assert data.get("map_revision") == 2, f"{fname} is not geometry revision 2"
+        measured = [route_length(p["points"]) for p in data["paths"]]
+        shortest = min(measured)
+        target = targets[data["band"]]
+        assert abs(shortest - target) <= target * 0.05, f"{fname} shortest path {shortest:.1f} misses {target:.0f} +/-5%"
+        assert abs(float(data["path_length"]) - shortest) < 0.01, f"{fname} path_length is not measured"
+        obstacles = data.get("obstacles", [])
+        assert len(obstacles) == 3 and sorted(o.get("cost") for o in obstacles) == [50, 100, 150], f"{fname} needs small/medium/large clutter"
+        assert len({o.get("id") for o in obstacles}) == 3, f"{fname} clutter ids must be stable and unique"
+
+        def clear_of_route(point):
+            return all(segment_distance(point, a, b) >= 40.0
+                       for path in data["paths"] for a, b in zip(path["points"], path["points"][1:]))
+        def clear_of_water(point):
+            return all(math.hypot(point[0] - w["x"], point[1] - w["y"]) >= w.get("radius", 0) + 24.0
+                       for w in data.get("placement_zones", {}).get("water", []))
+        def clear_of_rect(point, obstacle):
+            r = obstacle["base"]
+            return not (r["x"] - 24 <= point[0] <= r["x"] + r["width"] + 24 and r["y"] - 24 <= point[1] <= r["y"] + r["height"] + 24)
+
+        witnesses = []
+        for x in range(30, 1250, 48):
+            for y in range(30, 700, 48):
+                point = (x, y)
+                if clear_of_route(point) and clear_of_water(point) and all(clear_of_rect(point, o) for o in obstacles):
+                    if all(math.hypot(point[0] - q[0], point[1] - q[1]) >= 48 for q in witnesses):
+                        witnesses.append(point)
+        assert len(witnesses) >= 8, f"{fname} has fewer than eight clear 24-radius cat pads"
+        for obstacle in obstacles:
+            r = obstacle["base"]
+            pad = (r["x"] + r["width"] / 2, r["y"] + r["height"] / 2)
+            assert clear_of_route(pad) and clear_of_water(pad), f"{fname} {obstacle['id']} does not release a usable pad"
+    print("[PASS] [new] Geometry revision, target lengths, eight pad witnesses, and clutter pads validated.")
+
 def test_ward_atlas_threat_hints():
     maps_dir = os.path.join(CONTENT_DIR, "maps")
     for fname in os.listdir(maps_dir):
@@ -342,6 +396,7 @@ if __name__ == "__main__":
     test_account_xp_and_level_progression()
     test_ward_atlas_travel_floor()
     test_ward_atlas_land_witness()
+    test_map_revision_two_geometry_and_clearance()
     test_ward_atlas_threat_hints()
     test_tide_lift_100_refund()
     test_locale_catalogue_parity()

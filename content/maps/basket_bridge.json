@@ -1,47 +1,125 @@
 {
   "id": "basket_bridge",
   "name": "Basket Bridge",
-  "ward": "copper_market",
+  "map_revision": 2,
+  "ward": "alley",
   "band": "I",
   "difficulty": "intermediate",
   "shape": "split_merge",
-  "path_length": 1000.0,
-  "family": "standard",
-  "verb": "",
-  "lesson": "Bridge path and street path meet at a central stall.",
+  "path_width": 40,
+  "path_length": 1090,
+  "family": "redesigned",
+  "lesson": "Bridge and lower street meet before the exit; defend their shared finish.",
   "paths": [
     {
       "id": "bridge_path",
       "points": [
-        {"x": 60.0, "y": 140.0},
-        {"x": 600.0, "y": 140.0},
-        {"x": 600.0, "y": 380.0},
-        {"x": 800.0, "y": 380.0},
-        {"x": 800.0, "y": 600.0}
-      ],
-      "length": 1000.0
+        {
+          "x": 20,
+          "y": 120
+        },
+        {
+          "x": 490,
+          "y": 120
+        },
+        {
+          "x": 490,
+          "y": 300
+        },
+        {
+          "x": 750,
+          "y": 300
+        },
+        {
+          "x": 750,
+          "y": 490
+        }
+      ]
     },
     {
       "id": "street_path",
       "points": [
-        {"x": 60.0, "y": 380.0},
-        {"x": 600.0, "y": 380.0},
-        {"x": 800.0, "y": 380.0},
-        {"x": 800.0, "y": 620.0}
-      ],
-      "length": 1000.0
+        {
+          "x": 50,
+          "y": 500
+        },
+        {
+          "x": 400,
+          "y": 500
+        },
+        {
+          "x": 400,
+          "y": 300
+        },
+        {
+          "x": 750,
+          "y": 300
+        },
+        {
+          "x": 750,
+          "y": 490
+        }
+      ]
     }
   ],
   "placement_zones": {
     "land": [
-      {"x": 0.0, "y": 0.0, "width": 1280.0, "height": 720.0}
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      }
     ],
     "water": [
-      {"x": 300.0, "y": 260.0, "radius": 50.0}
+      {
+        "x": 260,
+        "y": 300,
+        "radius": 56
+      }
     ],
     "perches": [
-      {"x": 670.0, "y": 310.0, "radius": 30.0}
+      {
+        "x": 610,
+        "y": 240,
+        "radius": 30
+      }
     ]
   },
-  "sight_blockers": []
+  "sight_blockers": [],
+  "obstacles": [
+    {
+      "id": "basket_bridge_small",
+      "base": {
+        "x": 1050,
+        "y": 540,
+        "width": 52,
+        "height": 40
+      },
+      "style": "crates",
+      "cost": 50
+    },
+    {
+      "id": "basket_bridge_medium",
+      "base": {
+        "x": 920,
+        "y": 80,
+        "width": 68,
+        "height": 52
+      },
+      "style": "baskets",
+      "cost": 100
+    },
+    {
+      "id": "basket_bridge_large",
+      "base": {
+        "x": 920,
+        "y": 600,
+        "width": 86,
+        "height": 64
+      },
+      "style": "debris",
+      "cost": 150
+    }
+  ]
 }
