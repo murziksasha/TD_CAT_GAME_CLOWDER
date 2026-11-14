@@ -89,6 +89,10 @@ var current_map_id: String = "sunny_gutter"
 var localization: ClowderLocalization
 var match_paused := false
 var world_camera: Camera2D
+var camera_controls: HBoxContainer
+const CAMERA_CENTER := Vector2(640.0, 360.0)
+const CAMERA_SIZE := Vector2(1280.0, 720.0)
+const CAMERA_MAX_ZOOM := 2.25
 var right_drag_origin := Vector2.ZERO
 var right_dragged := false
 var balcony_hint_time := 0.0
@@ -134,6 +138,7 @@ func _ready() -> void:
 	_build_cat_dock()
 	_setup_map_select()
 	_setup_language_toggle()
+	_setup_camera_controls()
 	_connect_ui_signals()
 	_apply_wood_theme()
 	_update_ui()
@@ -430,6 +435,8 @@ func _physics_process(_delta: float) -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
+	_pan_camera(delta)
+	mouse_pos = _screen_to_world(get_viewport().get_mouse_position())
 	if sim == null:
 		return
 	interpolation_alpha = minf(1.0, interpolation_alpha + delta / maxf(0.001, get_physics_process_delta_time()))
@@ -463,7 +470,56 @@ func _restore_balcony_view() -> void:
 	world_camera.position = Vector2(640.0, 360.0)
 	world_camera.rotation = 0.0
 	world_camera.zoom = Vector2.ONE
+	world_camera.reset_smoothing()
 	balcony_hint_time = 0.0
+
+func _setup_camera_controls() -> void:
+	camera_controls = HBoxContainer.new()
+	camera_controls.position = Vector2(730, 548)
+	camera_controls.add_theme_constant_override("separation", 6)
+	$CanvasLayer/HUD.add_child(camera_controls)
+	for label in ["+", "−", "Reset"]:
+		var button := Button.new()
+		button.text = label
+		button.custom_minimum_size = Vector2(64, 42)
+		button.focus_mode = Control.FOCUS_NONE
+		button.modulate.a = 0.78
+		button.tooltip_text = "Zoom in · Arrow keys: move" if label == "+" else ("Zoom out" if label == "−" else "Reset view · Home")
+		button.mouse_entered.connect(func(): button.modulate.a = 1.0)
+		button.mouse_exited.connect(func(): button.modulate.a = 0.78)
+		if label == "Reset":
+			button.pressed.connect(_restore_balcony_view)
+		else:
+			var factor := 1.12 if label == "+" else 1.0 / 1.12
+			button.pressed.connect(func(): _zoom_camera(factor, get_viewport_rect().size * 0.5))
+		camera_controls.add_child(button)
+
+func _clamp_camera() -> void:
+	# Rotated viewport extents keep every visible corner inside the backdrop.
+	var half := CAMERA_SIZE * 0.5 / world_camera.zoom.x
+	var angle := world_camera.rotation
+	var extent := Vector2(absf(cos(angle)) * half.x + absf(sin(angle)) * half.y,
+		absf(sin(angle)) * half.x + absf(cos(angle)) * half.y)
+	extent = extent.min(CAMERA_SIZE * 0.5)
+	world_camera.position = world_camera.position.clamp(extent, CAMERA_SIZE - extent)
+
+func _zoom_camera(factor: float, screen_focus: Vector2) -> void:
+	var next_zoom := clampf(world_camera.zoom.x * factor, 1.0, CAMERA_MAX_ZOOM)
+	if is_equal_approx(next_zoom, 1.0):
+		_restore_balcony_view()
+		return
+	var focus := _screen_to_world(screen_focus)
+	world_camera.position = focus + (world_camera.position - focus) * world_camera.zoom.x / next_zoom
+	world_camera.zoom = Vector2.ONE * next_zoom
+	_clamp_camera()
+	balcony_hint_time = 3.0
+
+func _pan_camera(delta: float) -> void:
+	if world_camera == null or world_camera.zoom.x <= 1.0 or feat_modal.visible:
+		return
+	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	world_camera.position += direction.normalized().rotated(world_camera.rotation) * 480.0 * delta / world_camera.zoom.x
+	_clamp_camera()
 
 func _screen_to_world(screen_pos: Vector2) -> Vector2:
 	return get_canvas_transform().affine_inverse() * screen_pos
@@ -479,15 +535,14 @@ func _input(event: InputEvent) -> void:
 			if event.relative.length() > 0.5:
 				right_dragged = true
 				world_camera.rotation = clampf(world_camera.rotation + event.relative.x * 0.003, -0.34, 0.34)
+				if world_camera.zoom.x <= 1.0:
+					_restore_balcony_view()
+				else:
+					_clamp_camera()
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			if world_camera != null:
-				var focus := _screen_to_world(event.position)
-				world_camera.position = world_camera.position.lerp(focus, 0.12)
-				var factor := 1.12 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.89
-				var next_zoom := clampf(world_camera.zoom.x * factor, 0.75, 2.25)
-				world_camera.zoom = Vector2(next_zoom, next_zoom)
-				balcony_hint_time = 3.0
+			if world_camera != null and event.pressed and event.position.x < 970 and event.position.y > 65 and event.position.y < 600 and not feat_modal.visible:
+				_zoom_camera(1.12 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.12, event.position)
 			return
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			if event.pressed:
@@ -516,6 +571,8 @@ func _input(event: InputEvent) -> void:
 			_set_speed(3)
 
 func _handle_left_click(screen_pos: Vector2) -> void:
+	if camera_controls != null and camera_controls.get_global_rect().has_point(screen_pos):
+		return
 	# Ignore clicks on UI panels
 	if screen_pos.y > 600 or screen_pos.x > 970 or screen_pos.y < 65:
 		return
