@@ -14,18 +14,31 @@ var flash_check: CheckBox
 var text_scale_btn: OptionButton
 var audio_slider: HSlider
 var lang_btn: OptionButton
+var mouse_sprites: Dictionary = {}
 
-func setup(p_save_mgr: SimSaveManager) -> void:
+func setup(p_save_mgr: SimSaveManager, p_mouse_sprites: Dictionary = {}) -> void:
 	save_mgr = p_save_mgr
+	mouse_sprites = p_mouse_sprites
 	_build_ui()
 	_load_current_settings()
 
+func _get_icon(tex: Texture2D) -> Texture2D:
+	if tex == null:
+		return null
+	if tex.get_width() > tex.get_height() and tex.get_height() >= 32:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = tex
+		var h := tex.get_height()
+		atlas.region = Rect2(0, 0, h, h)
+		return atlas
+	return tex
+
 func _build_ui() -> void:
-	custom_minimum_size = Vector2(560, 480)
-	offset_left = 360.0
-	offset_top = 120.0
-	offset_right = 920.0
-	offset_bottom = 600.0
+	custom_minimum_size = Vector2(680, 560)
+	offset_left = 300.0
+	offset_top = 80.0
+	offset_right = 980.0
+	offset_bottom = 640.0
 
 	var root_vbox := VBoxContainer.new()
 	root_vbox.add_theme_constant_override("separation", 14)
@@ -36,14 +49,14 @@ func _build_ui() -> void:
 	root_vbox.add_child(header_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "⚙ Settings & Accessibility"
+	title_lbl.text = "Settings & Accessibility"
 	title_lbl.add_theme_font_size_override("font_size", 20)
 	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_hbox.add_child(title_lbl)
 
 	var close_btn := Button.new()
-	close_btn.text = " ✕ Close "
+	close_btn.text = "Close"
 	close_btn.pressed.connect(func():
 		visible = false
 		closed.emit()
@@ -139,6 +152,52 @@ func _build_ui() -> void:
 	lang_btn.add_item("Українська (UK)", 1)
 	lang_btn.item_selected.connect(_on_setting_changed)
 	lang_hbox.add_child(lang_btn)
+
+	root_vbox.add_child(HSeparator.new())
+
+	# 6. Permanent Coat Shape Strip (12 coats from Stage 3)
+	var coat_hdr := Label.new()
+	coat_hdr.text = "Coat Shape Language (Always Active):"
+	coat_hdr.add_theme_font_size_override("font_size", 13)
+	coat_hdr.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+	root_vbox.add_child(coat_hdr)
+
+	var coat_grid := GridContainer.new()
+	coat_grid.columns = 6
+	coat_grid.add_theme_constant_override("h_separation", 8)
+	coat_grid.add_theme_constant_override("v_separation", 6)
+	root_vbox.add_child(coat_grid)
+
+	var coats := [
+		{"id": "rust", "shape": "Notched ear"},
+		{"id": "slate", "shape": "Flat cap"},
+		{"id": "moss", "shape": "Leaf tail"},
+		{"id": "grain", "shape": "Satchel"},
+		{"id": "sugar", "shape": "Lollipop"},
+		{"id": "soot", "shape": "Brush"},
+		{"id": "frost", "shape": "Scarf"},
+		{"id": "ink", "shape": "Wizard hat"},
+		{"id": "iron", "shape": "Bucket"},
+		{"id": "marble", "shape": "Stone slab"},
+		{"id": "prism", "shape": "Crystal"},
+		{"id": "porcelain", "shape": "Shell"}
+	]
+	for c in coats:
+		var cell := VBoxContainer.new()
+		cell.custom_minimum_size = Vector2(96, 48)
+		cell.alignment = BoxContainer.ALIGNMENT_CENTER
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(28, 28)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture = _get_icon(mouse_sprites.get(c["id"]))
+		cell.add_child(icon)
+		var lbl := Label.new()
+		lbl.text = "%s\n(%s)" % [str(c["id"]).capitalize(), c["shape"]]
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 10)
+		cell.add_child(lbl)
+		coat_grid.add_child(cell)
 
 func _load_current_settings() -> void:
 	if save_mgr == null:

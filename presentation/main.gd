@@ -20,6 +20,10 @@ const ClowderLocalization = preload("res://presentation/localization.gd")
 const SimSaveManager = preload("res://sim/save_manager.gd")
 const AlmanacModal = preload("res://presentation/almanac_modal.gd")
 const TitleMenu = preload("res://presentation/title_menu.gd")
+const MapSelectModal = preload("res://presentation/map_select_modal.gd")
+const LoadoutModal = preload("res://presentation/loadout_modal.gd")
+const PauseModal = preload("res://presentation/pause_modal.gd")
+const WoodTheme = preload("res://presentation/wood_theme.gd")
 const InsightsModal = preload("res://presentation/insights_modal.gd")
 const ShopModal = preload("res://presentation/shop_modal.gd")
 const SettingsModal = preload("res://presentation/settings_modal.gd")
@@ -32,14 +36,23 @@ const NetworkManager = preload("res://network/network_manager.gd")
 @onready var lives_label: Label = $CanvasLayer/HUD/TopBar/HBox/LivesLabel
 @onready var kibble_label: Label = $CanvasLayer/HUD/TopBar/HBox/KibbleLabel
 @onready var round_label: Label = $CanvasLayer/HUD/TopBar/HBox/RoundLabel
+@onready var mode_badge_lbl: Label = $CanvasLayer/HUD/TopBar/HBox/ModeBadge
+@onready var pause_btn: Button = $CanvasLayer/HUD/TopBar/HBox/PauseBtn
 @onready var start_round_btn: Button = $CanvasLayer/HUD/TopBar/HBox/StartRoundButton
+@onready var den_btn: Button = $CanvasLayer/HUD/TopBar/HBox/DenBtn
 var map_select_btn: OptionButton = null
 var mode_select_btn: OptionButton = null
 var language_btn: Button = null
 var profile_badge_lbl: Label = null
 var save_mgr: SimSaveManager = null
+var den_modal: PanelContainer = null
 
 var title_menu: TitleMenu = null
+var map_select_modal: MapSelectModal = null
+var loadout_modal: LoadoutModal = null
+var pause_modal: PauseModal = null
+var selected_loadout_hero_id: String = "mittens"
+var selected_loadout_tricks: Array[String] = ["tuna_strike", "night_lantern", "catnip_frenzy"]
 var almanac_modal: AlmanacModal = null
 var insights_modal: InsightsModal = null
 var shop_modal: ShopModal = null
@@ -49,6 +62,7 @@ var almanac_top_btn: Button = null
 var shop_top_btn: Button = null
 var trick_btn_hbox: HBoxContainer = null
 var trick_buttons: Array[Button] = []
+var dock_cells: Array[Dictionary] = []
 var current_mode: int = SimConstants.GameMode.SUNNY
 var testing_lab: SimTestingLab = null
 var lab_panel: PanelContainer = null
@@ -94,15 +108,29 @@ var auto_wave_delay: float = 0.4
 @onready var cat_buttons_container: HBoxContainer = $CanvasLayer/HUD/BottomDock/Scroll/CatButtons
 @onready var inspector_panel: PanelContainer = $CanvasLayer/HUD/InspectorPanel
 @onready var right_info_panel: PanelContainer = $CanvasLayer/HUD/RightInfoPanel
-@onready var incoming_info: Label = $CanvasLayer/HUD/RightInfoPanel/VBox/IncomingInfo
+@onready var right_title_lbl: Label = $CanvasLayer/HUD/RightInfoPanel/VBox/Title
+@onready var right_subtitle_lbl: Label = $CanvasLayer/HUD/RightInfoPanel/VBox/Subtitle
+@onready var empty_prompt_lbl: Label = $CanvasLayer/HUD/RightInfoPanel/VBox/EmptyPromptLabel
+@onready var wave_strip: PanelContainer = $CanvasLayer/HUD/WaveStrip
+@onready var wave_title_lbl: Label = $CanvasLayer/HUD/WaveStrip/HBox/WaveTitle
+@onready var wave_chips_box: HBoxContainer = $CanvasLayer/HUD/WaveStrip/HBox/WaveChips
+@onready var incoming_info: Label = $CanvasLayer/HUD/WaveStrip/HBox/IncomingInfo
 
 # Inspector controls
-@onready var cat_title_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/CatTitleLabel
-@onready var cat_category_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/CategoryLabel
+@onready var inspector_portrait: TextureRect = $CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/InspectorPortrait
+@onready var cat_title_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/HeaderText/CatTitleLabel
+@onready var cat_category_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/HeaderText/CategoryLabel
+@onready var hero_level_badge: Control = $CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/HeroLevelBadge
 @onready var stats_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/StatsLabel
 @onready var feat_status_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/FeatStatusLabel
+@onready var target_segment_box: HBoxContainer = $CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox
+@onready var target_first_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox/TargetFirstBtn
+@onready var target_last_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox/TargetLastBtn
+@onready var target_strong_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox/TargetStrongBtn
+@onready var target_close_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox/TargetCloseBtn
 @onready var target_priority_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/TargetPriorityBtn
 @onready var brew_target_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/BrewTargetBtn
+@onready var upgrades_title_lbl: Label = $CanvasLayer/HUD/InspectorPanel/VBox/UpgradesTitle
 @onready var path_a_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathABtn
 @onready var path_b_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathBBtn
 @onready var path_c_btn: Button = $CanvasLayer/HUD/InspectorPanel/VBox/PathCBtn
@@ -115,6 +143,7 @@ var auto_wave_delay: float = 0.4
 
 # Feat Modal
 @onready var feat_modal: PanelContainer = $CanvasLayer/HUD/FeatModal
+@onready var feat_title_lbl: Label = $CanvasLayer/HUD/FeatModal/VBox/ModalTitle
 @onready var feat_subtitle_lbl: Label = $CanvasLayer/HUD/FeatModal/VBox/ModalSubtitle
 @onready var feat_card1_name: Label = $CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox/Name
 @onready var feat_card1_desc: Label = $CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox/Desc
@@ -166,6 +195,9 @@ var brew_selecting_source: SimTower = null
 var pending_feat_tower: SimTower = null
 var current_feat_offer: Array[Dictionary] = []
 var mouse_pos: Vector2 = Vector2.ZERO
+var coach_step: int = 0
+var coach_flash_hint: String = ""
+var inspector_hint_lbl: Label = null
 
 var cat_sprites: Dictionary = {}
 var cat_catalog: Dictionary = {}
@@ -241,6 +273,7 @@ func _ready() -> void:
 	_setup_balcony_camera()
 	_load_art()
 	_build_cat_dock()
+	_setup_den_modal()
 	_setup_map_select()
 	_setup_mode_select()
 	_setup_testing_lab_controls()
@@ -254,6 +287,8 @@ func _ready() -> void:
 	_setup_extended_ui()
 	_setup_meta_screens()
 	_apply_wood_theme()
+	_apply_comfort_settings()
+	_refresh_language_ui()
 	_update_ui()
 
 func _load_tex(path: String) -> Texture2D:
@@ -297,7 +332,7 @@ func _load_art() -> void:
 		mouse_sprites[id] = _load_sheet_or_static("res://presentation/art/mice/%s" % id, "_walk")
 	for id in ["burrow", "bristle", "monarch", "dusk", "matriarch"]:
 		rat_sprites[id] = _load_sheet_or_static("res://presentation/art/rats/%s" % id, "_walk")
-	for id in ["stall", "lantern", "crates", "puddle"]:
+	for id in ["stall", "lantern", "crates", "puddle", "stoop", "awning", "crate_stack", "hanging_wash", "mouse_hole", "fish_basket"]:
 		prop_sprites[id] = _load_tex("res://presentation/art/props/%s.png" % id)
 	grass_tex = _load_tex("res://presentation/art/tiles/grass.png")
 	cobble_tex = _load_tex("res://presentation/art/tiles/cobble.png")
@@ -306,27 +341,15 @@ func _load_sheet_or_static(stem: String, sheet_suffix: String = "_sheet") -> Tex
 	var sheet := _load_tex("%s%s.png" % [stem, sheet_suffix])
 	return sheet if sheet != null else _load_tex("%s.png" % stem)
 
+func _get_text_scale_factor() -> float:
+	if save_mgr == null:
+		return 1.0
+	var pct := int(save_mgr.data.get("settings", {}).get("text_scale", 100))
+	return clampf(float(pct) / 100.0, 1.0, 1.5)
+
 func _apply_wood_theme() -> void:
-	var panel := _wood_panel()
-	for node in [
-		$CanvasLayer/HUD/TopBar,
-		$CanvasLayer/HUD/BottomDock,
-		$CanvasLayer/HUD/InspectorPanel,
-		$CanvasLayer/HUD/RightInfoPanel,
-		feat_modal,
-		$CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1,
-		$CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2,
-		$CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3,
-		hero_commander_panel,
-		results_modal,
-		almanac_modal,
-		insights_modal,
-		shop_modal,
-		settings_modal,
-		camera_panel
-	]:
-		if node is PanelContainer:
-			node.add_theme_stylebox_override("panel", panel)
+	var scale_factor := _get_text_scale_factor()
+	WoodTheme.apply_to_tree($CanvasLayer/HUD, scale_factor)
 
 	# Theme dock scrollbar with matching wood & brass styling
 	var scroll_bg := StyleBoxFlat.new()
@@ -356,51 +379,17 @@ func _apply_wood_theme() -> void:
 			hsb.add_theme_stylebox_override("grabber_highlight", grabber_hl)
 			hsb.add_theme_stylebox_override("grabber_pressed", grabber_hl)
 
-	var normal := _wood_button(Color(0.93, 0.72, 0.32), Color(0.40, 0.22, 0.10))
-	var hover := _wood_button(Color(1.0, 0.86, 0.45), Color(0.55, 0.32, 0.12))
-	var pressed := _wood_button(Color(0.75, 0.52, 0.18), Color(0.24, 0.12, 0.06))
-	_theme_controls($CanvasLayer/HUD, normal, hover, pressed)
+	if selected_tower != null:
+		_refresh_target_segments()
 
 func _wood_panel() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(0.17, 0.10, 0.06, 0.92)
-	box.border_color = Color(0.93, 0.72, 0.32)
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(14)
-	box.shadow_color = Color(0, 0, 0, 0.4)
-	box.shadow_size = 10
-	box.content_margin_left = 12
-	box.content_margin_right = 12
-	box.content_margin_top = 8
-	box.content_margin_bottom = 8
-	return box
+	return WoodTheme.panel_style()
 
 func _wood_button(border: Color, fill: Color) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = fill
-	box.border_color = border
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(8)
-	box.content_margin_left = 6
-	box.content_margin_right = 6
-	box.content_margin_top = 4
-	box.content_margin_bottom = 4
-	return box
+	return WoodTheme.button_style(border, fill)
 
-func _theme_controls(node: Node, normal: StyleBox, hover: StyleBox, pressed: StyleBox) -> void:
-	if node is Button:
-		node.add_theme_stylebox_override("normal", normal)
-		node.add_theme_stylebox_override("hover", hover)
-		node.add_theme_stylebox_override("pressed", pressed)
-		node.add_theme_stylebox_override("disabled", pressed)
-		node.add_theme_color_override("font_color", Color(1.0, 0.96, 0.88))
-		node.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.55))
-		node.add_theme_color_override("font_disabled_color", Color(0.7, 0.62, 0.5))
-	elif node is Label:
-		if node.name != "LivesLabel" and node.name != "KibbleLabel":
-			node.add_theme_color_override("font_color", Color(1.0, 0.95, 0.86))
-	for child in node.get_children():
-		_theme_controls(child, normal, hover, pressed)
+func _theme_controls(node: Node, _normal: StyleBox, _hover: StyleBox, _pressed: StyleBox) -> void:
+	WoodTheme.apply_to_tree(node, _get_text_scale_factor())
 
 func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 	if p_map_id != "":
@@ -466,38 +455,109 @@ func _init_simulation(p_map_id: String = "", p_mode: int = -1) -> void:
 	selected_obstacle_id = ""
 	if obstacle_card != null:
 		obstacle_card.visible = false
+	coach_flash_hint = ""
+	if save_mgr != null and bool(save_mgr.data.get("settings", {}).get("coach_seen", false)):
+		coach_step = 3
+	else:
+		coach_step = 0
 
 func _build_cat_dock() -> void:
 	for child in cat_buttons_container.get_children():
 		child.queue_free()
+	dock_cells.clear()
 		
 	var cats_to_show: Array[Dictionary] = []
 	for cat_id in cat_order:
 		var data: Dictionary = cat_catalog.get(cat_id, {})
 		cats_to_show.append({"id": cat_id, "name": data.get("name", cat_id.capitalize()), "cost": int(data.get("cost", 0)), "is_hero": false})
 	cats_to_show.append_array([
-		{"id": "mittens", "name": "Mittens ★", "cost": 600, "is_hero": true},
-		{"id": "duchess", "name": "Duchess ★", "cost": 750, "is_hero": true},
-		{"id": "baron", "name": "Baron Salt ★", "cost": 700, "is_hero": true},
-		{"id": "pebble", "name": "Sister Pebble ★", "cost": 900, "is_hero": true}
+		{"id": "mittens", "name": "Mittens", "cost": 600, "is_hero": true},
+		{"id": "duchess", "name": "Duchess", "cost": 750, "is_hero": true},
+		{"id": "baron", "name": "Baron Salt", "cost": 700, "is_hero": true},
+		{"id": "pebble", "name": "Sister Pebble", "cost": 900, "is_hero": true}
 	])
 	
 	for c in cats_to_show:
-		var btn = Button.new()
-		var price = sim.economy.calculate_price(c["cost"])
-		btn.text = "%s\n%d" % [c["name"], price]
-		btn.custom_minimum_size = Vector2(108, 72)
-		btn.icon = _get_single_frame_icon(cat_sprites.get(c["id"]))
-		btn.expand_icon = true
-		btn.add_theme_constant_override("icon_max_width", 42)
-		if c["is_hero"]:
-			btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(98, 76)
+		btn.tooltip_text = "%s (%d)" % [c["name"], sim.economy.calculate_price(c["cost"])]
+
+		var vbox := VBoxContainer.new()
+		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_theme_constant_override("separation", 1)
+		btn.add_child(vbox)
+
+		var icon_rect := TextureRect.new()
+		icon_rect.custom_minimum_size = Vector2(38, 34)
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_rect.texture = _get_single_frame_icon(cat_sprites.get(c["id"]))
+		vbox.add_child(icon_rect)
+
+		var name_lbl := Label.new()
+		name_lbl.text = str(c["name"]) + (" ★" if c["is_hero"] else "")
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_size_override("font_size", 11)
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		vbox.add_child(name_lbl)
+
+		var cost_lbl := Label.new()
+		var price := sim.economy.calculate_price(c["cost"])
+		cost_lbl.text = str(price)
+		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cost_lbl.add_theme_font_size_override("font_size", 12)
+		cost_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(cost_lbl)
+
 		btn.pressed.connect(_on_dock_button_pressed.bind(c["id"], c["is_hero"]))
 		cat_buttons_container.add_child(btn)
+		dock_cells.append({
+			"btn": btn,
+			"icon": icon_rect,
+			"name_lbl": name_lbl,
+			"cost_lbl": cost_lbl,
+			"base_cost": int(c["cost"]),
+			"is_hero": bool(c["is_hero"]),
+			"id": str(c["id"])
+		})
 
 	var scroll_node: ScrollContainer = $CanvasLayer/HUD/BottomDock/Scroll
 	if not scroll_node.gui_input.is_connected(_on_dock_scroll_input):
 		scroll_node.gui_input.connect(_on_dock_scroll_input)
+
+func _update_cat_dock_affordability() -> void:
+	if sim == null:
+		return
+	for cell in dock_cells:
+		var btn: Button = cell["btn"]
+		var icon_rect: TextureRect = cell["icon"]
+		var name_lbl: Label = cell["name_lbl"]
+		var cost_lbl: Label = cell["cost_lbl"]
+		var base_cost: int = cell["base_cost"]
+		var is_hero: bool = cell["is_hero"]
+		var price := sim.economy.calculate_price(base_cost)
+		var affordable := sim.economy.can_afford(price)
+		var hero_taken := is_hero and sim.hero != null
+		cost_lbl.text = "Placed" if hero_taken else str(price)
+		if hero_taken:
+			icon_rect.modulate = Color(1, 1, 1, 0.35)
+			name_lbl.add_theme_color_override("font_color", Color(0.75, 0.70, 0.62, 0.6))
+			cost_lbl.add_theme_color_override("font_color", Color(0.70, 0.78, 0.70))
+			btn.disabled = true
+		elif affordable:
+			icon_rect.modulate = Color.WHITE
+			name_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.35) if is_hero else Color(1.0, 0.96, 0.88))
+			cost_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.28))
+			btn.disabled = false
+		else:
+			icon_rect.modulate = Color(1, 1, 1, 0.42)
+			name_lbl.add_theme_color_override("font_color", Color(0.78, 0.72, 0.64, 0.7))
+			cost_lbl.add_theme_color_override("font_color", Color(1.0, 0.56, 0.46))
+			btn.disabled = false
 
 func _on_dock_scroll_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
@@ -510,11 +570,22 @@ func _on_dock_scroll_input(event: InputEvent) -> void:
 func _connect_ui_signals() -> void:
 	if not start_round_btn.pressed.is_connected(_on_start_round_pressed):
 		start_round_btn.pressed.connect(_on_start_round_pressed)
+		if pause_btn != null:
+			pause_btn.pressed.connect(_toggle_pause)
+		if den_btn != null:
+			den_btn.pressed.connect(func():
+				if not match_paused:
+					_toggle_pause()
+			)
 		speed1_btn.pressed.connect(func(): _set_speed(1))
 		speed2_btn.pressed.connect(func(): _set_speed(2))
 		speed3_btn.pressed.connect(func(): _set_speed(3))
 		
 		target_priority_btn.pressed.connect(_on_cycle_target_priority)
+		target_first_btn.pressed.connect(func(): _set_target_priority(SimConstants.TargetPriority.FIRST))
+		target_last_btn.pressed.connect(func(): _set_target_priority(SimConstants.TargetPriority.LAST))
+		target_strong_btn.pressed.connect(func(): _set_target_priority(SimConstants.TargetPriority.STRONG))
+		target_close_btn.pressed.connect(func(): _set_target_priority(SimConstants.TargetPriority.CLOSE))
 		brew_target_btn.pressed.connect(_on_brew_target_pressed)
 		path_a_btn.pressed.connect(func(): _upgrade_selected("path_a"))
 		path_b_btn.pressed.connect(func(): _upgrade_selected("path_b"))
@@ -679,10 +750,19 @@ func _setup_extended_ui() -> void:
 	res_btn_hbox.add_child(results_map_btn)
 
 	var results_lead_btn := Button.new()
-	results_lead_btn.text = "🏆 Top 100"
-	results_lead_btn.custom_minimum_size = Vector2(140, 42)
+	results_lead_btn.text = "Top 100"
+	results_lead_btn.custom_minimum_size = Vector2(120, 42)
 	results_lead_btn.pressed.connect(_open_leaderboard)
 	res_btn_hbox.add_child(results_lead_btn)
+
+	var results_title_btn := Button.new()
+	results_title_btn.text = "Title"
+	results_title_btn.custom_minimum_size = Vector2(110, 42)
+	results_title_btn.pressed.connect(func():
+		results_modal.visible = false
+		_toggle_title_menu()
+	)
+	res_btn_hbox.add_child(results_title_btn)
 
 	_setup_obstacle_card()
 
@@ -823,8 +903,18 @@ func _show_results_dialog(won: bool) -> void:
 		results_title_lbl.text = "💀 DEFEAT — Alley Overrun!"
 		results_title_lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
 		
-	results_stats_lbl.text = "Rounds Cleared: %d / %d | Remaining Lives: %d | Peak Kibble: %d" % [
-		sim.current_round, sim.max_rounds, sim.lives, sim.peak_kibble
+	var total_feats := 0
+	var feat_names: Array[String] = []
+	for t in sim.towers:
+		for f in t.selected_feats:
+			total_feats += 1
+			var fname := str(f.get("name", ""))
+			if not fname.is_empty() and not feat_names.has(fname):
+				feat_names.append(fname)
+	var feat_summary := "%d (%s)" % [total_feats, ", ".join(feat_names)] if total_feats > 0 else "0"
+
+	results_stats_lbl.text = "Rounds: %d/%d | Lives Left: %d | Peak Kibble: %d | Feats Taken: %s" % [
+		sim.current_round, sim.max_rounds, sim.lives, sim.peak_kibble, feat_summary
 	]
 	
 	if sim.leak_history.is_empty():
@@ -924,31 +1014,21 @@ func _show_results_dialog(won: bool) -> void:
 			clean_sheet
 		)
 
-	var unlock_lines: Array[String] = []
-	if not lead_res.is_empty():
-		unlock_lines.append("🏆 Leaderboard Score: %d pts (Rank: #%d)" % [
-			lead_res.get("score", 0),
-			lead_res.get("rank", 99)
-		])
+	var summary_lines: Array[String] = []
 	if not match_res.is_empty():
-		unlock_lines.append("Progression: +%d Account XP (Account Level: %d)" % [
-			match_res.get("account_xp_gained", 0),
-			match_res.get("new_level", 1)
+		summary_lines.append("Account XP: +%d (Lv %d) | Fishcoin: +%d%s" % [
+			int(match_res.get("account_xp_gained", 0)),
+			int(match_res.get("new_level", 1)),
+			int(match_res.get("fishcoin_gained", 0)),
+			(" | Golden Bones: +%d" % int(match_res.get("golden_bones_gained", 0))) if int(match_res.get("golden_bones_gained", 0)) > 0 else ""
 		])
-		if match_res.get("levels_gained", 0) > 0:
-			unlock_lines.append("🎉 LEVEL UP! Reached Level %d (+%d Insight Points, +%d Fishcoin)!" % [
-				match_res.get("new_level", 1),
-				match_res.get("levels_gained", 0),
-				match_res.get("levels_gained", 0) * 15
-			])
-		var rewards_parts: Array[String] = []
-		if match_res.get("fishcoin_gained", 0) > 0:
-			rewards_parts.append("+%d Fishcoin 🐟" % match_res["fishcoin_gained"])
-		if match_res.get("golden_bones_gained", 0) > 0:
-			rewards_parts.append("+%d Golden Bones 🦴 (Prestige!)" % match_res["golden_bones_gained"])
-		if not rewards_parts.is_empty():
-			unlock_lines.append("Rewards Earned: " + ", ".join(rewards_parts))
+	if not lead_res.is_empty():
+		summary_lines.append("Score: %d pts (#%d)" % [int(lead_res.get("score", 0)), int(lead_res.get("rank", 99))])
+	if not summary_lines.is_empty():
+		results_stats_lbl.text += "\n" + " | ".join(summary_lines)
 
+	var queued_unlock_lines: Array[String] = []
+	if not match_res.is_empty():
 		var revealed: Dictionary = match_res.get("revealed_unlocks", {})
 		var unl_parts: Array[String] = []
 		for c in revealed.get("cats", []):
@@ -958,11 +1038,13 @@ func _show_results_dialog(won: bool) -> void:
 		for m in revealed.get("maps", []):
 			unl_parts.append("Map: %s" % m.capitalize())
 		if not unl_parts.is_empty():
-			unlock_lines.append("✨ Unlocked: " + ", ".join(unl_parts))
+			queued_unlock_lines.append("Unlocked: " + ", ".join(unl_parts))
 
 	if testing_lab != null:
+		results_unlock_lbl.visible = true
 		results_unlock_lbl.text = "Testing Lab: no progression or rewards recorded."
 	elif alley_crawl_session != null:
+		results_unlock_lbl.visible = true
 		if alley_crawl.completed:
 			results_unlock_lbl.text = "Alley Crawl complete: +%d Fishcoin%s" % [int(crawl_reward.get("fishcoin", 0)), "" if crawl_reward.get("success", false) else " (already claimed)"]
 			results_retry_btn.text = "Begin New Crawl"
@@ -973,13 +1055,96 @@ func _show_results_dialog(won: bool) -> void:
 			results_unlock_lbl.text = "District cleared. Choose a Relic and the next route."
 			results_modal.visible = false
 			_refresh_alley_crawl_panel(true)
-	elif unlock_lines.is_empty():
-		results_unlock_lbl.text = "Mastery & Progression: +%d Match XP recorded." % (sim.current_round * 25)
+	elif not queued_unlock_lines.is_empty():
+		results_unlock_lbl.visible = true
+		results_unlock_lbl.text = "\n".join(queued_unlock_lines)
 	else:
-		results_unlock_lbl.text = "\n".join(unlock_lines)
+		results_unlock_lbl.visible = false
+		results_unlock_lbl.text = ""
+
+func _setup_den_modal() -> void:
+	den_modal = PanelContainer.new()
+	den_modal.name = "DenModal"
+	den_modal.offset_left = 420.0
+	den_modal.offset_top = 120.0
+	den_modal.offset_right = 860.0
+	den_modal.offset_bottom = 560.0
+	den_modal.visible = false
+	$CanvasLayer/HUD.add_child(den_modal)
+
+	var vbox := VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 8)
+	den_modal.add_child(vbox)
+
+	var header := HBoxContainer.new()
+	vbox.add_child(header)
+	var title := Label.new()
+	title.text = "Den & Alley Hub"
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var close_btn := Button.new()
+	close_btn.text = "Close"
+	close_btn.pressed.connect(func(): den_modal.visible = false)
+	header.add_child(close_btn)
+
+	profile_badge_lbl = Label.new()
+	profile_badge_lbl.text = "Lvl 1 | Fishcoin 0 | Golden Bones 0"
+	profile_badge_lbl.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(profile_badge_lbl)
+
+	vbox.add_child(HSeparator.new())
+
+	var map_mode_row := HBoxContainer.new()
+	map_mode_row.name = "MapModeRow"
+	map_mode_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(map_mode_row)
+
+	var toggle_row := HBoxContainer.new()
+	toggle_row.name = "ToggleRow"
+	toggle_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(toggle_row)
+
+	vbox.add_child(HSeparator.new())
+
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	vbox.add_child(grid)
+
+	for item in [
+		{"text": "Almanac", "cb": _open_almanac},
+		{"text": "Insights", "cb": _open_insights},
+		{"text": "Alley Shop", "cb": func(): _open_shop("regular")},
+		{"text": "Collector's Vault", "cb": func(): _open_shop("vault")},
+		{"text": "Leaderboards", "cb": _open_leaderboard},
+		{"text": "Co-op", "cb": _open_coop_modal},
+		{"text": "Settings", "cb": _open_settings},
+		{"text": "Title Screen", "cb": _toggle_title_menu}
+	]:
+		var b := Button.new()
+		b.text = item["text"]
+		b.custom_minimum_size = Vector2(0, 36)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func():
+			den_modal.visible = false
+			item["cb"].call()
+		)
+		grid.add_child(b)
+
+func _toggle_den_modal() -> void:
+	if den_modal == null:
+		return
+	den_modal.visible = not den_modal.visible
+	if den_modal.visible:
+		_update_profile_badge()
 
 func _setup_profile_badge() -> void:
-	profile_badge_lbl = null
+	if profile_badge_lbl == null:
+		profile_badge_lbl = Label.new()
 
 func _update_profile_badge() -> void:
 	if profile_badge_lbl == null or save_mgr == null:
@@ -987,12 +1152,13 @@ func _update_profile_badge() -> void:
 	var lvl: int = int(save_mgr.data.get("account", {}).get("level", 1))
 	var fish: int = int(save_mgr.data.get("economy", {}).get("fishcoin", 0))
 	var bones: int = int(save_mgr.data.get("economy", {}).get("golden_bones", 0))
-	profile_badge_lbl.text = "Lvl %d | 🐟 %d | 🦴 %d" % [lvl, fish, bones]
+	profile_badge_lbl.text = "Lvl %d | Fishcoin %d | Golden Bones %d" % [lvl, fish, bones]
 
 func _setup_mode_select() -> void:
 	mode_select_btn = OptionButton.new()
 	mode_select_btn.fit_to_longest_item = false
-	mode_select_btn.custom_minimum_size = Vector2(80, 0)
+	mode_select_btn.custom_minimum_size = Vector2(120, 0)
+	mode_select_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mode_select_btn.add_item("Sunny", SimConstants.GameMode.SUNNY)
 	mode_select_btn.add_item("Alley", SimConstants.GameMode.ALLEY)
 	mode_select_btn.add_item("Night", SimConstants.GameMode.NIGHT)
@@ -1002,7 +1168,11 @@ func _setup_mode_select() -> void:
 	mode_select_btn.add_item("Crawl", ALLEY_CRAWL_MODE)
 	mode_select_btn.selected = current_mode
 	mode_select_btn.item_selected.connect(_on_mode_selected)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(mode_select_btn)
+	if den_modal != null:
+		den_modal.get_node("VBox/MapModeRow").add_child(mode_select_btn)
+	else:
+		$CanvasLayer/HUD.add_child(mode_select_btn)
+		mode_select_btn.visible = false
 
 func _on_mode_selected(idx: int) -> void:
 	current_mode = mode_select_btn.get_item_id(idx)
@@ -1257,49 +1427,40 @@ func _refresh_testing_lab_controls() -> void:
 func _setup_top_bar_extra_buttons() -> void:
 	auto_wave_btn = Button.new()
 	_update_auto_wave_btn_text()
-	auto_wave_btn.custom_minimum_size = Vector2(70, 0)
+	auto_wave_btn.custom_minimum_size = Vector2(90, 0)
+	auto_wave_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	auto_wave_btn.tooltip_text = "Auto-Start Waves (0.4s pause)"
 	auto_wave_btn.pressed.connect(_toggle_auto_wave)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(auto_wave_btn)
+	if den_modal != null:
+		den_modal.get_node("VBox/ToggleRow").add_child(auto_wave_btn)
 
 	coop_player_toggle_btn = Button.new()
-	coop_player_toggle_btn.text = "🐱 P1"
-	coop_player_toggle_btn.custom_minimum_size = Vector2(50, 0)
+	coop_player_toggle_btn.text = "P1"
+	coop_player_toggle_btn.custom_minimum_size = Vector2(56, 0)
 	coop_player_toggle_btn.tooltip_text = "Switch Co-op Placer [Hotkey: P]"
 	coop_player_toggle_btn.visible = false
 	coop_player_toggle_btn.pressed.connect(_toggle_coop_player)
 	$CanvasLayer/HUD/TopBar/HBox.add_child(coop_player_toggle_btn)
 
-	almanac_top_btn = Button.new()
-	almanac_top_btn.text = "📖"
-	almanac_top_btn.custom_minimum_size = Vector2(32, 0)
-	almanac_top_btn.tooltip_text = "The Almanac"
-	almanac_top_btn.pressed.connect(_open_almanac)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(almanac_top_btn)
-
-	menu_hub_btn = Button.new()
-	menu_hub_btn.text = "☰ Menu"
-	menu_hub_btn.custom_minimum_size = Vector2(62, 0)
-	menu_hub_btn.tooltip_text = "Game Menu (Play, Almanac, Insights, Shop, Settings, Leaderboard, Co-op)"
-	menu_hub_btn.pressed.connect(_toggle_title_menu)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(menu_hub_btn)
-
 func _organize_top_bar() -> void:
 	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
-	var speed_container = hbox.get_node_or_null("SpeedContainer")
+	var lives_icon := hbox.get_node_or_null("LivesIcon")
+	var kibble_icon := hbox.get_node_or_null("KibbleIcon")
+	var spacer := hbox.get_node_or_null("Spacer")
+	var speed_container := hbox.get_node_or_null("SpeedContainer")
 	var ordered: Array = [
+		lives_icon,
 		lives_label,
+		kibble_icon,
 		kibble_label,
 		round_label,
-		map_select_btn,
-		mode_select_btn,
+		mode_badge_lbl,
+		spacer,
+		pause_btn,
 		speed_container,
-		auto_wave_btn,
 		start_round_btn,
 		coop_player_toggle_btn,
-		almanac_top_btn,
-		language_btn,
-		menu_hub_btn
+		den_btn
 	]
 	var idx := 0
 	for node in ordered:
@@ -1390,18 +1551,52 @@ func _setup_meta_screens() -> void:
 	$CanvasLayer/HUD.add_child(shop_modal)
 
 	settings_modal = SettingsModal.new()
-	settings_modal.setup(save_mgr)
+	settings_modal.setup(save_mgr, mouse_sprites)
 	settings_modal.visible = false
 	settings_modal.settings_changed.connect(_on_settings_modal_changed)
 	$CanvasLayer/HUD.add_child(settings_modal)
 
+	map_select_modal = MapSelectModal.new()
+	map_select_modal.setup(save_mgr)
+	map_select_modal.visible = false
+	map_select_modal.map_mode_selected.connect(_on_map_card_chosen)
+	map_select_modal.closed.connect(func(): _toggle_title_menu())
+	$CanvasLayer/HUD.add_child(map_select_modal)
+
+	loadout_modal = LoadoutModal.new()
+	loadout_modal.setup(save_mgr, cat_sprites)
+	loadout_modal.visible = false
+	loadout_modal.start_match.connect(_start_match_from_loadout)
+	loadout_modal.back_pressed.connect(_open_map_select)
+	$CanvasLayer/HUD.add_child(loadout_modal)
+
+	pause_modal = PauseModal.new()
+	pause_modal.setup()
+	pause_modal.visible = false
+	pause_modal.resume_pressed.connect(_resume_from_pause)
+	pause_modal.settings_pressed.connect(_open_settings)
+	pause_modal.almanac_pressed.connect(_open_almanac)
+	pause_modal.insights_pressed.connect(_open_insights)
+	pause_modal.shop_pressed.connect(func(): _open_shop("regular"))
+	pause_modal.vault_pressed.connect(func(): _open_shop("vault"))
+	pause_modal.leaderboard_pressed.connect(_open_leaderboard)
+	pause_modal.coop_pressed.connect(_open_coop_modal)
+	pause_modal.title_pressed.connect(func():
+		match_paused = false
+		_close_all_modals()
+		if title_menu != null:
+			title_menu.update_profile_display(save_mgr)
+			title_menu.visible = true
+	)
+	$CanvasLayer/HUD.add_child(pause_modal)
+
 	title_menu = TitleMenu.new()
-	title_menu.setup(save_mgr)
-	title_menu.visible = false
+	title_menu.setup(save_mgr, prop_sprites)
+	title_menu.visible = (DisplayServer.get_name() != "headless")
 	title_menu.leaderboard_pressed.connect(_open_leaderboard)
 	$CanvasLayer/HUD.add_child(title_menu)
 
-	title_menu.play_pressed.connect(func(): _close_all_modals())
+	title_menu.play_pressed.connect(_open_map_select)
 	title_menu.almanac_pressed.connect(_open_almanac)
 	title_menu.insights_pressed.connect(_open_insights)
 	title_menu.shop_pressed.connect(func(): _open_shop("regular"))
@@ -1409,21 +1604,61 @@ func _setup_meta_screens() -> void:
 	title_menu.settings_pressed.connect(_open_settings)
 	title_menu.coop_pressed.connect(_open_coop_modal)
 
+func _open_map_select() -> void:
+	_close_all_modals()
+	if map_select_modal != null:
+		map_select_modal.refresh()
+		map_select_modal.visible = true
+
+func _on_map_card_chosen(p_map_id: String, p_mode: int) -> void:
+	if p_mode == TESTING_LAB_MODE or p_mode == ALLEY_CRAWL_MODE:
+		_start_match_from_loadout(p_map_id, p_mode, "mittens", selected_loadout_tricks)
+		return
+	if loadout_modal != null:
+		loadout_modal.open_for(p_map_id, p_mode)
+
+func _start_match_from_loadout(p_map_id: String, p_mode: int, hero_id: String, tricks: Array[String]) -> void:
+	selected_loadout_hero_id = hero_id
+	selected_loadout_tricks = tricks.duplicate()
+	_close_all_modals()
+	current_map_id = p_map_id
+	current_mode = p_mode
+	if map_select_btn != null:
+		for i in range(map_select_btn.item_count):
+			if str(map_select_btn.get_item_metadata(i)) == p_map_id:
+				map_select_btn.selected = i
+				break
+	if mode_select_btn != null:
+		for i in range(mode_select_btn.item_count):
+			if mode_select_btn.get_item_id(i) == p_mode:
+				mode_select_btn.selected = i
+				break
+	_on_results_retry()
+
 func _close_all_modals() -> void:
 	if title_menu != null: title_menu.visible = false
+	if map_select_modal != null: map_select_modal.visible = false
+	if loadout_modal != null: loadout_modal.visible = false
+	if pause_modal != null: pause_modal.visible = false
+	if den_modal != null: den_modal.visible = false
 	if almanac_modal != null: almanac_modal.visible = false
 	if insights_modal != null: insights_modal.visible = false
 	if shop_modal != null: shop_modal.visible = false
 	if settings_modal != null: settings_modal.visible = false
+	if leaderboard_modal != null: leaderboard_modal.visible = false
+	if coop_modal != null: coop_modal.visible = false
 
 func _open_almanac() -> void:
 	_close_all_modals()
 	if almanac_modal != null:
+		WoodTheme.apply_to_tree(almanac_modal, _get_text_scale_factor())
 		almanac_modal.visible = true
 
 func _open_insights() -> void:
 	_close_all_modals()
 	if insights_modal != null:
+		insights_modal._select_tree(insights_modal.current_tree)
+		WoodTheme.apply_to_tree(insights_modal, _get_text_scale_factor())
 		insights_modal.visible = true
 
 func _open_shop(tab: String = "regular") -> void:
@@ -1431,10 +1666,12 @@ func _open_shop(tab: String = "regular") -> void:
 	if shop_modal != null:
 		shop_modal.visible = true
 		shop_modal._select_tab(tab)
+		WoodTheme.apply_to_tree(shop_modal, _get_text_scale_factor())
 
 func _open_settings() -> void:
 	_close_all_modals()
 	if settings_modal != null:
+		WoodTheme.apply_to_tree(settings_modal, _get_text_scale_factor())
 		settings_modal.visible = true
 
 func _toggle_title_menu() -> void:
@@ -1447,9 +1684,22 @@ func _toggle_title_menu() -> void:
 		title_menu.update_profile_display(save_mgr)
 		title_menu.visible = true
 
+func _apply_comfort_settings() -> void:
+	if save_mgr == null:
+		return
+	var s: Dictionary = save_mgr.data.get("settings", {})
+	if combat_vfx != null:
+		combat_vfx.reduced = bool(s.get("vfx_reduced", false))
+		var shake := str(s.get("screen_shake", "low")).to_lower()
+		combat_vfx.shake_mode = 0 if shake == "off" else (2 if shake == "full" else 1)
+	if presentation_audio != null:
+		presentation_audio.master_volume = float(s.get("audio_volume", 0.8))
+
 func _on_settings_modal_changed() -> void:
 	if save_mgr == null:
 		return
+	_apply_comfort_settings()
+	_apply_wood_theme()
 	var s: Dictionary = save_mgr.data.get("settings", {})
 	if localization != null:
 		var lang = str(s.get("language", "en"))
@@ -1487,37 +1737,42 @@ func _on_results_map_select() -> void:
 func _setup_map_select() -> void:
 	map_select_btn = OptionButton.new()
 	map_select_btn.fit_to_longest_item = false
-	map_select_btn.custom_minimum_size = Vector2(130, 0)
-	var hbox: HBoxContainer = $CanvasLayer/HUD/TopBar/HBox
-	hbox.add_child(map_select_btn)
+	map_select_btn.custom_minimum_size = Vector2(160, 0)
+	map_select_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if den_modal != null:
+		den_modal.get_node("VBox/MapModeRow").add_child(map_select_btn)
+		den_modal.get_node("VBox/MapModeRow").move_child(map_select_btn, 0)
+	else:
+		$CanvasLayer/HUD.add_child(map_select_btn)
+		map_select_btn.visible = false
 	
 	var maps_list = [
-		{"id": "sunny_gutter", "name": "🟢 Sunny Gutter (B)"},
-		{"id": "lantern_stoop", "name": "🟢 Lantern Stoop (B)"},
-		{"id": "crabapple_bend", "name": "🟢 Crabapple Bend (B)"},
-		{"id": "fishbone_straight", "name": "🟢 Fishbone Straight (B)"},
-		{"id": "morning_arch", "name": "🟢 Morning Arch (B)"},
-		{"id": "market_lane", "name": "🟡 Market Lane (B+)"},
-		{"id": "stall_row", "name": "🟡 Stall Row (B+)"},
-		{"id": "puddle_court", "name": "🟡 Puddle Court (B+)"},
-		{"id": "sack_corner", "name": "🟡 Sack Corner (B+)"},
-		{"id": "herring_square", "name": "🟡 Herring Square (B+)"},
-		{"id": "fig_and_twine", "name": "🟡 Fig & Twine (B+)"},
-		{"id": "spice_arcade", "name": "🟡 Spice Arcade (B+)"},
-		{"id": "twin_gutters", "name": "🟠 Twin Gutters (I)"},
-		{"id": "welcome_bridge", "name": "🟠 Welcome Bridge (I)"},
-		{"id": "chimney_step", "name": "🟠 Chimney Step (I)"},
-		{"id": "basket_bridge", "name": "🟠 Basket Bridge (I)"},
-		{"id": "rooftop_crossing", "name": "🟠 Rooftop Crossing (I)"},
-		{"id": "copper_scale", "name": "🟠 Copper Scale (I)"},
-		{"id": "canopy_cross", "name": "🟠 Canopy Cross (I)"},
-		{"id": "weigh_house", "name": "🟠 Weigh House (I)"},
-		{"id": "two_purse_lane", "name": "🔴 Two-Purse Lane (A)"},
-		{"id": "fishmarket_maze", "name": "🔴 Fishmarket Maze (A)"},
-		{"id": "canal_night", "name": "🔴 Canal Night (A)"},
-		{"id": "night_onion", "name": "🔴 Night Onion (A)"},
-		{"id": "grand_bazaar", "name": "🔴 Grand Bazaar (A)"},
-		{"id": "the_warren", "name": "🟣 The Warren (E)"}
+		{"id": "sunny_gutter", "name": "Sunny Gutter (B)"},
+		{"id": "lantern_stoop", "name": "Lantern Stoop (B)"},
+		{"id": "crabapple_bend", "name": "Crabapple Bend (B)"},
+		{"id": "fishbone_straight", "name": "Fishbone Straight (B)"},
+		{"id": "morning_arch", "name": "Morning Arch (B)"},
+		{"id": "market_lane", "name": "Market Lane (B+)"},
+		{"id": "stall_row", "name": "Stall Row (B+)"},
+		{"id": "puddle_court", "name": "Puddle Court (B+)"},
+		{"id": "sack_corner", "name": "Sack Corner (B+)"},
+		{"id": "herring_square", "name": "Herring Square (B+)"},
+		{"id": "fig_and_twine", "name": "Fig & Twine (B+)"},
+		{"id": "spice_arcade", "name": "Spice Arcade (B+)"},
+		{"id": "twin_gutters", "name": "Twin Gutters (I)"},
+		{"id": "welcome_bridge", "name": "Welcome Bridge (I)"},
+		{"id": "chimney_step", "name": "Chimney Step (I)"},
+		{"id": "basket_bridge", "name": "Basket Bridge (I)"},
+		{"id": "rooftop_crossing", "name": "Rooftop Crossing (I)"},
+		{"id": "copper_scale", "name": "Copper Scale (I)"},
+		{"id": "canopy_cross", "name": "Canopy Cross (I)"},
+		{"id": "weigh_house", "name": "Weigh House (I)"},
+		{"id": "two_purse_lane", "name": "Two-Purse Lane (A)"},
+		{"id": "fishmarket_maze", "name": "Fishmarket Maze (A)"},
+		{"id": "canal_night", "name": "Canal Night (A)"},
+		{"id": "night_onion", "name": "Night Onion (A)"},
+		{"id": "grand_bazaar", "name": "Grand Bazaar (A)"},
+		{"id": "the_warren", "name": "The Warren (E)"}
 	]
 	
 	for i in range(maps_list.size()):
@@ -1531,10 +1786,11 @@ func _setup_map_select() -> void:
 
 func _setup_language_toggle() -> void:
 	language_btn = Button.new()
-	language_btn.custom_minimum_size = Vector2(36, 0)
+	language_btn.custom_minimum_size = Vector2(72, 0)
 	language_btn.tooltip_text = "Toggle Language (EN / UA)"
 	language_btn.pressed.connect(_on_language_toggled)
-	$CanvasLayer/HUD/TopBar/HBox.add_child(language_btn)
+	if den_modal != null:
+		den_modal.get_node("VBox/ToggleRow").add_child(language_btn)
 	_apply_wood_theme()
 	_refresh_language_ui()
 
@@ -1558,8 +1814,34 @@ func _on_language_toggled() -> void:
 func _refresh_language_ui() -> void:
 	if language_btn != null:
 		language_btn.text = localization.text("ui.language", "UA")
-	if start_round_btn != null and not sim.round_in_progress:
-		start_round_btn.text = localization.text("ui.start_round", "Start round")
+	if den_btn != null:
+		den_btn.text = _t("ui.den", "Den")
+	if pause_btn != null:
+		pause_btn.text = _t("ui.resume", "Resume") if match_paused else _t("ui.pause", "Pause")
+	if wave_title_lbl != null:
+		wave_title_lbl.text = _t("ui.next_wave", "Next:")
+	if empty_prompt_lbl != null:
+		if not coach_flash_hint.is_empty():
+			empty_prompt_lbl.text = coach_flash_hint
+		elif coach_step == 0:
+			empty_prompt_lbl.text = _t("ui.coach_place", "Step 1: Choose Pip below and place them on the grass.")
+		elif coach_step == 1:
+			empty_prompt_lbl.text = _t("ui.coach_send", "Step 2: Press Start [Space] to send the round.")
+		elif coach_step == 2:
+			empty_prompt_lbl.text = _t("ui.coach_buy", "Step 3: Tap Pip, then buy the highlighted path when Kibble allows.")
+		else:
+			empty_prompt_lbl.text = _t("ui.empty_inspector", "Choose a cat, or tap a cat on the alley.")
+	if target_first_btn != null:
+		target_first_btn.text = _t("ui.target_first", "First")
+		target_last_btn.text = _t("ui.target_last", "Last")
+		target_strong_btn.text = _t("ui.target_strong", "Strong")
+		target_close_btn.text = _t("ui.target_close", "Close")
+	if upgrades_title_lbl != null:
+		upgrades_title_lbl.text = _t("ui.paths_title", "Paths (Max 2)")
+	if deselect_btn != null:
+		deselect_btn.text = _t("ui.deselect", "Deselect")
+	if start_round_btn != null and not sim.round_in_progress and not match_paused:
+		start_round_btn.text = "▶ %s [Space]" % _t("ui.start", "Start")
 
 func _t(key: String, fallback: String, replacements: Dictionary = {}) -> String:
 	return localization.text(key, fallback, replacements) if localization != null else fallback
@@ -1632,6 +1914,8 @@ func _process(delta: float) -> void:
 		actor_drawer.advance(delta)
 	if combat_vfx != null:
 		combat_vfx.advance(delta)
+		if world_camera != null:
+			world_camera.offset = combat_vfx.shake_offset
 	_drain_presentation_log()
 	balcony_hint_time = maxf(0.0, balcony_hint_time - delta)
 	queue_redraw()
@@ -1729,7 +2013,21 @@ func _screen_to_world(screen_pos: Vector2) -> Vector2:
 
 func _toggle_pause() -> void:
 	match_paused = not match_paused
-	start_round_btn.text = _t("ui.resume", "Resume") if match_paused else _t("ui.start_round", "Start round")
+	if pause_modal != null:
+		pause_modal.visible = match_paused
+	if pause_btn != null:
+		pause_btn.text = _t("ui.resume", "Resume") if match_paused else _t("ui.pause", "Pause")
+	if start_round_btn != null:
+		start_round_btn.text = _t("ui.resume", "Resume") if match_paused else ("▶ %s [Space]" % _t("ui.start", "Start"))
+	_update_ui()
+
+func _resume_from_pause() -> void:
+	match_paused = false
+	if pause_modal != null:
+		pause_modal.visible = false
+	if pause_btn != null:
+		pause_btn.text = _t("ui.pause", "Pause")
+	_update_ui()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -1771,11 +2069,20 @@ func _input(event: InputEvent) -> void:
 		elif event.keycode == KEY_HOME:
 			_restore_balcony_view()
 		elif event.keycode == KEY_1:
-			_set_speed(1)
+			if feat_modal.visible:
+				_pick_feat_card(0)
+			else:
+				_set_speed(1)
 		elif event.keycode == KEY_2:
-			_set_speed(2)
+			if feat_modal.visible:
+				_pick_feat_card(1)
+			else:
+				_set_speed(2)
 		elif event.keycode == KEY_3:
-			_set_speed(3)
+			if feat_modal.visible:
+				_pick_feat_card(2)
+			else:
+				_set_speed(3)
 		elif event.keycode == KEY_Q:
 			_trigger_hero_ability(1)
 		elif event.keycode == KEY_E:
@@ -1783,6 +2090,14 @@ func _input(event: InputEvent) -> void:
 
 func _handle_left_click(screen_pos: Vector2) -> void:
 	if title_menu != null and title_menu.visible:
+		return
+	if map_select_modal != null and map_select_modal.visible:
+		return
+	if loadout_modal != null and loadout_modal.visible:
+		return
+	if pause_modal != null and pause_modal.visible:
+		return
+	if den_modal != null and den_modal.visible and den_modal.get_global_rect().has_point(screen_pos):
 		return
 	if leaderboard_modal != null and leaderboard_modal.visible and leaderboard_modal.get_global_rect().has_point(screen_pos):
 		return
@@ -1804,8 +2119,8 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 		return
 	if results_modal != null and results_modal.visible and results_modal.get_global_rect().has_point(screen_pos):
 		return
-	# Ignore clicks on UI panels
-	if screen_pos.y > 600 or screen_pos.x > 970 or screen_pos.y < 65:
+	# Ignore clicks on UI panels (TopBar + WaveStrip, BottomDock, Right Inspector)
+	if screen_pos.y > 600 or screen_pos.x > 970 or screen_pos.y < 102:
 		return
 	var click_pos := _screen_to_world(screen_pos)
 
@@ -1836,8 +2151,12 @@ func _handle_left_click(screen_pos: Vector2) -> void:
 				var owner = coop_current_player if coop_mode_active else 1
 				var t = sim.place_tower(placing_cat_id, click_pos, owner)
 				if t != null:
+					if coach_step == 0:
+						coach_step = 1
+					coach_flash_hint = ""
 					_select_tower(t)
 					placing_cat_id = ""
+					_update_ui()
 		return
 
 	# An obstacle opens an explanatory card only outside placement mode. It cannot
@@ -1910,27 +2229,34 @@ func _on_brew_target_pressed() -> void:
 
 func _update_inspector() -> void:
 	if selected_tower != null:
+		if inspector_portrait != null:
+			inspector_portrait.texture = _get_single_frame_icon(cat_sprites.get(selected_tower.cat_id))
+		if hero_level_badge != null:
+			hero_level_badge.visible = false
+		if target_segment_box != null:
+			target_segment_box.visible = true
+			_refresh_target_segments()
+		if upgrades_title_lbl != null:
+			upgrades_title_lbl.visible = true
 		cat_title_lbl.text = "%s — %s" % [selected_tower.cat_name, selected_tower.cat_data.get("title", "Cat")]
-		var mastery_text = _get_mastery_text(selected_tower.cat_id)
-		cat_category_lbl.text = "%s Cat • %s Damage\n%s" % [
+		cat_category_lbl.text = "%s • %s" % [
 			selected_tower.category,
-			SimConstants.damage_type_to_string(selected_tower.damage_type),
-			mastery_text
+			SimConstants.damage_type_to_string(selected_tower.damage_type)
 		]
 		
 		if selected_tower.cat_id == "goldie":
-			stats_lbl.text = "End-Round Income: +%d | Total Produced: %d Kibble" % [
+			stats_lbl.text = "End-Round: +%d | Produced: %d" % [
 				selected_tower.cat_data.get("base", {}).get("end_round_kibble", 140),
 				selected_tower.total_kibble_produced
 			]
 		elif selected_tower.cat_id == "miso":
 			var rad = sim._get_miso_aura_radius(selected_tower)
-			stats_lbl.text = "Aura Radius: %d | Buffing: %d Cats | Assisted: %d Dmg" % [
+			stats_lbl.text = "Aura: %d | Buffing: %d | Assisted: %d" % [
 				int(rad), selected_tower.buffed_cats_count, int(selected_tower.total_buff_damage_assisted)
 			]
 		else:
 			var owner_info = " • P%d" % selected_tower.owner_id if coop_mode_active else ""
-			stats_lbl.text = "Dmg: %d | Pierce: %d | Range: %d | CD: %.2fs%s\nPops: %d | Total Dealt: %d Dmg" % [
+			stats_lbl.text = "Dmg: %d | Pierce: %d | Rng: %d | CD: %.2fs%s\nPops: %d | Dealt: %d" % [
 				selected_tower.get_effective_damage(),
 				selected_tower.get_effective_pierce(),
 				int(selected_tower.get_effective_range()),
@@ -1940,7 +2266,7 @@ func _update_inspector() -> void:
 				selected_tower.damage_dealt
 			]
 			if selected_tower.cat_id == "pudding" and selected_tower.freeze_assists > 0:
-				stats_lbl.text += " | Freeze Assists: %d" % selected_tower.freeze_assists
+				stats_lbl.text += " | Chill: %d" % selected_tower.freeze_assists
 			elif selected_tower.cat_id == "bub":
 				var bub_base: Dictionary = selected_tower.cat_data.get("base", {})
 				var corrosion_dps := sim._cat_tier_value(selected_tower, "corrosion_dps", float(bub_base.get("corrosion_dps", 1.0)))
@@ -1956,7 +2282,7 @@ func _update_inspector() -> void:
 			next_xp = SimFeats.THRESHOLD_II
 		elif selected_tower.feat_rank >= 2:
 			next_xp = SimFeats.THRESHOLD_III
-		feat_status_lbl.text = "Feat Rank: %d (XP: %d / %d)" % [selected_tower.feat_rank, int(selected_tower.feat_xp), next_xp]
+		feat_status_lbl.text = "Feat Rank %d (%d / %d XP)" % [selected_tower.feat_rank, int(selected_tower.feat_xp), next_xp]
 		
 		target_priority_btn.text = "Target: %s" % SimConstants.target_priority_to_string(selected_tower.target_priority)
 		var has_brew := selected_tower.cat_id == "bub" and int(selected_tower.tiers.get("path_b", 0)) >= 3
@@ -1974,18 +2300,27 @@ func _update_inspector() -> void:
 		_update_upgrade_btn(path_c_btn, "path_c")
 		
 		var refund = int(floor(float(selected_tower.total_spent) * sim.economy.sell_refund_ratio))
-		sell_btn.text = "Sell (+%d Kibble)" % refund
+		sell_btn.text = "%s (+%d)" % [_t("ui.sell", "Sell"), refund]
 		sell_btn.disabled = not sim.economy.allow_selling
 	elif selected_is_hero and sim.hero != null:
 		var h = sim.hero
-		cat_title_lbl.text = "%s (Hero Cat)" % h.hero_name
-		cat_category_lbl.text = "Commander • Level %d / 20" % h.level
-		stats_lbl.text = "Dmg: %d | Pierce: %d | Range: %d | CD: %.2fs" % [
+		if inspector_portrait != null:
+			inspector_portrait.texture = _get_single_frame_icon(cat_sprites.get(h.id))
+		if hero_level_badge != null:
+			hero_level_badge.visible = true
+			if hero_level_badge.has_method("set_level"):
+				hero_level_badge.set_level(h.level)
+		if target_segment_box != null:
+			target_segment_box.visible = false
+		if upgrades_title_lbl != null:
+			upgrades_title_lbl.visible = false
+		cat_title_lbl.text = "%s" % h.hero_name
+		cat_category_lbl.text = "Hero Commander"
+		stats_lbl.text = "Dmg: %d | Pierce: %d | Rng: %d | CD: %.2fs" % [
 			h.get_effective_damage(), h.pierce, int(h.get_effective_range()), h.get_effective_cooldown()
 		]
 		var next_xp = SimHero.XP_TABLE[mini(h.level, SimHero.XP_TABLE.size() - 1)]
-		feat_status_lbl.text = "Hero Match XP: %d / %d" % [int(h.xp), next_xp]
-		target_priority_btn.text = "Hero Auto-Target: First"
+		feat_status_lbl.text = "Hero XP: %d / %d" % [int(h.xp), next_xp]
 		
 		path_a_btn.visible = false
 		path_b_btn.visible = false
@@ -2004,10 +2339,38 @@ func _update_inspector() -> void:
 		if h.ability_2_cooldown_left > 0.0:
 			ability2_btn.text += " (%.1fs)" % h.ability_2_cooldown_left
 	else:
+		if hero_level_badge != null:
+			hero_level_badge.visible = false
+		if target_segment_box != null:
+			target_segment_box.visible = false
+		if upgrades_title_lbl != null:
+			upgrades_title_lbl.visible = true
 		path_a_btn.visible = true
 		path_b_btn.visible = true
 		path_c_btn.visible = true
 		brew_target_btn.visible = false
+
+func _refresh_target_segments() -> void:
+	if selected_tower == null or target_segment_box == null:
+		return
+	var pairs := [
+		{"btn": target_first_btn, "prio": SimConstants.TargetPriority.FIRST},
+		{"btn": target_last_btn, "prio": SimConstants.TargetPriority.LAST},
+		{"btn": target_strong_btn, "prio": SimConstants.TargetPriority.STRONG},
+		{"btn": target_close_btn, "prio": SimConstants.TargetPriority.CLOSE}
+	]
+	var active_style := _wood_button(Color(1.0, 0.88, 0.42), Color(0.58, 0.34, 0.14))
+	var idle_style := _wood_button(Color(0.75, 0.56, 0.25), Color(0.28, 0.15, 0.08))
+	for p in pairs:
+		var btn: Button = p["btn"]
+		var is_active: bool = selected_tower.target_priority == p["prio"]
+		btn.add_theme_stylebox_override("normal", active_style if is_active else idle_style)
+		btn.add_theme_color_override("font_color", Color(1.0, 0.92, 0.48) if is_active else Color(0.86, 0.80, 0.70))
+
+func _set_target_priority(prio: int) -> void:
+	if selected_tower != null:
+		selected_tower.target_priority = prio
+		_update_inspector()
 
 func _get_mastery_text(_cat_id: String) -> String:
 	return "Mastery Rank 1 (Next: Rank 2 at 400 XP -> Unlocks Tier 3)"
@@ -2019,9 +2382,10 @@ func _update_upgrade_btn(btn: Button, path_key: String) -> void:
 	var p_data = paths.get(path_key, {})
 	var path_name = p_data.get("name", "Path")
 	var t_list: Array = p_data.get("tiers", [])
+	var pips := "●".repeat(cur_tier) + "○".repeat(5 - cur_tier)
 	
 	if cur_tier >= 5 or cur_tier >= t_list.size():
-		btn.text = "%s [Tier 5/5]\nMAX TIER" % path_name
+		btn.text = "%s  %s\nMAX TIER (5/5)" % [path_name, pips]
 		btn.disabled = true
 		return
 		
@@ -2031,30 +2395,56 @@ func _update_upgrade_btn(btn: Button, path_key: String) -> void:
 	var discounts = sim.get_tower_discounts(selected_tower)
 	var price = sim.economy.calculate_price(base_cost, discounts)
 	
-	var pips := "●".repeat(cur_tier) + "○".repeat(5 - cur_tier)
-	var stat_diff = _calculate_upgrade_stat_diff(selected_tower, path_key, next_tier_data)
-	var disc_note = " (Discounted)" if not discounts.is_empty() else ""
-	btn.text = "%s  %s\n%s: %s\n%d Kibble%s" % [path_name, pips, tier_name, stat_diff, price, disc_note]
+	var stat_diff = str(next_tier_data.get("desc", ""))
+	if stat_diff.is_empty():
+		stat_diff = _calculate_upgrade_stat_diff(selected_tower, path_key, next_tier_data)
 	
+	if inspector_hint_lbl == null and has_node("CanvasLayer/HUD/InspectorPanel/VBox"):
+		inspector_hint_lbl = Label.new()
+		inspector_hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		inspector_hint_lbl.add_theme_font_size_override("font_size", 11)
+		inspector_hint_lbl.add_theme_color_override("font_color", Color(1.0, 0.86, 0.42))
+		inspector_hint_lbl.visible = false
+		$CanvasLayer/HUD/InspectorPanel/VBox.add_child(inspector_hint_lbl)
+	if inspector_hint_lbl != null:
+		inspector_hint_lbl.visible = false
+
 	var check = sim.can_upgrade_tower(selected_tower, path_key)
 	if not check.get("allowed", false):
 		btn.disabled = true
 		var r = str(check.get("reason", ""))
 		if r == "MAX_TIER":
-			btn.text += "\n[MAX TIER (5/5)]"
+			btn.text = "%s  %s\nMAX TIER (5/5)" % [path_name, pips]
 		elif r == "TWO_PATHS_CHOSEN":
-			btn.text += "\n[LOCKED: 2 paths already chosen]"
+			btn.text = "%s  %s\n%s" % [path_name, pips, _t("ui.crosspath_closed_two", "Closed: 2 paths already chosen")]
+			_maybe_show_crosspath_coach()
 		elif r.begins_with("LOCKED_BY_OTHER_TIER3"):
 			var other_p = r.split(":")[1].replace("path_", "Path ").to_upper()
-			btn.text += "\n[LOCKED: %s is Tier 3+, caps this at Tier 2]" % other_p
+			btn.text = "%s  %s\n%s" % [path_name, pips, _t("ui.crosspath_closed_t3", "Closed: {path} is Tier 3+ (max Tier 2)", {"path": other_p})]
+			_maybe_show_crosspath_coach()
 		elif r == "UNIQUE_T5_EXISTS":
-			btn.text += "\n[LOCKED: Only 1 Tier-5 allowed on map]"
+			btn.text = "%s  %s\nClosed: Tier 5 already on map" % [path_name, pips]
 		elif r == "NO_KIBBLE":
-			btn.text += "\n[NEED %d KIBBLE]" % price
+			btn.text = "%s  %s\n%s — %s\n%d Kibble" % [path_name, pips, tier_name, stat_diff, price]
+		btn.add_theme_stylebox_override("normal", WoodTheme.button_style(Color(0.75, 0.52, 0.18), Color(0.24, 0.12, 0.06)))
 	else:
 		btn.disabled = false
-		if cur_tier == 2:
-			btn.text += "\n⚠️ Tier 3 caps secondary path at Tier 2!"
+		btn.text = "%s  %s\n%s — %s\n%d Kibble" % [path_name, pips, tier_name, stat_diff, price]
+		if coach_step == 2:
+			btn.add_theme_stylebox_override("normal", WoodTheme.button_style(Color(0.45, 0.96, 0.50), Color(0.24, 0.42, 0.20)))
+		else:
+			btn.add_theme_stylebox_override("normal", WoodTheme.button_style(Color(0.93, 0.72, 0.32), Color(0.40, 0.22, 0.10)))
+
+func _maybe_show_crosspath_coach() -> void:
+	if save_mgr == null or inspector_hint_lbl == null:
+		return
+	var s: Dictionary = save_mgr.data.get("settings", {})
+	if not bool(s.get("coach_crosspath_seen", false)):
+		inspector_hint_lbl.text = _t("ui.coach_crosspath", "Crosspath rule: at most 2 paths; Tier 3+ caps the other at Tier 2.")
+		inspector_hint_lbl.visible = true
+		s["coach_crosspath_seen"] = true
+		save_mgr.data["settings"] = s
+		save_mgr.save_profile()
 
 func _calculate_upgrade_stat_diff(tower: SimTower, _path_key: String, next_tier_data: Dictionary) -> String:
 	var chunks: Array[String] = []
@@ -2068,6 +2458,8 @@ func _calculate_upgrade_stat_diff(tower: SimTower, _path_key: String, next_tier_
 			chunks.append("Pierce %d->%d" % [tower.pierce, np])
 	elif next_tier_data.has("bonus_pierce"):
 		chunks.append("+%d Pierce" % int(next_tier_data["bonus_pierce"]))
+	if next_tier_data.has("projectiles"):
+		chunks.append("%d shots" % int(next_tier_data["projectiles"]))
 	if next_tier_data.has("range"):
 		var nr = int(next_tier_data["range"])
 		if nr != int(tower.range_radius):
@@ -2075,24 +2467,36 @@ func _calculate_upgrade_stat_diff(tower: SimTower, _path_key: String, next_tier_
 	if next_tier_data.has("cooldown"):
 		var ncd = float(next_tier_data["cooldown"])
 		if absf(ncd - tower.cooldown) > 0.01:
-			chunks.append("CD %.2fs->%.2fs" % [tower.cooldown, ncd])
+			chunks.append("CD %.2fs" % ncd)
+	if next_tier_data.has("attack_speed_mult"):
+		chunks.append("+%d%% speed" % int(round((float(next_tier_data["attack_speed_mult"]) - 1.0) * 100.0)))
+	if next_tier_data.has("crit_chance"):
+		chunks.append("%d%% crit" % int(round(float(next_tier_data["crit_chance"]) * 100.0)))
 	if next_tier_data.has("see_shadow") and next_tier_data["see_shadow"] and not tower.see_shadow:
-		chunks.append("✦ Night Eye")
+		chunks.append("See Shadow")
+	if next_tier_data.has("seeking") and next_tier_data["seeking"]:
+		chunks.append("Seeking")
 	if next_tier_data.has("damage_type"):
 		var dt = str(next_tier_data["damage_type"])
 		if dt == "Bite":
-			chunks.append("⚙️ Pops Iron")
+			chunks.append("Pops Iron")
 		elif dt == "Blast":
-			chunks.append("💥 Blast")
+			chunks.append("Blast")
 		elif dt == "Void":
-			chunks.append("🌌 Void (Hits Ink)")
+			chunks.append("Void (Hits Ink)")
 	if next_tier_data.has("freeze_duration"):
-		chunks.append("❄️ Freeze %.1fs" % float(next_tier_data["freeze_duration"]))
+		chunks.append("Freeze %.1fs" % float(next_tier_data["freeze_duration"]))
 	if next_tier_data.has("aura_radius"):
 		chunks.append("Aura %d" % int(next_tier_data["aura_radius"]))
+	if next_tier_data.has("end_round_kibble"):
+		chunks.append("+%d Kibble/round" % int(next_tier_data["end_round_kibble"]))
+	if next_tier_data.has("corrosion_dps"):
+		chunks.append("%.1f Acid DPS" % float(next_tier_data["corrosion_dps"]))
+	if next_tier_data.has("midas_ratio"):
+		chunks.append("Midas +%d%%" % int(round(float(next_tier_data["midas_ratio"]) * 100.0)))
 	if next_tier_data.has("active_ability"):
-		chunks.append("🔔 Unlocks Active")
-	return ", ".join(chunks) if not chunks.is_empty() else "New Technique"
+		chunks.append("Active Ability")
+	return ", ".join(chunks) if not chunks.is_empty() else str(next_tier_data.get("name", "Upgrade"))
 
 func _crosspath_reason(path_key: String) -> String:
 	for other in ["path_a", "path_b", "path_c"]:
@@ -2104,12 +2508,26 @@ func _upgrade_selected(path_key: String) -> void:
 	if selected_tower != null:
 		if sim.upgrade_tower(selected_tower, path_key):
 			combat_vfx.note({"type": "upgrade", "x": selected_tower.position.x, "y": selected_tower.position.y})
+			if coach_step == 2:
+				coach_step = 3
+				if save_mgr != null:
+					var s: Dictionary = save_mgr.data.get("settings", {})
+					s["coach_seen"] = true
+					save_mgr.data["settings"] = s
+					save_mgr.save_profile()
 			_update_inspector()
 			_update_ui()
 
 func _on_sell_selected() -> void:
 	if selected_tower != null:
 		sim.sell_tower(selected_tower)
+		if save_mgr != null:
+			var s: Dictionary = save_mgr.data.get("settings", {})
+			if not bool(s.get("coach_sell_seen", false)):
+				coach_flash_hint = _t("ui.coach_sell", "Sold! The Sell button always shows your exact Kibble refund.")
+				s["coach_sell_seen"] = true
+				save_mgr.data["settings"] = s
+				save_mgr.save_profile()
 		_deselect_tower()
 		_update_ui()
 
@@ -2131,6 +2549,13 @@ func _on_cycle_target_priority() -> void:
 
 func _trigger_hero_ability(slot: int) -> void:
 	if sim.trigger_hero_ability(slot):
+		if sim.hero != null and combat_vfx != null:
+			combat_vfx.note({
+				"type": "hero_telegraph",
+				"x": sim.hero.position.x,
+				"y": sim.hero.position.y,
+				"radius": sim.hero.get_effective_range()
+			})
 		_update_inspector()
 
 func _check_pending_feats() -> void:
@@ -2141,7 +2566,12 @@ func _check_pending_feats() -> void:
 
 func _open_feat_dialog(t: SimTower) -> void:
 	feat_modal.visible = true
-	feat_subtitle_lbl.text = "%s reached Feat Rank %d! Choose 1 Feat perk:" % [t.cat_name, t.feat_rank]
+	if feat_title_lbl != null:
+		feat_title_lbl.text = _t("ui.feat_title", "Cat Feat")
+	feat_subtitle_lbl.text = _t("ui.feat_subtitle", "Between rounds — {name} reached Feat Rank {rank}. Choose 1 perk (Keys 1–3):", {
+		"name": t.cat_name,
+		"rank": str(t.feat_rank)
+	})
 	
 	current_feat_offer = SimFeats.generate_feat_offer(
 		1337,
@@ -2155,13 +2585,18 @@ func _open_feat_dialog(t: SimTower) -> void:
 	if current_feat_offer.size() >= 3:
 		feat_card1_name.text = current_feat_offer[0].get("name", "Perk 1")
 		feat_card1_desc.text = current_feat_offer[0].get("desc", "")
+		feat_card1_btn.text = _t("ui.feat_pick", "Pick [{key}]", {"key": "1"})
 		
 		feat_card2_name.text = current_feat_offer[1].get("name", "Perk 2")
 		feat_card2_desc.text = current_feat_offer[1].get("desc", "")
+		feat_card2_btn.text = _t("ui.feat_pick", "Pick [{key}]", {"key": "2"})
 		
 		feat_card3_name.text = current_feat_offer[2].get("name", "Perk 3")
 		feat_card3_desc.text = current_feat_offer[2].get("desc", "")
+		feat_card3_btn.text = _t("ui.feat_pick", "Pick [{key}]", {"key": "3"})
 		
+	feat_reroll_btn.visible = not t.reroll_used
+	feat_reroll_btn.text = _t("ui.feat_reroll", "Reroll Feats ({cost} Kibble)", {"cost": "150"})
 	feat_reroll_btn.disabled = t.reroll_used or not sim.economy.can_afford(150)
 
 func _pick_feat_card(idx: int) -> void:
@@ -2185,23 +2620,59 @@ func _on_start_round_pressed() -> void:
 			return
 		if sim.start_next_round():
 			brew_selecting_source = null
+			coach_flash_hint = ""
+			if coach_step == 1:
+				coach_step = 2
 		_update_ui()
+
+func _mode_display_name(mode_val: int) -> String:
+	match mode_val:
+		SimConstants.GameMode.SUNNY: return _t("ui.mode_sunny", "Sunny")
+		SimConstants.GameMode.ALLEY: return _t("ui.mode_alley", "Alley")
+		SimConstants.GameMode.NIGHT: return _t("ui.mode_night", "Night")
+		SimConstants.GameMode.LAST_WHISKER: return _t("ui.mode_last_whisker", "Last Whisker")
+		SimConstants.GameMode.BARE_PAW: return _t("ui.mode_bare_paw", "Bare Paw")
+		TESTING_LAB_MODE: return _t("ui.mode_lab", "Testing Lab")
+		ALLEY_CRAWL_MODE: return _t("ui.mode_crawl", "Alley Crawl")
+	return "Sunny"
 
 func _update_ui() -> void:
 	if sim == null:
 		return
 	_update_profile_badge()
-	lives_label.text = "%s: %d" % [_t("ui.lives", "Lives"), sim.lives]
-	kibble_label.text = "%s: %s" % [_t("ui.kibble", "Kibble"), "Unlimited" if sim.economy.unlimited_kibble else str(sim.economy.kibble)]
+	lives_label.text = "%d" % sim.lives
+	lives_label.tooltip_text = "%s: %d" % [_t("ui.lives", "Lives"), sim.lives]
+	kibble_label.text = "∞" if sim.economy.unlimited_kibble else "%d" % sim.economy.kibble
+	kibble_label.tooltip_text = "%s: %s" % [_t("ui.kibble", "Kibble"), "Unlimited" if sim.economy.unlimited_kibble else str(sim.economy.kibble)]
 	if testing_lab != null and lab_dps_label != null:
 		var sample := testing_lab.get_dps_sample()
 		lab_dps_label.text = "DPS: unavailable (0 ticks)" if int(sample.elapsed_ticks) <= 0 else "DPS: %.1f | HP: %d | Ticks: %d" % [float(sample.dps), int(sample.hp_removed), int(sample.elapsed_ticks)]
 	var crawl_prefix := "D%d/%d · " % [alley_crawl.current_stage + 1, alley_crawl.stage_count] if alley_crawl_session != null else ""
 	round_label.text = "%s%s %d/%d" % [crawl_prefix, _t("ui.round", "Round"), sim.current_round, sim.max_rounds]
+	var mode_str := _mode_display_name(current_mode)
+	if mode_badge_lbl != null:
+		mode_badge_lbl.text = mode_str
+	if right_subtitle_lbl != null:
+		var map_label := _t("map.%s" % current_map_id, current_map_id.capitalize().replace("_", " "))
+		right_subtitle_lbl.text = "%s • %s" % [map_label, mode_str]
+	if empty_prompt_lbl != null:
+		if not coach_flash_hint.is_empty():
+			empty_prompt_lbl.text = coach_flash_hint
+		elif coach_step == 0:
+			empty_prompt_lbl.text = _t("ui.coach_place", "Step 1: Choose Pip below and place them on the grass.")
+		elif coach_step == 1:
+			empty_prompt_lbl.text = _t("ui.coach_send", "Step 2: Press Start [Space] to send the round.")
+		elif coach_step == 2:
+			empty_prompt_lbl.text = _t("ui.coach_buy", "Step 3: Tap Pip, then buy the highlighted path when Kibble allows.")
+		else:
+			empty_prompt_lbl.text = _t("ui.empty_inspector", "Choose a cat, or tap a cat on the alley.")
+	if pause_btn != null:
+		pause_btn.text = _t("ui.resume", "Resume") if match_paused else _t("ui.pause", "Pause")
 	if map_select_btn != null:
 		map_select_btn.disabled = sim.round_in_progress or alley_crawl_session != null
 	if mode_select_btn != null:
 		mode_select_btn.disabled = sim.round_in_progress or alley_crawl_session != null
+	_update_cat_dock_affordability()
 	_update_wave_strip()
 	_update_hero_commander_panel()
 	if not sim.round_in_progress and not match_paused:
@@ -2209,7 +2680,9 @@ func _update_ui() -> void:
 			start_round_btn.text = "%.1fs [Space]" % maxf(0.0, auto_start_timer)
 		else:
 			start_round_btn.text = "▶ %s [Space]" % _t("ui.start", "Start")
-	start_round_btn.disabled = sim.round_in_progress or sim.match_won or sim.match_lost or feat_modal.visible
+	elif match_paused:
+		start_round_btn.text = _t("ui.resume", "Resume")
+	start_round_btn.disabled = (sim.round_in_progress and not match_paused) or sim.match_won or sim.match_lost or feat_modal.visible
 	if selected_tower != null or selected_is_hero:
 		_update_inspector()
 	if (sim.match_won or sim.match_lost) and results_modal != null and not results_modal.visible:
@@ -2218,8 +2691,19 @@ func _update_ui() -> void:
 func _update_wave_strip() -> void:
 	var next_round := sim.current_round if sim.round_in_progress else sim.current_round + 1
 	var groups: Array = sim.round_data.get("rounds", {}).get(str(next_round), [])
+	if wave_chips_box != null:
+		for child in wave_chips_box.get_children():
+			child.queue_free()
 	if groups.is_empty():
-		incoming_info.text = _t("ui.trail_clear", "Trail clear") if sim.match_won else _t("ui.no_wave", "No wave authored yet")
+		var empty_txt := _t("ui.trail_clear", "Trail clear") if sim.match_won else _t("ui.no_wave", "No wave authored yet")
+		incoming_info.text = empty_txt
+		if wave_strip != null:
+			wave_strip.tooltip_text = empty_txt
+		if wave_chips_box != null:
+			var lbl := Label.new()
+			lbl.text = empty_txt
+			lbl.add_theme_font_size_override("font_size", 12)
+			wave_chips_box.add_child(lbl)
 		return
 	var chunks: Array[String] = []
 	var threats: Array[String] = []
@@ -2228,56 +2712,87 @@ func _update_wave_strip() -> void:
 	var routes := {}
 	
 	for group in groups:
-		var kind := str(group.get("rat", group.get("coat", "mouse"))).capitalize()
+		var coat_key := str(group.get("coat", "")).to_lower()
+		var rat_key := str(group.get("rat", "")).to_lower()
+		var kind := _t("coat.%s" % coat_key, coat_key.capitalize()) if rat_key.is_empty() else rat_key.capitalize()
 		var count := int(group.get("count", 1))
+		var is_sh := bool(group.get("shadow", false) or group.get("is_shadow", false))
+		var is_pl := bool(group.get("plated", false) or group.get("is_plated", false))
 		var tags: Array[String] = []
-		if group.get("shadow", false) or group.get("is_shadow", false):
+		if is_sh:
 			has_shadow = true
-			tags.append("✦Shadow")
-		if group.get("plated", false) or group.get("is_plated", false):
+			tags.append("Shadow")
+		if is_pl:
 			has_plated = true
-			tags.append("🛡️Plated")
+			tags.append("Plated")
 		var r_idx = group.get("route", 0)
 		routes[r_idx] = true
 		
 		var tag_str = (" " + "/".join(tags)) if not tags.is_empty() else ""
 		chunks.append("%s x%d%s" % [kind, count, tag_str])
+
+		if wave_chips_box != null and wave_chips_box.get_child_count() < 6:
+			var chip := HBoxContainer.new()
+			chip.add_theme_constant_override("separation", 3)
+			var sprite_tex: Texture2D = rat_sprites.get(rat_key) if not rat_key.is_empty() else mouse_sprites.get(coat_key)
+			if sprite_tex != null:
+				var icon := TextureRect.new()
+				icon.texture = _get_single_frame_icon(sprite_tex)
+				icon.custom_minimum_size = Vector2(22, 22)
+				icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				if is_sh:
+					icon.modulate = Color(1, 1, 1, 0.55)
+				chip.add_child(icon)
+			else:
+				var swatch := ColorRect.new()
+				swatch.custom_minimum_size = Vector2(14, 14)
+				swatch.color = COAT_COLORS.get(coat_key, Color(0.55, 0.35, 0.25))
+				chip.add_child(swatch)
+			var cnt_lbl := Label.new()
+			var prefix := ""
+			if is_sh:
+				prefix += "✦"
+			if is_pl:
+				prefix += "🛡"
+			cnt_lbl.text = "%s×%d" % [prefix, count]
+			cnt_lbl.add_theme_font_size_override("font_size", 12)
+			chip.add_child(cnt_lbl)
+			chip.tooltip_text = "%s ×%d%s" % [kind, count, tag_str]
+			wave_chips_box.add_child(chip)
 		
-		var coat_key = str(group.get("coat", "")).to_lower()
-		var rat_key = str(group.get("rat", "")).to_lower()
-		
-		if coat_key == "iron" and not threats.has("⚠️ Iron: Claw immune (Use Bite/Blast/Magic)"):
-			threats.append("⚠️ Iron: Claw immune (Use Bite/Blast/Magic)")
-		elif coat_key == "soot" and not threats.has("⚠️ Soot: Blast immune (Use Claw/Bite/Magic)"):
-			threats.append("⚠️ Soot: Blast immune (Use Claw/Bite/Magic)")
-		elif coat_key == "ink" and not threats.has("⚠️ Ink: Magic immune (Use Claw/Blast/Bite)"):
-			threats.append("⚠️ Ink: Magic immune (Use Claw/Blast/Bite)")
-		elif coat_key == "frost" and not threats.has("⚠️ Frost: Freeze & Chill immune"):
-			threats.append("⚠️ Frost: Freeze & Chill immune")
-		elif coat_key == "porcelain" and not threats.has("⚠️ Porcelain: Multi-layer high-speed shell"):
-			threats.append("⚠️ Porcelain: Multi-layer high-speed shell")
-		
-		if rat_key == "matriarch" and not threats.has("👑 RAT MATRIARCH: Immune to all stuns/slows/freezes!"):
-			threats.append("👑 RAT MATRIARCH: Immune to all stuns/slows/freezes!")
-		elif rat_key != "" and not threats.has("🐀 Heavy Rat: High HP boss"):
-			threats.append("🐀 %s: Heavy boss with child swarm!" % rat_key.capitalize())
+		if coat_key == "iron" and not threats.has("Iron: Claw immune"):
+			threats.append("Iron: Claw immune")
+		elif coat_key == "soot" and not threats.has("Soot: Blast immune"):
+			threats.append("Soot: Blast immune")
+		elif coat_key == "ink" and not threats.has("Ink: Magic immune"):
+			threats.append("Ink: Magic immune")
+		elif coat_key == "frost" and not threats.has("Frost: Freeze/Chill immune"):
+			threats.append("Frost: Freeze/Chill immune")
+		elif coat_key == "porcelain" and not threats.has("Porcelain: Multi-layer shell"):
+			threats.append("Porcelain: Multi-layer shell")
+		if rat_key == "matriarch" and not threats.has("Rat Matriarch: Control immune"):
+			threats.append("Rat Matriarch: Control immune")
+		elif rat_key != "" and not threats.has("Rat: High HP boss"):
+			threats.append("%s Rat: High HP boss" % rat_key.capitalize())
 			
-	if has_shadow and not threats.has("✦ Shadow: Invisible without Night Eye"):
-		threats.append("✦ Shadow units: Invisible without Night Eye")
-	if has_plated and not threats.has("🛡️ Plated: Armor absorbs initial damage"):
-		threats.append("🛡️ Plated units: Armor absorbs initial damage")
+	if has_shadow and not threats.has("Shadow: Needs Night Eye"):
+		threats.append("Shadow: Needs Night Eye")
+	if has_plated and not threats.has("Plated: Armor shell"):
+		threats.append("Plated: Armor shell")
 		
 	var route_str := ""
 	if routes.size() > 1:
-		route_str = "\nActive Routes: Split across %d paths!" % routes.size()
+		route_str = " | %d paths" % routes.size()
 	elif routes.has(1):
-		route_str = "\nRoute: Alternate Path B"
+		route_str = " | Path B"
 		
-	var threat_str := ""
+	var full_summary := "Round %d: %s%s" % [next_round, ", ".join(chunks), route_str]
 	if not threats.is_empty():
-		threat_str = "\n" + "\n".join(threats)
-		
-	incoming_info.text = ("Next Wave (R%d):\n" % next_round) + "\n".join(chunks) + route_str + threat_str
+		full_summary += "\n" + " • ".join(threats)
+	incoming_info.text = full_summary
+	if wave_strip != null:
+		wave_strip.tooltip_text = full_summary
 
 # ==================== DRAWING & VISUALIZATION ====================
 
@@ -2285,7 +2800,8 @@ func _draw() -> void:
 	if sim == null or actor_drawer == null:
 		return
 	if world_drawer != null:
-		world_drawer.draw_world(self, grass_tex, cobble_tex, prop_sprites, sim)
+		var leak_t := combat_vfx.leak_flash if combat_vfx != null else 0.0
+		world_drawer.draw_world(self, grass_tex, cobble_tex, prop_sprites, sim, leak_t)
 	if testing_lab != null:
 		_draw_lab_overlays()
 	var displayed_s: Dictionary = {}
@@ -2577,10 +3093,10 @@ func _draw_placement_preview() -> void:
 	if placing_cat_id == "":
 		return
 		
-	var valid = false
-	var footprint = 20.0
-	var range_r = 130.0
-	var cost = 200
+	var valid := false
+	var footprint: float = 20.0
+	var range_r: float = 130.0
+	var cost: int = 200
 	var chk: Dictionary = {}
 	
 	if is_placing_hero:
@@ -2596,24 +3112,31 @@ func _draw_placement_preview() -> void:
 		range_r = float(cdata.get("base", {}).get("range", 130.0))
 		cost = chk.get("price", 200)
 		
-	var col = Color(0.2, 0.9, 0.3, 0.35) if valid else Color(0.9, 0.2, 0.2, 0.35)
-	var stroke = Color(0.2, 0.9, 0.3, 0.9) if valid else Color(0.9, 0.2, 0.2, 0.9)
+	var decal_fill := Color(0.16, 0.72, 0.68, 0.34) if valid else Color(0.84, 0.34, 0.22, 0.34)
+	var decal_ring := Color(0.24, 0.90, 0.84, 0.95) if valid else Color(0.96, 0.44, 0.28, 0.95)
+	var range_fill := Color(0.20, 0.78, 0.74, 0.12) if valid else Color(0.86, 0.36, 0.24, 0.12)
 	
-	# Range circle
-	draw_circle(mouse_pos, range_r, col)
-	draw_arc(mouse_pos, range_r, 0, TAU, 48, stroke, 1.5)
+	# Faint range ring during placement + crisp ground decal under footprint
+	draw_circle(mouse_pos, range_r, range_fill)
+	draw_arc(mouse_pos, range_r, 0, TAU, 48, Color(decal_ring, 0.65), 1.5)
+	draw_circle(mouse_pos, footprint + 4.0, decal_fill)
+	draw_arc(mouse_pos, footprint + 4.0, 0, TAU, 28, decal_ring, 2.5)
+	if not valid:
+		var x_len: float = float(footprint) * 0.55
+		draw_line(mouse_pos - Vector2(x_len, x_len), mouse_pos + Vector2(x_len, x_len), decal_ring, 2.5)
+		draw_line(mouse_pos + Vector2(x_len, -x_len), mouse_pos - Vector2(x_len, x_len), decal_ring, 2.5)
 	
 	var ghost: Texture2D = cat_sprites.get(placing_cat_id)
 	if ghost:
 		_blit(ghost, mouse_pos, footprint * 3.1, 0.85 if valid else 0.45, 0.82)
 	else:
-		draw_circle(mouse_pos, footprint, Color(stroke.r, stroke.g, stroke.b, 0.7))
+		draw_circle(mouse_pos, footprint, Color(decal_ring.r, decal_ring.g, decal_ring.b, 0.7))
 	
-	var tip = "%s ($%d)" % [placing_cat_id.capitalize(), cost]
+	var tip = "%s (%d)" % [placing_cat_id.capitalize(), cost]
 	if not valid:
-		var icons := {"road": "⛔ road", "surface": "💧 surface", "cat": "🐾 cat", "hero": "🐾 hero", "permanent_obstacle": "🏠 fixed", "removable_obstacle": "🧺 clearable", "kibble": "🍖 Kibble"}
+		var icons := {"road": "road", "surface": "surface", "cat": "cat", "hero": "hero", "permanent_obstacle": "fixed", "removable_obstacle": "clearable", "kibble": "kibble"}
 		tip += " — %s" % icons.get(str(chk.get("code", "")), str(chk.get("reason", "invalid")))
-	draw_string(ThemeDB.fallback_font, mouse_pos + Vector2(25, -15), tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, stroke)
+	draw_string(ThemeDB.fallback_font, mouse_pos + Vector2(25, -15), tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, decal_ring)
 
 func _load_json(path: String) -> Dictionary:
 	var file = FileAccess.open(path, FileAccess.READ)

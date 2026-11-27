@@ -3,6 +3,7 @@ class_name InsightsModal
 extends PanelContainer
 
 const SimSaveManager = preload("res://sim/save_manager.gd")
+const WoodTheme = preload("res://presentation/wood_theme.gd")
 
 signal closed
 
@@ -42,9 +43,9 @@ func _build_ui() -> void:
 	root_vbox.add_child(top_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "🔮 Insights — Passive Skill Trees"
+	title_lbl.text = "Insights — Passive Skill Trees"
 	title_lbl.add_theme_font_size_override("font_size", 20)
-	title_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 1.0))
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_hbox.add_child(title_lbl)
 
@@ -55,12 +56,12 @@ func _build_ui() -> void:
 	top_hbox.add_child(points_lbl)
 
 	var respec_btn := Button.new()
-	respec_btn.text = " ↺ Free Respec "
+	respec_btn.text = "Free Respec"
 	respec_btn.pressed.connect(_on_respec_pressed)
 	top_hbox.add_child(respec_btn)
 
 	var close_btn := Button.new()
-	close_btn.text = " ✕ Close "
+	close_btn.text = "Close"
 	close_btn.pressed.connect(func():
 		visible = false
 		closed.emit()
@@ -125,23 +126,53 @@ func _select_tree(tree_id: String) -> void:
 		var pid: String = p.get("id", "")
 		var is_owned = owned.has(pid)
 		var cost = int(p.get("cost", 1))
+		var can_buy = (not is_owned) and _can_buy_perk(p, i, owned)
+		var is_next_in_path = (not is_owned) and (i == 0 or owned.has(perks[i - 1].get("id", "")))
 
 		var perk_panel := PanelContainer.new()
+		perk_panel.set_meta("_keep_custom_panel", true)
+		var card_style := WoodTheme.card_style(is_next_in_path)
+		if is_owned:
+			card_style.border_color = Color(0.42, 0.86, 0.46)
+			card_style.bg_color = Color(0.14, 0.22, 0.12, 0.94)
+		elif is_next_in_path:
+			card_style.border_color = Color(1.0, 0.88, 0.40)
+		perk_panel.add_theme_stylebox_override("panel", card_style)
+
 		var p_hbox := HBoxContainer.new()
 		p_hbox.add_theme_constant_override("separation", 12)
 		perk_panel.add_child(p_hbox)
+
+		# Wood medallion tier node badge + path link
+		var medallion := PanelContainer.new()
+		medallion.set_meta("_keep_custom_panel", true)
+		var med_style := WoodTheme.button_style(
+			Color(0.45, 0.92, 0.48) if is_owned else (Color(1.0, 0.88, 0.42) if is_next_in_path else Color(0.55, 0.42, 0.24)),
+			Color(0.18, 0.30, 0.16) if is_owned else (Color(0.46, 0.28, 0.12) if is_next_in_path else Color(0.20, 0.12, 0.08))
+		)
+		med_style.set_corner_radius_all(24)
+		medallion.custom_minimum_size = Vector2(54, 54)
+		medallion.add_theme_stylebox_override("panel", med_style)
+		var med_lbl := Label.new()
+		med_lbl.text = "%s\nT%d" % ["✓" if is_owned else ("NEXT" if is_next_in_path else "•"), i + 1]
+		med_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		med_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		med_lbl.add_theme_font_size_override("font_size", 11)
+		medallion.add_child(med_lbl)
+		p_hbox.add_child(medallion)
 
 		var info_vbox := VBoxContainer.new()
 		info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		p_hbox.add_child(info_vbox)
 
-		var title_txt = "Tier %d: %s (Cost: %d Pt%s)" % [
+		var title_txt = "Tier %d: %s (%d Pt%s)" % [
 			i + 1, p.get("name", pid), cost, "s" if cost > 1 else ""
 		]
 		var title_lbl := Label.new()
 		title_lbl.text = title_txt
-		title_lbl.add_theme_font_size_override("font_size", 16)
-		title_lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0) if not is_owned else Color(0.5, 1.0, 0.5))
+		title_lbl.add_theme_font_size_override("font_size", 15)
+		title_lbl.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55) if is_owned else (Color(1.0, 0.90, 0.45) if is_next_in_path else Color(0.92, 0.88, 0.80)))
+		title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info_vbox.add_child(title_lbl)
 
 		var desc_lbl := Label.new()
@@ -149,25 +180,23 @@ func _select_tree(tree_id: String) -> void:
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info_vbox.add_child(desc_lbl)
 
-		# Mastery requirement info if any
 		var req = p.get("req_mastery", {})
 		if not req.is_empty():
 			var req_lbl := Label.new()
 			var req_cat = req.get("cat", req.get("category", ""))
 			var req_rank = req.get("rank", 1)
 			req_lbl.text = "Requires: %s Mastery Rank %d" % [req_cat.capitalize(), req_rank]
-			req_lbl.add_theme_color_override("font_color", Color(1.0, 0.7, 0.4))
+			req_lbl.add_theme_color_override("font_color", Color(1.0, 0.72, 0.42))
+			req_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			info_vbox.add_child(req_lbl)
 
-		# Action Button
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(130, 40)
 		if is_owned:
-			btn.text = "✓ UNLOCKED"
+			btn.text = "Owned"
 			btn.disabled = true
 		else:
-			btn.text = "Unlock (%d Pt)" % cost
-			var can_buy = _can_buy_perk(p, i, owned)
+			btn.text = "Buy (%d Pt)" % cost if is_next_in_path else "Locked (%d Pt)" % cost
 			btn.disabled = not can_buy
 			if can_buy:
 				btn.pressed.connect(func(): _buy_perk(pid, cost))

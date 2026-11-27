@@ -67,7 +67,7 @@ func draw_actors(canvas: CanvasItem, sim, displayed_s: Dictionary, selected_towe
 
 func _draw_tower(canvas: CanvasItem, tower, selected: bool, cats: Dictionary, in_round: bool) -> void:
 	if selected:
-		canvas.draw_circle(tower.position, tower.range_radius, Color(CAT_COLORS.get(tower.cat_id, Color.WHITE), 0.14))
+		canvas.draw_circle(tower.position, tower.range_radius, Color(CAT_COLORS.get(tower.cat_id, Color.WHITE), 0.08))
 		canvas.draw_arc(tower.position, tower.range_radius, 0, TAU, 48, Color("ffd763"), 2.0)
 	_draw_aura(canvas, tower)
 	var attack: Dictionary = attacks.get(tower.instance_id, {})
@@ -172,20 +172,41 @@ func _draw_hero(canvas: CanvasItem, hero, selected: bool, cats: Dictionary) -> v
 		canvas.draw_string(ThemeDB.fallback_font, hero.position + Vector2(-6, 5), initial, HORIZONTAL_ALIGNMENT_CENTER, 12, 14, Color.WHITE)
 
 	canvas.draw_string(ThemeDB.fallback_font, hero.position + Vector2(-17, -43), "LV %d" % hero.level, HORIZONTAL_ALIGNMENT_CENTER, 34, 12, Color("ffe275"))
-	_draw_cooldown_ring(canvas, hero.position + Vector2(-18, 26), hero.ability_1_cooldown_left, hero.hero_data.get("active_abilities", {}).get("ability_1", {}).get("cooldown", 1.0))
-	_draw_cooldown_ring(canvas, hero.position + Vector2(18, 26), hero.ability_2_cooldown_left, hero.hero_data.get("active_abilities", {}).get("ability_2", {}).get("cooldown", 1.0))
+	var cd1_total := float(hero.hero_data.get("active_abilities", {}).get("ability_1", {}).get("cooldown", 1.0))
+	var cd2_total := float(hero.hero_data.get("active_abilities", {}).get("ability_2", {}).get("cooldown", 1.0))
+	# Short telegraph ring when an ability just triggered (first 0.45s of its cooldown window)
+	for pair in [
+		{"left": float(hero.ability_1_cooldown_left), "total": cd1_total, "col": Color("ffd763")},
+		{"left": float(hero.ability_2_cooldown_left), "total": cd2_total, "col": Color("7bc8ff")}
+	]:
+		var elapsed := float(pair["total"]) - float(pair["left"])
+		if float(pair["left"]) > 0.0 and elapsed >= 0.0 and elapsed <= 0.45:
+			var tele_t := elapsed / 0.45
+			var tele_r := lerpf(28.0, float(hero.current_range), tele_t)
+			canvas.draw_arc(hero.position, tele_r, 0, TAU, 36, Color(pair["col"], (1.0 - tele_t) * 0.85), 3.0)
+	_draw_cooldown_ring(canvas, hero.position + Vector2(-18, 26), hero.ability_1_cooldown_left, cd1_total)
+	_draw_cooldown_ring(canvas, hero.position + Vector2(18, 26), hero.ability_2_cooldown_left, cd2_total)
 
 func _draw_mouse(canvas: CanvasItem, pos: Vector2, unit, mice: Dictionary, flip: bool) -> void:
 	var scale := 0.4 + 0.6 * (1.0 - float(child_scales.get(unit.id, 0.0)) / 0.27)
-	var height := (34.0 if unit.unit_type == "porcelain" else 28.0) * scale
+	var height := (32.0 if unit.unit_type == "porcelain" else 26.0) * scale
+	var alpha := 0.50 if unit.is_shadow else 1.0
 	_draw_shadow(canvas, pos + Vector2(0, 6), 10.0 * scale)
-	_draw_sprite(canvas, mice.get(unit.unit_type), pos, height, flip, int(time * 7.0) % 4, 0.45 if unit.is_shadow else 1.0)
+	_draw_sprite(canvas, mice.get(unit.unit_type), pos, height, flip, int(time * 7.0) % 4, alpha)
 	if mice.get(unit.unit_type) == null:
-		canvas.draw_circle(pos, 11.0 * scale, COAT_COLORS.get(unit.unit_type, Color("d85b4a")))
+		var fallback_col: Color = COAT_COLORS.get(unit.unit_type, Color("d85b4a"))
+		fallback_col.a = alpha
+		canvas.draw_circle(pos, 11.0 * scale, fallback_col)
 	if unit.is_plated:
-		canvas.draw_arc(pos, 16 * scale, 0, TAU, 20, Color("e8edf1"), 2.0)
+		canvas.draw_arc(pos, 16 * scale, 0, TAU, 20, Color(0.91, 0.93, 0.95, alpha), 2.2)
 	if unit.is_shadow:
-		canvas.draw_string(ThemeDB.fallback_font, pos + Vector2(-6, -19), "✦", HORIZONTAL_ALIGNMENT_CENTER, 12, 12, Color("d994ff"))
+		# Code-drawn 4-point star overhead for shadow mice
+		var sc := pos + Vector2(0, -18)
+		var star := PackedVector2Array([
+			sc + Vector2(0, -5), sc + Vector2(1.5, -1.5), sc + Vector2(5, 0), sc + Vector2(1.5, 1.5),
+			sc + Vector2(0, 5), sc + Vector2(-1.5, 1.5), sc + Vector2(-5, 0), sc + Vector2(-1.5, -1.5)
+		])
+		canvas.draw_colored_polygon(star, Color("d994ff"))
 
 	# Porcelain cracks reflecting shell damage & health pips
 	if unit.unit_type == "porcelain":
@@ -213,8 +234,9 @@ func _draw_mouse(canvas: CanvasItem, pos: Vector2, unit, mice: Dictionary, flip:
 	_draw_status(canvas, pos, unit.status, unit.unit_type)
 
 func _draw_rat(canvas: CanvasItem, pos: Vector2, unit, rats: Dictionary, flip: bool) -> void:
-	var heights := {"burrow": 70.0, "bristle": 82.0, "monarch": 96.0, "dusk": 78.0, "matriarch": 112.0}
-	var height: float = heights.get(unit.unit_type, 70.0)
+	# Rats read 3x to 4x a Porcelain mouse (32px), and Matriarch is the largest body.
+	var heights := {"burrow": 102.0, "dusk": 108.0, "bristle": 116.0, "monarch": 128.0, "matriarch": 156.0}
+	var height: float = heights.get(unit.unit_type, 102.0)
 	_draw_shadow(canvas, pos + Vector2(0, 8), height * 0.25)
 	_draw_sprite(canvas, rats.get(unit.unit_type), pos, height, flip, int(time * 5.0) % 4)
 	if rats.get(unit.unit_type) == null:
@@ -304,16 +326,44 @@ func _draw_projectiles(canvas: CanvasItem, sim) -> void:
 			# Target landing reticle
 			canvas.draw_arc(projectile.target_position, maxf(8, projectile.radius * (0.3 + 0.2 * prog)), 0, TAU, 18, Color(color, 0.5), 1.5)
 		else:
-			# Linear projectile: yarn ball for Pip with trailing thread!
+			# Distinct unnumbered, transparent streak per damage family:
+			# 0 Claw, 1 Bite, 2 Blast, 3 Magic, 4 Acid, 5 Void, 6 True
 			var direction: Vector2 = (projectile.target_position - projectile.position).normalized()
-			if projectile.damage_type == 0:
-				# Yarn thread trailing
-				canvas.draw_line(projectile.position - direction * 16, projectile.position, Color("ffe4b5"), 2.0)
-				canvas.draw_circle(projectile.position, 4.0, Color("e67d22"))
-				canvas.draw_circle(projectile.position, 2.0, Color("ffd763"))
-			else:
-				canvas.draw_line(projectile.position - direction * 11, projectile.position, color, 3.0)
-				canvas.draw_circle(projectile.position, 3.3, color)
+			if direction.length_squared() < 0.01:
+				direction = Vector2.RIGHT
+			var perp := Vector2(-direction.y, direction.x)
+			match projectile.damage_type:
+				0: # Claw: warm amber yarn/claw streak
+					canvas.draw_line(projectile.position - direction * 15, projectile.position, Color(0.98, 0.82, 0.55, 0.85), 2.0)
+					canvas.draw_line(projectile.position - direction * 10 + perp * 3, projectile.position + perp * 2, Color("e67d22"), 1.6)
+					canvas.draw_circle(projectile.position, 4.0, Color("e67d22"))
+					canvas.draw_circle(projectile.position, 1.8, Color("ffd763"))
+				1: # Bite: crimson/ivory twin-fang V-wedge streak
+					canvas.draw_line(projectile.position - direction * 13 + perp * 3.5, projectile.position, Color(0.96, 0.94, 0.88, 0.95), 2.2)
+					canvas.draw_line(projectile.position - direction * 13 - perp * 3.5, projectile.position, Color(0.96, 0.94, 0.88, 0.95), 2.2)
+					canvas.draw_circle(projectile.position, 3.2, Color("d5564e"))
+				2: # Blast: ember streak
+					canvas.draw_line(projectile.position - direction * 14, projectile.position, Color(0.95, 0.45, 0.16, 0.85), 3.4)
+					canvas.draw_circle(projectile.position, 3.6, Color("ffb347"))
+				3: # Magic: violet diamond bolt with spark tail
+					canvas.draw_line(projectile.position - direction * 14, projectile.position, Color(0.68, 0.45, 0.95, 0.85), 2.6)
+					var d_pts := PackedVector2Array([
+						projectile.position + direction * 5,
+						projectile.position + perp * 3.5,
+						projectile.position - direction * 4,
+						projectile.position - perp * 3.5
+					])
+					canvas.draw_colored_polygon(d_pts, Color("d4b5ff"))
+				4: # Acid: bright lime droplet streak
+					canvas.draw_line(projectile.position - direction * 13, projectile.position, Color(0.50, 0.88, 0.28, 0.85), 2.8)
+					canvas.draw_circle(projectile.position, 3.8, Color("9ef55a"))
+				5: # Void: dark indigo crescent mark with bright lavender rim
+					canvas.draw_line(projectile.position - direction * 14, projectile.position, Color(0.26, 0.14, 0.40, 0.9), 3.4)
+					canvas.draw_arc(projectile.position, 5.0, direction.angle() - 1.1, direction.angle() + 1.1, 10, Color("d6a4ff"), 2.2)
+				_: # True: radiant white-gold star dart
+					canvas.draw_line(projectile.position - direction * 15, projectile.position, Color(1.0, 0.95, 0.70, 0.9), 2.4)
+					canvas.draw_circle(projectile.position, 4.0, Color.WHITE)
+					canvas.draw_arc(projectile.position, 6.0, 0, TAU, 12, Color("ffd763"), 1.5)
 
 func _draw_sprite(canvas: CanvasItem, texture: Texture2D, pos: Vector2, height: float, flip: bool, frame: int, alpha: float = 1.0) -> void:
 	if texture == null:
@@ -376,31 +426,36 @@ func _draw_ornament(canvas: CanvasItem, tower) -> void:
 	if primary_tier <= 0:
 		return
 
-	# Primary path ornament
-	var pri_color := Color("ffd76a") if primary_tier >= 5 else Color("c9eff7") if primary_tier >= 3 else Color("e9aa65")
-	# Base arc
-	canvas.draw_arc(tower.position + Vector2(0, 5), tower.footprint_radius + 5, PI * 1.08, PI * 1.92, 14, pri_color, 2.5)
-	# Primary pips on front
+	# Material vocabulary: brass (base/T1), yarn or frost (T3), masterwork brass crown (T5)
+	var brass_col := Color("d99e44")
+	var frost_yarn_col := Color("9be3f8") if tower.cat_id in ["pudding", "nim", "bub"] else Color("f08a38")
+	var crest_col := Color("ffd76a") if primary_tier >= 5 else (frost_yarn_col if primary_tier >= 3 else brass_col)
+
+	# Tier 1+ brass collar arc + readable pips
+	canvas.draw_arc(tower.position + Vector2(0, 5), tower.footprint_radius + 5, PI * 1.08, PI * 1.92, 14, crest_col, 2.6)
 	for i in range(primary_tier):
-		canvas.draw_circle(tower.position + Vector2(-8 + i * 4, 20), 2.0, pri_color)
+		canvas.draw_circle(tower.position + Vector2(-8 + i * 4, 20), 2.1, crest_col)
 
 	if primary_tier >= 5:
-		# Tier 5: Radiant golden crown
-		canvas.draw_arc(tower.position, tower.footprint_radius + 9, 0, TAU, 32, Color(pri_color, 0.55), 2.0)
-		canvas.draw_arc(tower.position, tower.footprint_radius + 13, 0, TAU, 32, Color(pri_color, 0.25), 1.0)
-		canvas.draw_string(ThemeDB.fallback_font, tower.position + Vector2(-6, -tower.footprint_radius - 12), "👑", HORIZONTAL_ALIGNMENT_CENTER, 12, 12, Color("ffd76a"))
+		# Tier 5: Masterwork brass crown & radiant outer band
+		canvas.draw_arc(tower.position, tower.footprint_radius + 9, 0, TAU, 32, Color(brass_col, 0.70), 2.2)
+		canvas.draw_arc(tower.position, tower.footprint_radius + 13, 0, TAU, 32, Color(frost_yarn_col, 0.35), 1.4)
+		var cy: Vector2 = Vector2(tower.position) + Vector2(0, -float(tower.footprint_radius) - 14.0)
+		var crown := PackedVector2Array([
+			cy + Vector2(-8, 4), cy + Vector2(-9, -4), cy + Vector2(-3, 0),
+			cy + Vector2(0, -6), cy + Vector2(3, 0), cy + Vector2(9, -4), cy + Vector2(8, 4)
+		])
+		canvas.draw_colored_polygon(crown, Color("ffd76a"))
 	elif primary_tier >= 3:
-		# Tier 3: Silver crescent crest
-		canvas.draw_arc(tower.position, tower.footprint_radius + 7, PI * 0.7, PI * 1.3, 16, Color(pri_color, 0.65), 2.0)
+		# Tier 3: Yarn braid or frost crystal crest arc
+		canvas.draw_arc(tower.position, tower.footprint_radius + 7, PI * 0.68, PI * 1.32, 16, Color(crest_col, 0.85), 2.4)
 
-	# Secondary path ornament: visually distinct crosspath badge on opposite flank
+	# Secondary path ornament: brass flank arc & pips
 	if secondary_tier >= 1:
-		var sec_color := Color("e9aa65") if secondary_tier == 1 else Color("d58c42")
-		# Secondary flanking arc on top flank
-		canvas.draw_arc(tower.position + Vector2(0, -5), tower.footprint_radius + 4, PI * 0.08, PI * 0.92, 12, sec_color, 1.8)
-		# Secondary pips
+		var sec_color := brass_col if secondary_tier == 1 else Color("f2b758")
+		canvas.draw_arc(tower.position + Vector2(0, -5), tower.footprint_radius + 4, PI * 0.08, PI * 0.92, 12, sec_color, 1.9)
 		for j in range(secondary_tier):
-			canvas.draw_circle(tower.position + Vector2(-4 + j * 6, -tower.footprint_radius - 6), 1.8, sec_color)
+			canvas.draw_circle(tower.position + Vector2(-4 + j * 6, -tower.footprint_radius - 6), 1.9, sec_color)
 
 func _draw_aura(canvas: CanvasItem, tower) -> void:
 	if tower.cat_id == "miso":

@@ -1,149 +1,148 @@
 # AGENTS.md — Clowder: Alley Siege
 
-Rules for anyone changing this repo. The design canon is fixed. The sim stays authoritative. Art lives in presentation. All detailed specifications reside in `SPEC/`.
+Rules for anyone changing this repo. The sim decides the match. Art lives in presentation. Design detail lives in `SPEC/`. This file is injected on every agent turn, so it stays short and it stays true to the tree.
 
 ---
 
-## 1. What this game is
+## 1. Token safety
+
+Spend context on the files the task touches. Do not tour the repo to get oriented.
+
+- Search, then read a slice. Grep a tight pattern and read that function. `presentation/main.gd` and `sim/match.gd` are large. Read a line range. `SPEC/MASTER_DESIGN_PLAN.md` duplicates the numbered specs. Leave it closed.
+- Open one spec. The index is `SPEC/README.md`. Open the single numbered file the task needs. Leave the rest closed.
+- Leave binaries and caches unread: `presentation/art/**/*.png`, `*.import`, `*.uid`, `.godot/`, `__pycache__/`. For art, open the one sprite the task names.
+- Keep the reply short. Do not paste this file, a spec, a JSON catalogue, or a test log. On a failure, quote the failing assertion and the file that owns it.
+- One task, one layer. A look change stays in `presentation/`. A rules change stays in `sim/` and `content/`. Skip subagents when the change fits in one file. Skip a full art regen when one sprite is enough.
+- When a doc and the tree disagree, follow the tree. `SPEC/11` still says 8 cats, 9 gates, and an old layout. `SPEC/13` is an unratified proposal. `content/`, `sim/`, and `tools/balance_runner.py` are what the game does. Do not reshape the repo to match a stale paragraph, and do not implement SPEC 13 because the file exists.
+- Re-read a file in this turn only when an edit may have changed it. Do not restate the roster, the laws, or the commands unless the user asked.
+
+---
+
+## 2. What this game is
 
 **Clowder: Alley Siege** (short name **Clowder**) is a free single-player path tower defense. Cats hold a track. Mice pop into smaller mice. Rats are the large late-wave enemies. No ads, no premium currency, no loot boxes, no real-money shop.
 
-- **Engine**: Godot 4 (4.3+), GDScript.
-- **Simulation**: Fixed sim tick is 30 Hz. Headless, deterministic, zero scene-tree calls.
-- **Content**: Data-driven JSON in `content/`. The sim and almanac read the identical JSON.
-- **Commands**:
-  - Run the game: `npm start` or `run_game.bat`
-  - Godot Editor: `npm run editor`
-  - Balance checks: `npm test`
-  - Sunny acceptance script: `npm run test:sunny`
+- **Engine**: Godot 4.3+ (`project.godot` features `4.3`), GDScript. Physics tick and sim tick are 30 Hz.
+- **Simulation**: Headless and deterministic. `sim/` is `RefCounted` script logic. It makes no scene-tree calls.
+- **Content**: JSON under `content/`. The sim, the almanac, and the balance harness read that same JSON.
+- **Play**: `npm start`, `npm run game`, or `run_game.bat`. Editor: `npm run editor`.
+- **Checks**:
+  - `npm test` runs `tools/balance_runner.py`. Exit 0 is the pass. The banner says 14 gates, then the same process runs the Bub headless check.
+  - `npm run test:sunny` runs `tools/sunny_scripted_match.py`.
+  - `npm run test:expansion` runs the Testing Lab and Alley Crawl headless scripts through Godot.
 
 ---
 
-## 2. Terminology
+## 3. Terminology
 
-Use these words in code, JSON, documentation, and UI. Never use borrowed terms from other tower defense titles.
+Use these words in code, JSON, docs, and UI.
 
-| General TD Idea | Clowder Canonical Name |
+| General TD idea | Clowder name |
 | :--- | :--- |
 | Tower | **Cat** |
 | Commander | **Hero cat** (one per match, levels 1–20) |
 | Small enemy | **Mouse** and its **coat** |
-| Large enemy / Boss | **Rat** |
+| Large enemy | **Rat** |
 | In-match money | **Kibble** |
-| Meta money | **Fishcoin** |
+| Meta money for tricks and looks | **Fishcoin** |
+| Mythic-look money | **Golden bones** (`content/prestige_shop.json`) |
 | Passive tree | **Insights** |
 | Shop active | **Trick** |
 | In-match cat choice | **Feat** |
 | Meta unlock XP | **Mastery** |
 
-- **Launch Cats**: Pip, Nibs, Pudding, Biscuit, Sable, Nim, Goldie, Miso.
-- **Launch Heroes**: Mittens, Duchess, Baron Salt, Sister Pebble.
-- **Mouse Coats (12)**: Rust, Slate, Moss, Grain, Sugar, Soot, Frost, Ink, Iron, Marble, Prism, Porcelain.
+- **Launch cats**: Pip, Nibs, Pudding, Biscuit, Sable, Nim, Goldie, Miso.
+- **Also in the playable roster** (`content/cats/index.json`): Marlow (Harbor, water, Bite) and Bub (Myth, Acid, brew).
+- **Heroes** (`content/heroes/`): Mittens (`mittens`, starter), Duchess (`duchess`), Baron Salt (`baron`), Sister Pebble (`pebble`).
+- **Mouse coats (12)**: Rust, Slate, Moss, Grain, Sugar, Soot, Frost, Ink, Iron, Marble, Prism, Porcelain.
 - **Rats (5)**: Burrow, Bristle, Monarch, Dusk, Rat Matriarch.
+- **Locales**: `content/locales/en.json` and `content/locales/uk.json`. Player-facing strings stay in parity. The balance harness checks that.
 
 Do not put Bloons, MOAB, Monkey, or other borrowed proper nouns in the game.
 
 ---
 
-## 3. Rules that code must not drift
+## 4. Laws that must not drift
 
-- **Crosspath Law**: A cat spends on at most two upgrade paths. Tier 3 or higher on one path permanently caps the other at Tier 2. One Tier-5 per path per cat type on the map.
-- **Damage Types & Immunities**:
-  - Claw (stopped by Iron)
-  - Blast (stopped by Soot)
-  - Magic (stopped by Ink)
-  - Bite, Acid, Void, True (stop on nothing by coat)
-  - Frost coats ignore freeze and chill.
-- **Rat Matriarch Control Immunity**: Ignores stun, knockback, freeze, slow, and instant-kill. That immunity is **one central component** in `sim/status.gd`, never a special case scattered inside each cat.
-- **Pop Overflow**: Damage overflow applies to the **first child** in the same hit and **does not consume extra pierce**. It recurses. Other children require separate pierce.
-- **Kibble & Leaks**: Kibble pays for HP actually removed. Leaked HP pays nothing. Lives lost equals remaining RBE of the escaping unit.
-- **Fishcoin Boundary**: Fishcoin buys looks and tricks. It does not buy cats, heroes, passives, lives, or continues.
-- **Bare Paw Truth**: Bare Paw mode turns off Insights, tricks, continues, and selling. Every map must be beatable on Bare Paw using naturally available mastery tiers.
-- **Feat Determinism**: Feat cards open **between rounds only**. The offer is seeded (`matchSeed + catInstanceId + featRank + pathBits`). Reloading must not reroll it.
-- **Content Authority**: Prices, coats, rounds, and upgrades come strictly from `content/*.json`. Do not hardcode numbers into GDScript or UI scenes.
+- **Crosspath law**: A cat spends on at most two upgrade paths. Tier 3 or higher on one path permanently caps the other at Tier 2. One Tier-5 per path per cat type on the map. Enforced in `sim/tower.gd`.
+- **Damage and coats**: Claw stops on Iron. Blast stops on Soot. Magic stops on Ink. Bite, Acid, Void, and True stop on nothing by coat. Frost coats ignore freeze and chill.
+- **Rat Matriarch control immunity**: Ignores stun, knockback, freeze, slow, and instant-kill. That immunity is one component, `sim/status.gd` (`is_matriarch`). Do not reimplement it inside each cat.
+- **Pop overflow**: Overflow hits the first child in the same hit and does not consume extra pierce. It recurses. Other children need their own pierce.
+- **Kibble and leaks**: Kibble pays for HP actually removed. Leaked HP pays nothing. Lives lost equals the remaining RBE of the escaping unit.
+- **Money boundary**: Fishcoin buys looks and tricks. Golden bones buy mythic looks in the prestige shop. Neither buys cats, heroes, Insights, lives, or continues. Add no third currency.
+- **Bare Paw**: Turns off Insights, tricks, continues, and selling. Every standard map must stay beatable on Bare Paw with mastery tiers earned by natural play.
+- **Feat determinism**: Feat cards open between rounds only. The offer seed is `matchSeed + catInstanceId + featRank + pathBits`. A reload must not reroll it.
+- **Content authority**: Prices, coats, rounds, upgrades, and map points come from `content/`. Do not hardcode those numbers in GDScript or scenes.
+- **Testing Lab**: Unlimited kibble, pause, and scripted spawns stay inside `sim/testing_lab.gd` and its tests. A normal match never starts with those cheats on.
+- **Alley Crawl**: Rules live in `sim/alley_crawl.gd`, `sim/alley_crawl_session.gd`, and `content/grand_expansion/alley_crawl.json`. A crawl result is not a standard-map medal and does not relax Bare Paw.
+- **Co-op and network**: `network/network_manager.gd` and `presentation/coop_modal.gd` exist. They are not a license to change the single-player rules. SPEC 13 lockstep is still a proposal.
 
 ---
 
-## 4. Where things live
+## 5. Where the project lives
 
-| Directory / File | Role |
+| Path | Role |
 | :--- | :--- |
-| `SPEC/` | Canonical design and technical specifications (`SPEC/README.md` index, 11 domain specs, master plan). |
-| `sim/` | Headless match simulation. Pure GDScript (`RefCounted`). No textures, no scenes, no `get_node()`. |
-| `content/` | Authoritative JSON files that both `sim/` and the presentation almanac read. |
-| `presentation/` | Godot 2D scene (`main.tscn`), HUD, animations, particle effects, and drawing. |
-| `presentation/art/` | PNG sprites, tiles, props, and Godot `.import` files. |
-| `tools/` | Automated test runner (`balance_runner.py`), sunny acceptance test, and `extract_art.py`. |
+| `SPEC/01`–`SPEC/12`, `SPEC/README.md` | Design canon. Open one file. |
+| `SPEC/13_GRAND_EXPANSION_SYSTEMS.md`, `SPEC/GRAND_EXPANSION_IMPLEMENTATION_PLAN.md` | Proposal only. |
+| `content/cats/*.json`, `content/cats/index.json` | Cat stats and roster order. |
+| `content/heroes/*.json` | Hero kits. |
+| `content/maps/<id>.json` | One file per map. Count is the files on disk, not the 100-map plan in SPEC 12. |
+| `content/rounds/` | `sunny.json`, `campaign.json`, `bands.json`. |
+| `content/mice.json`, `rats.json`, `tricks.json`, `shop.json`, `prestige_shop.json`, `insights.json`, `levels.json` | Shared catalogues. |
+| `content/locales/` | `en.json`, `uk.json`. |
+| `content/grand_expansion/alley_crawl.json` | Alley Crawl config. |
+| `sim/` | `match`, `tower`, `unit`, `projectile`, `status`, `economy`, `feats`, `hero`, `constants`, `replay`, `save_manager`, `leaderboard_manager`, `testing_lab`, `alley_crawl`, `alley_crawl_session`. Class names use the `Sim` prefix. |
+| `presentation/main.gd`, `main.tscn` | Match, HUD, art loading, wood theme. |
+| `presentation/*_modal.gd`, `title_menu.gd` | Meta screens. |
+| `presentation/world_draw.gd`, `actor_draw.gd`, `vfx.gd`, `audio.gd`, `localization.gd` | Draw, FX, audio, strings. |
+| `tools/balance_runner.py` | `npm test`. |
+| `tools/sunny_scripted_match.py` | `npm run test:sunny`. |
+| `tools/run_expansion_tests.js` | `npm run test:expansion`. |
+| `tools/test_*.gd` | Headless Godot checks. Add a check beside the behavior it locks. |
 
-If a change only affects how the match looks, stay in `presentation/`. If a change affects mechanics, stats, or who wins, edit `sim/` and `content/`, then run `npm test`.
-
----
-
-## 5. Art direction
-
-Style anchor: the cat sprites in `presentation/art/cats/`. Cozy painterly storybook, chunky silhouettes, warm amber and terracotta, teal shadow, soft even light. New cats are edited from that set, not regenerated from a fresh prompt.
-
-| Folder | Files |
-| :--- | :--- |
-| `presentation/art/cats/` | `pip`, `nibs`, `pudding`, `biscuit`, `sable`, `nim`, `goldie`, `miso`, `mittens` |
-| `presentation/art/mice/` | one PNG per coat id (`rust` … `porcelain`) |
-| `presentation/art/rats/` | `burrow`, `bristle`, `monarch`, `dusk`, `matriarch` |
-| `presentation/art/props/` | `stall`, `lantern`, `crates`, `puddle` |
-| `presentation/art/tiles/` | `grass.png`, `cobble.png` |
-
-Optional animation sheets live beside these fallback sprites: `<id>_sheet.png` for cats and heroes, `<coat>_walk.png` for mice, and `<rat>_walk.png` for rats. The renderer is sheet-aware but must remain safe when they are absent.
-
-`presentation/main.gd` loads those paths. A missing file falls back to a flat geometric shape, so a bad sprite never crashes the match.
-
-### Drawing Rules:
-- Sprites stay transparent. No baked ground, no baked health numbers, no words.
-- Health bars, feat stars, level text, kibble, and lives stay drawn in code so they remain accurate.
-- Shadow mice are the same sprite rendered at lower alpha (50%), plus an overhead star mark.
-- Plated is a code-drawn metallic rim, not a second painting.
-- The Sunny Gutter path is `(40,100) → (640,100) → (640,400) → (340,400)`. Props and houses must stay completely off that ribbon.
-- HUD chrome uses the wood theme in `_apply_wood_theme()`. Do not put a second UI skin on one screen.
-
-`tools/extract_art.py` keys the green lineup sheets and writes this folder. Source lineup sheets are not committed as runtime art.
+The sim may append plain dictionaries to `presentation_log`. It never reads that log, never calls `Time` or `OS`, and never touches the scene tree.
 
 ---
 
-## 6. Specifications and Canon Reference (`SPEC/`)
+## 6. Art
 
-All canonical game design parameters, formulas, and balance rules are preserved in the `SPEC/` directory:
+Style anchor: `presentation/art/cats/`. Cozy painterly storybook, chunky silhouettes, warm amber and terracotta, teal shadow, soft even light. A new cat is edited from that set.
 
-- **[SPEC/01_GAME_OVERVIEW.md](SPEC/01_GAME_OVERVIEW.md)**: Modes (Sunny, Alley, Night, Last Whisker, Bare Paw), modifiers, win/loss rules.
-- **[SPEC/02_COMBAT_AND_SIMULATION.md](SPEC/02_COMBAT_AND_SIMULATION.md)**: 30 Hz tick, polyline paths, damage types, status effects, pop overflow recursion, Matriarch immunity component.
-- **[SPEC/03_MICE_AND_RATS.md](SPEC/03_MICE_AND_RATS.md)**: 12 coats, Super Porcelain (R81+), 5 rats, full RBE tables.
-- **[SPEC/04_CATS_AND_TOWERS.md](SPEC/04_CATS_AND_TOWERS.md)**: Crosspath law, mastery locks, complete 15-upgrade tables for all 8 launch cats, future cats, Alpha cats.
-- **[SPEC/05_HEROES.md](SPEC/05_HEROES.md)**: Hero XP curve (levels 1–20), full kits for Mittens, Duchess, Baron Salt, Sister Pebble.
-- **[SPEC/06_ECONOMY_AND_PROGRESSION.md](SPEC/06_ECONOMY_AND_PROGRESSION.md)**: Kibble income and decay, selling 70%, discount floor (60%), Account XP curve, Unlock Queue, Mastery XP.
-- **[SPEC/07_FEATS_AND_INSIGHTS.md](SPEC/07_FEATS_AND_INSIGHTS.md)**: In-match Feat XP thresholds, universal and path feat cards, 6 Insight trees.
-- **[SPEC/08_SHOP_TRICKS_AND_COSMETICS.md](SPEC/08_SHOP_TRICKS_AND_COSMETICS.md)**: Fishcoin earnings, Trick ceiling (<= 1100 on Matriarch), 8 tricks, cosmetics.
-- **[SPEC/09_MAPS_AND_ROUNDS.md](SPEC/09_MAPS_AND_ROUNDS.md)**: 6 maps, round syntax, authored waves 1–40, milestone waves 41–100, RBE acceptance bands, freeplay 101–140.
-- **[SPEC/10_UI_UX_AND_AUDIO.md](SPEC/10_UI_UX_AND_AUDIO.md)**: Screens, match HUD, hotkeys, colorblind shapes, pop pitch escalation, audio direction.
-- **[SPEC/11_TECHNICAL_ARCHITECTURE.md](SPEC/11_TECHNICAL_ARCHITECTURE.md)**: Godot 4 architecture, save profile schema, deterministic replay format, 9 balance gates, 13-phase build order.
-- **[SPEC/MASTER_DESIGN_PLAN.md](SPEC/MASTER_DESIGN_PLAN.md)**: Full canonical design plan document.
+`presentation/main.gd` `_load_art()` loads by id:
 
----
+- Cats: ids from `content/cats/index.json`, plus heroes `mittens`, `duchess`, `baron`, `pebble`. Sheet `<id>_sheet.png`, else `<id>.png`.
+- Mice: `<coat>_walk.png`, else `<coat>.png`, for the 12 coats.
+- Rats: `<id>_walk.png`, else `<id>.png`, for `burrow`, `bristle`, `monarch`, `dusk`, `matriarch`.
+- Props: `stall`, `lantern`, `crates`, `puddle`. Tiles: `grass.png`, `cobble.png`.
 
-## 7. How to change the game & Agent Guidelines
+A missing file falls back to a flat shape. A bad sprite must not crash the match.
 
-- **New Coat or Rat**: A JSON entry in `content/mice.json` or `content/rats.json` plus a sprite whose filename matches the ID.
-- **New Cat**: Data-only if the cat uses existing components (projectiles, auras, pulses, zones, income, beams, sentries). A new verb (e.g. "dash along the path") requires a named sim component in `sim/`, then a sprite.
-- **Engine Stack**: Godot 4.3+, GDScript. Do not suggest a different engine unless explicitly requested.
-- **Deterministic Sim**: Seeded RNG; no wall-clock (`OS` or `Time`) calls inside `sim/`.
-- **Git Hygiene**: Best practices configured in `.gitignore`. Cache files (`.godot/`, `__pycache__/`, logs, binaries) must never be committed. Asset `.import` files MUST be committed.
-- **Verification Routine**:
-  1. After any sim, content, or balance change: run `npm test` and `npm run test:sunny`.
-  2. Ensure all 9 balance gates pass cleanly.
-   3. After a presentation change: launch the game (`npm start`), place Pip, start a round, and confirm mice walk the cobbles, the dock displays cat icons, and HUD interactions function properly.
+- Sprites stay transparent. No baked ground, numbers, or words.
+- Sheets are 128px cells: four idle frames, then six attack frames, 3/4 view facing right. Presentation flips toward the target.
+- Health bars, feat stars, level text, kibble, and lives stay code-drawn.
+- Shadow mice reuse the sprite at 50% alpha plus an overhead star. Plated is a code-drawn rim.
+- Sunny Gutter points live in `content/maps/sunny_gutter.json`: `(40,100) → (640,100) → (640,400) → (340,400)`. Props stay off that ribbon.
+- HUD chrome uses `_apply_wood_theme()` in `presentation/main.gd`. One wood skin per screen.
+- Upgrade read is an overlay ornament at tiers 1, 3, and 5. Do not paint fifteen bodies per cat.
+- Commit `*.import`. Never commit `.godot/`, `__pycache__/`, logs, export binaries, or `export_credentials.cfg`. `*.uid` is gitignored.
 
 ---
 
-## 8. Presentation pipeline
+## 7. How to change it
 
-- Game feel lives in `presentation/`. The sim may append plain dictionaries to `presentation_log` as output, but never reads that log, calls `Time`/`OS`, or touches the scene tree.
-- Missing art always falls back to a static sprite or flat shape. Health bars, feat stars, level text, kibble, and lives remain code-drawn and accurate to the sim.
-- Sheets are transparent 128px cells: four idle frames then six attack frames, in 3/4 view facing right. Presentation flips toward the target. Never bake ground, numbers, or words into an asset.
-- Upgrades read through overlay ornaments at tiers 1, 3, and 5; do not make fifteen body repaints per cat. Damage-type colors and immunity cues are the shared combat language, and HUD chrome remains the wood theme.
-- After presentation work, run the game, place Pip, start a round, verify the cobbles, dock icons, HUD, and a tier ornament. After sim or content work, run `npm test` and `npm run test:sunny`.
+- **New coat or rat**: an entry in `content/mice.json` or `content/rats.json`, plus a sprite whose filename is the id. Keep locale parity.
+- **New cat**: a JSON file in `content/cats/`, an id appended in `content/cats/index.json`, and a sprite stem that matches the id. Data-only when the cat uses projectiles, auras, pulses, zones, income, beams, or sentries. A new verb needs a named component in `sim/` first, then the sprite. Follow with `npm test`.
+- **New map**: one `content/maps/<id>.json`. Path points, masks, and obstacles live in that file. Wire it through the existing map load. Do not invent a second geometry format.
+- **Player-facing copy**: edit `content/locales/en.json` and `content/locales/uk.json` together.
+- **Determinism**: seeded RNG only inside `sim/`. No wall-clock calls there.
+- **Engine**: Godot 4.3+ and GDScript. Do not propose another engine unless the user asks.
+
+After the edit, run the check that covers it:
+
+1. Any change under `sim/`, `content/`, maps, locales, or balance: `npm test`.
+2. Sunny rounds or the Sunny Gutter ribbon: also `npm run test:sunny`.
+3. Testing Lab or Alley Crawl: also `npm run test:expansion`.
+4. A presentation change: `npm start`, place Pip, start a round. Mice walk the cobbles, the dock shows cat icons, the HUD responds, and a touched upgrade still shows its tier ornament.
+
+Fix a red check before calling the work done. Say so if a check could not be run.

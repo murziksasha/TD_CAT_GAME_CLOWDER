@@ -37,14 +37,14 @@ func _build_ui() -> void:
 	root_vbox.add_child(header_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "🐾 Clowder Co-op — Defense of the Warrens"
+	title_lbl.text = "Clowder Co-op"
 	title_lbl.add_theme_font_size_override("font_size", 20)
 	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_hbox.add_child(title_lbl)
 
 	var close_btn := Button.new()
-	close_btn.text = " ✕ Close "
+	close_btn.text = "Close"
 	close_btn.pressed.connect(func():
 		visible = false
 		closed.emit()
