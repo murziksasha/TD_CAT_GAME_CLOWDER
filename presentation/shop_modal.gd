@@ -55,20 +55,20 @@ func _build_ui() -> void:
 	root_vbox.add_child(header_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "🛍 The Alley Market & Collector's Vault"
+	title_lbl.text = "Alley Shop & Collector's Vault"
 	title_lbl.add_theme_font_size_override("font_size", 20)
-	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_hbox.add_child(title_lbl)
 
 	wallet_lbl = Label.new()
-	wallet_lbl.text = "🐟 0 Fishcoin | 🦴 0 Golden Bones  "
-	wallet_lbl.add_theme_font_size_override("font_size", 16)
+	wallet_lbl.text = "0 Fishcoin | 0 Golden Bones  "
+	wallet_lbl.add_theme_font_size_override("font_size", 15)
 	wallet_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
 	header_hbox.add_child(wallet_lbl)
 
 	var close_btn := Button.new()
-	close_btn.text = " ✕ Close "
+	close_btn.text = "Close"
 	close_btn.pressed.connect(func():
 		visible = false
 		closed.emit()
@@ -82,8 +82,8 @@ func _build_ui() -> void:
 	tabs_hbox.add_theme_constant_override("separation", 10)
 	root_vbox.add_child(tabs_hbox)
 
-	_add_tab_button("regular", "🐟 Alley Market (Fishcoin)")
-	_add_tab_button("vault", "🦴 Collector's Vault (Super Shop)")
+	_add_tab_button("regular", "Looks & Tricks (Fishcoin)")
+	_add_tab_button("vault", "Collector's Vault (Golden Bones)")
 
 	root_vbox.add_child(HSeparator.new())
 

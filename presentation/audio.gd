@@ -20,9 +20,11 @@ var min_intervals: Dictionary = {
 	"slate_pop": 0.04, "moss_pop": 0.04, "sugar_pop": 0.04, "soot_pop": 0.05,
 	"frost_shiver": 0.05, "ink_swallow": 0.08, "marble_crash": 0.08, "prism_shimmer": 0.06,
 	"burrow_break": 0.20, "bristle_rattle": 0.20, "monarch_fanfare": 0.25,
-	"dusk_vanish": 0.18, "matriarch_roar": 0.35, "pop": 0.03, "leak": 0.15
+	"dusk_vanish": 0.18, "matriarch_roar": 0.35, "matriarch_sting": 0.35, "rat_entrance": 0.25,
+	"skin_flourish": 0.08, "pop": 0.03, "leak": 0.15
 }
 var is_ready := false
+var master_volume: float = 0.8
 
 func _init() -> void:
 	_synthesize_all_sounds()
@@ -67,9 +69,14 @@ func note(event: Dictionary) -> void:
 		"rat_enter":
 			var rat := str(event.get("rat", "")).to_lower()
 			if rat == "matriarch":
-				play("matriarch_roar", 3.0)
+				play("matriarch_sting", 3.0)
 			elif rat == "monarch":
 				play("monarch_fanfare", 2.0)
+			else:
+				play("rat_entrance", 1.5)
+		"skin_flourish":
+			# Cosmetic skin harmonic flourish plays quietly under the base cue
+			play("skin_flourish", -9.0)
 		"blocked":
 			var blk := str(event.get("blocked_by", "")).to_lower()
 			match blk:
@@ -108,7 +115,7 @@ func note(event: Dictionary) -> void:
 			play("leak", 2.0)
 
 func play(sound_name: String, volume_db: float = 0.0) -> void:
-	if not is_ready or players.is_empty():
+	if not is_ready or players.is_empty() or master_volume <= 0.01:
 		return
 	var stream: AudioStreamWAV = streams.get(sound_name)
 	if stream == null:
@@ -124,7 +131,7 @@ func play(sound_name: String, volume_db: float = 0.0) -> void:
 		return
 	player_index = (player_index + 1) % POOL_SIZE
 	player.stream = stream
-	player.volume_db = volume_db
+	player.volume_db = volume_db + linear_to_db(clampf(master_volume, 0.01, 1.0))
 	player.pitch_scale = randf_range(0.96, 1.04)
 	player.play()
 
@@ -281,6 +288,22 @@ func _synthesize_all_sounds() -> void:
 		var sub: float = sin(TAU * lerpf(50.0, 28.0, t / d) * t) * 0.7
 		var rumble: float = randf_range(-1.0, 1.0) * 0.3
 		return (sub + rumble) * env
+	)
+	streams["rat_entrance"] = _build_sound(0.28, func(t: float, d: float) -> float:
+		var env: float = sin(PI * (t / d)) * exp(-t * 4.0)
+		var horn: float = sin(TAU * lerpf(110.0, 82.0, t / d) * t) * 0.6 + sin(TAU * 165.0 * t) * 0.25
+		var scrape: float = randf_range(-1.0, 1.0) * 0.15
+		return (horn + scrape) * env
+	)
+	streams["matriarch_sting"] = _build_sound(0.42, func(t: float, d: float) -> float:
+		var env: float = (1.0 - t / d) * exp(-t * 4.5)
+		var chord: float = sin(TAU * 73.4 * t) * 0.45 + sin(TAU * 103.8 * t) * 0.35 + sin(TAU * 110.0 * t) * 0.20
+		var rumble: float = randf_range(-1.0, 1.0) * exp(-t * 10.0) * 0.25
+		return (chord + rumble) * env
+	)
+	streams["skin_flourish"] = _build_sound(0.11, func(t: float, d: float) -> float:
+		var env: float = exp(-t * 24.0) * (1.0 - t / d)
+		return (sin(TAU * 1568.0 * t) * 0.5 + sin(TAU * 2349.0 * t) * 0.5) * env
 	)
 
 	# Fallbacks

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://clowder_main_scene"]
+[gd_scene load_steps=3 format=3 uid="uid://clowder_main_scene"]
 
 [ext_resource type="Script" path="res://presentation/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://presentation/hud_icons.gd" id="2_hud_icon"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -20,54 +21,117 @@ mouse_filter = 2
 clip_contents = true
 layout_mode = 0
 offset_left = 16.0
-offset_top = 12.0
+offset_top = 8.0
 offset_right = 960.0
-offset_bottom = 62.0
+offset_bottom = 46.0
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/HUD/TopBar"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
+
+[node name="LivesIcon" type="Control" parent="CanvasLayer/HUD/TopBar/HBox"]
+custom_minimum_size = Vector2(22, 20)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("2_hud_icon")
+kind = "heart"
 
 [node name="LivesLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
-theme_override_font_sizes/font_size = 15
-text = "❤️ Lives: 200"
+theme_override_colors/font_color = Color(1, 0.42, 0.36, 1)
+theme_override_font_sizes/font_size = 16
+text = "200"
+
+[node name="KibbleIcon" type="Control" parent="CanvasLayer/HUD/TopBar/HBox"]
+custom_minimum_size = Vector2(22, 20)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("2_hud_icon")
+kind = "bowl"
 
 [node name="KibbleLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
-theme_override_font_sizes/font_size = 15
-text = "🐟 Kibble: 850"
+theme_override_font_sizes/font_size = 16
+text = "850"
 
 [node name="RoundLabel" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
-text = "Round 0/40"
+text = "Round 0 / 40"
+
+[node name="ModeBadge" type="Label" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.48, 1)
+theme_override_font_sizes/font_size = 13
+text = "Sunny"
+
+[node name="Spacer" type="Control" parent="CanvasLayer/HUD/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PauseBtn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox"]
+custom_minimum_size = Vector2(68, 0)
+layout_mode = 2
+text = "Pause"
 
 [node name="SpeedContainer" type="HBoxContainer" parent="CanvasLayer/HUD/TopBar/HBox"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
 [node name="Speed1Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
-custom_minimum_size = Vector2(28, 0)
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "1x"
 
 [node name="Speed2Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
-custom_minimum_size = Vector2(28, 0)
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "2x"
 
 [node name="Speed3Btn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox/SpeedContainer"]
-custom_minimum_size = Vector2(28, 0)
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "3x"
 
 [node name="StartRoundButton" type="Button" parent="CanvasLayer/HUD/TopBar/HBox"]
-custom_minimum_size = Vector2(110, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "▶ Start [Space]"
+
+[node name="DenBtn" type="Button" parent="CanvasLayer/HUD/TopBar/HBox"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+text = "Den"
+
+[node name="WaveStrip" type="PanelContainer" parent="CanvasLayer/HUD"]
+clip_contents = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 960.0
+offset_bottom = 78.0
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/HUD/WaveStrip"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WaveTitle" type="Label" parent="CanvasLayer/HUD/WaveStrip/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.48, 1)
+theme_override_font_sizes/font_size = 13
+text = "Next:"
+
+[node name="WaveChips" type="HBoxContainer" parent="CanvasLayer/HUD/WaveStrip/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="IncomingInfo" type="Label" parent="CanvasLayer/HUD/WaveStrip/HBox"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "R1: 15 Rust"
 
 [node name="BottomDock" type="PanelContainer" parent="CanvasLayer/HUD"]
 layout_mode = 0
@@ -97,31 +161,82 @@ offset_bottom = 708.0
 
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/HUD/InspectorPanel"]
 layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="HeaderHBox" type="HBoxContainer" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CatTitleLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+[node name="InspectorPortrait" type="TextureRect" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox"]
+custom_minimum_size = Vector2(46, 46)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Pip — Yarn Tosser"
+expand_mode = 1
+stretch_mode = 5
 
-[node name="CategoryLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+[node name="HeaderText" type="VBoxContainer" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 13
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="CatTitleLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/HeaderText"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Pip — Yarn Tosser"
+autowrap_mode = 2
+
+[node name="CategoryLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox/HeaderText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.76, 0.66, 1)
+theme_override_font_sizes/font_size = 12
 text = "Alley Cat • Claw Damage"
+autowrap_mode = 2
+
+[node name="HeroLevelBadge" type="Control" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeaderHBox"]
+visible = false
+custom_minimum_size = Vector2(46, 24)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("2_hud_icon")
+kind = "level"
 
 [node name="StatsLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Dmg: 1 | Pierce: 2 | Range: 130"
+autowrap_mode = 2
 
 [node name="FeatStatusLabel" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Feat Rank: 0 (XP: 0/100)"
 
+[node name="TargetSegmentBox" type="HBoxContainer" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TargetFirstBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "First"
+
+[node name="TargetLastBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Last"
+
+[node name="TargetStrongBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Strong"
+
+[node name="TargetCloseBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/TargetSegmentBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Close"
+
 [node name="TargetPriorityBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
+visible = false
 layout_mode = 2
 text = "Target: FIRST"
 
@@ -135,26 +250,29 @@ layout_mode = 2
 
 [node name="UpgradesTitle" type="Label" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
-text = "Upgrade Paths (Crosspath max 2)"
+theme_override_font_sizes/font_size = 14
+text = "Paths (Max 2)"
 
 [node name="PathABtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-text = "Path A [0/5]\nLong Needle ($127)"
+text = "Path A [0/5]\nLong Needle (150)"
 alignment = 0
+autowrap_mode = 2
 
 [node name="PathBBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-text = "Path B [0/5]\nKeen Whisker ($85)"
+text = "Path B [0/5]\nKeen Whisker (100)"
 alignment = 0
+autowrap_mode = 2
 
 [node name="PathCBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-text = "Path C [0/5]\nTwin Spool ($153)"
+text = "Path C [0/5]\nTwin Spool (180)"
 alignment = 0
+autowrap_mode = 2
 
 [node name="HSeparator2" type="HSeparator" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
@@ -166,20 +284,20 @@ theme_override_constants/separation = 6
 
 [node name="Ability1Btn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeroAbilitiesBox"]
 layout_mode = 2
-text = "⚡ Pin Cushion (Lvl 3)"
+text = "Pin Cushion (Lvl 3)"
 
 [node name="Ability2Btn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox/HeroAbilitiesBox"]
 layout_mode = 2
-text = "⚡ Spool Barrage (Lvl 10)"
+text = "Spool Barrage (Lvl 10)"
 
 [node name="SellBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_colors/font_color = Color(1, 0.45, 0.4, 1)
 text = "Sell (+119 Kibble)"
 
 [node name="DeselectBtn" type="Button" parent="CanvasLayer/HUD/InspectorPanel/VBox"]
 layout_mode = 2
-text = "Close Panel"
+text = "Deselect"
 
 [node name="RightInfoPanel" type="PanelContainer" parent="CanvasLayer/HUD"]
 layout_mode = 0
@@ -195,34 +313,22 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Clowder: Alley Siege"
+text = "Clowder"
 
 [node name="Subtitle" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_colors/font_color = Color(0.82, 0.76, 0.66, 1)
 theme_override_font_sizes/font_size = 13
-text = "Sunny Gutter (Beginner • 1200u)"
+text = "Sunny Gutter"
+autowrap_mode = 2
 
 [node name="HSep" type="HSeparator" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
 layout_mode = 2
 
-[node name="HelpText" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
+[node name="EmptyPromptLabel" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "• Click a Cat below to deploy.
-• Click placed cat to upgrade.
-• 3 Paths (A, B, C): Crosspath rule allows at most 2 paths; one >= T3 caps other at T2.
-• Feats unlock between rounds!
-• Space: Start / Next Round
-• 1, 2, 3: Game Speed
-• Esc / Right-Click: Cancel"
-autowrap_mode = 2
-
-[node name="IncomingInfo" type="Label" parent="CanvasLayer/HUD/RightInfoPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 13
-text = "Next Round: Round 1\nWave: 15 Rust Mice"
+theme_override_font_sizes/font_size = 14
+text = "Choose a cat, or tap a cat on the alley."
 autowrap_mode = 2
 
 [node name="FeatModal" type="PanelContainer" parent="CanvasLayer/HUD"]
@@ -248,14 +354,15 @@ theme_override_constants/separation = 14
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_font_sizes/font_size = 20
-text = "✨ CAT FEAT ACHIEVED! ✨"
+text = "Cat Feat"
 horizontal_alignment = 1
 
 [node name="ModalSubtitle" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "Pip reached Feat Rank 1! Choose 1 Feat perk:"
+text = "Between rounds — Pip reached Feat Rank 1. Choose 1 perk (Keys 1–3):"
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="CardsHBox" type="HBoxContainer" parent="CanvasLayer/HUD/FeatModal/VBox"]
 layout_mode = 2
@@ -279,7 +386,7 @@ horizontal_alignment = 1
 [node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_color = Color(0.85, 0.82, 0.76, 1)
 theme_override_font_sizes/font_size = 13
 text = "+12% range"
 horizontal_alignment = 1
@@ -287,7 +394,7 @@ autowrap_mode = 2
 
 [node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card1/VBox"]
 layout_mode = 2
-text = "Pick Perk"
+text = "Pick [1]"
 
 [node name="Card2" type="PanelContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox"]
 layout_mode = 2
@@ -306,7 +413,7 @@ horizontal_alignment = 1
 [node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_color = Color(0.85, 0.82, 0.76, 1)
 theme_override_font_sizes/font_size = 13
 text = "+10% attack speed"
 horizontal_alignment = 1
@@ -314,7 +421,7 @@ autowrap_mode = 2
 
 [node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card2/VBox"]
 layout_mode = 2
-text = "Pick Perk"
+text = "Pick [2]"
 
 [node name="Card3" type="PanelContainer" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox"]
 layout_mode = 2
@@ -333,7 +440,7 @@ horizontal_alignment = 1
 [node name="Desc" type="Label" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_color = Color(0.85, 0.82, 0.76, 1)
 theme_override_font_sizes/font_size = 13
 text = "+2 pierce, -8% range"
 horizontal_alignment = 1
@@ -341,10 +448,10 @@ autowrap_mode = 2
 
 [node name="SelectBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox/CardsHBox/Card3/VBox"]
 layout_mode = 2
-text = "Pick Perk"
+text = "Pick [3]"
 
 [node name="RerollBtn" type="Button" parent="CanvasLayer/HUD/FeatModal/VBox"]
 custom_minimum_size = Vector2(240, 36)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "🎲 Reroll Feats (150 Kibble)"
+text = "Reroll Feats (150 Kibble)"

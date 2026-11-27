@@ -70,14 +70,14 @@ func _build_ui() -> void:
 	root_vbox.add_child(header_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "📖 The Almanac — Cat Lore & Alley Intelligence"
+	title_lbl.text = "The Almanac — Cat Lore & Alley Intelligence"
 	title_lbl.add_theme_font_size_override("font_size", 20)
 	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_hbox.add_child(title_lbl)
 
 	var close_btn := Button.new()
-	close_btn.text = " ✕ Close "
+	close_btn.text = "Close"
 	close_btn.pressed.connect(func():
 		visible = false
 		closed.emit()
@@ -211,11 +211,46 @@ func _show_cat_details(cat_id: String) -> void:
 	var is_hero = heroes_data.has(cat_id)
 	var data_dict = heroes_data.get(cat_id, {}) if is_hero else cats_data.get(cat_id, {})
 
+	var hdr_row := HBoxContainer.new()
+	hdr_row.add_theme_constant_override("separation", 12)
+	detail_container.add_child(hdr_row)
+
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(56, 56)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture = _get_single_frame_icon(cat_sprites.get(cat_id))
+	hdr_row.add_child(portrait)
+
+	var hdr_text := VBoxContainer.new()
+	hdr_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_row.add_child(hdr_text)
+
 	var name_lbl := Label.new()
 	name_lbl.text = data_dict.get("name", cat_id.capitalize()) + (" (Hero Commander)" if is_hero else " (Cat)")
 	name_lbl.add_theme_font_size_override("font_size", 22)
-	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
-	detail_container.add_child(name_lbl)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_text.add_child(name_lbl)
+
+	var cat_shapes := {
+		"pip": "Shape: Yarn ball & needle",
+		"nibs": "Shape: Curved claw stance",
+		"pudding": "Shape: Frost bowl",
+		"biscuit": "Shape: Fishbone mortar basket",
+		"sable": "Shape: Rooftop rifle & monocle",
+		"nim": "Shape: Crackling spark orb",
+		"goldie": "Shape: Fishing net & crate",
+		"miso": "Shape: Cafe tray & serving apron",
+		"marlow": "Shape: Harbor tide collar",
+		"bub": "Shape: Bubbling brew flask"
+	}
+	if cat_shapes.has(cat_id):
+		var shp_lbl := Label.new()
+		shp_lbl.text = cat_shapes[cat_id]
+		shp_lbl.add_theme_font_size_override("font_size", 12)
+		shp_lbl.add_theme_color_override("font_color", Color(0.86, 0.78, 0.64))
+		hdr_text.add_child(shp_lbl)
 
 	var desc_lbl := Label.new()
 	desc_lbl.text = data_dict.get("description", "A valiant defender of the clowder.")
@@ -286,23 +321,59 @@ func _show_enemy_details(enemy_id: String) -> void:
 	_clear_details()
 	var coats: Dictionary = mice_data.get("coats", {})
 	var rats: Dictionary = rats_data.get("rats", {})
+	var coat_shapes := {
+		"rust": "Shape: Notched ear & chew marks",
+		"slate": "Shape: Tilted flat cap",
+		"moss": "Shape: Leaf hat & leaf tail",
+		"grain": "Shape: Grain satchel & angled tail",
+		"sugar": "Shape: Pink spiral lollipop",
+		"soot": "Shape: Chimney brush & soot puff",
+		"frost": "Shape: Knit wool scarf",
+		"ink": "Shape: Pointed sorcerer hat",
+		"iron": "Shape: Metal bucket helmet",
+		"marble": "Shape: Heavy stone slab",
+		"prism": "Shape: Faceted crystal prism",
+		"porcelain": "Shape: Glossy ceramic shell"
+	}
 
 	if coats.has(enemy_id):
 		var c = coats[enemy_id]
+		var hdr_row := HBoxContainer.new()
+		hdr_row.add_theme_constant_override("separation", 12)
+		detail_container.add_child(hdr_row)
+
+		var portrait := TextureRect.new()
+		portrait.custom_minimum_size = Vector2(56, 56)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.texture = _get_single_frame_icon(mouse_sprites.get(enemy_id))
+		hdr_row.add_child(portrait)
+
+		var hdr_text := VBoxContainer.new()
+		hdr_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hdr_row.add_child(hdr_text)
+
 		var title := Label.new()
 		title.text = "%s Mouse (Tier Coat)" % enemy_id.capitalize()
 		title.add_theme_font_size_override("font_size", 22)
-		title.add_theme_color_override("font_color", Color(1.0, 0.7, 0.4))
-		detail_container.add_child(title)
+		title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+		hdr_text.add_child(title)
+
+		var shape_lbl := Label.new()
+		shape_lbl.text = coat_shapes.get(enemy_id, "")
+		shape_lbl.add_theme_font_size_override("font_size", 13)
+		shape_lbl.add_theme_color_override("font_color", Color(0.86, 0.78, 0.64))
+		hdr_text.add_child(shape_lbl)
 
 		var stats := Label.new()
 		var spd = float(c.get("speed_multiplier", 1.0)) * 40.0
 		var rbe = c.get("rbe", 1)
 		var imm: Array = c.get("immunities", [])
 		var imm_str = "None" if imm.is_empty() else ", ".join(imm)
-		stats.text = "RBE: %d | Speed: %.1f u/s | Layer HP: %d | Immunities: %s" % [
+		stats.text = "RBE: %d | Speed: %.1f u/s | Layer HP: %d\nImmunities: %s" % [
 			rbe, spd, c.get("layer_hp", 1), imm_str
 		]
+		stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		detail_container.add_child(stats)
 
 		detail_container.add_child(HSeparator.new())
@@ -316,28 +387,44 @@ func _show_enemy_details(enemy_id: String) -> void:
 			for ch in children:
 				parts.append("%d %s" % [ch.get("count", 1), ch.get("coat", "")])
 			pop_lbl.text = "Pop Cascade: Splits into %s" % ", ".join(parts)
+		pop_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		detail_container.add_child(pop_lbl)
 
 	elif rats.has(enemy_id):
 		var r = rats[enemy_id]
+		var hdr_row := HBoxContainer.new()
+		hdr_row.add_theme_constant_override("separation", 12)
+		detail_container.add_child(hdr_row)
+
+		var portrait := TextureRect.new()
+		portrait.custom_minimum_size = Vector2(64, 64)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.texture = _get_single_frame_icon(rat_sprites.get(enemy_id))
+		hdr_row.add_child(portrait)
+
 		var title := Label.new()
 		title.text = "%s Rat (Siege Boss)" % enemy_id.capitalize()
 		title.add_theme_font_size_override("font_size", 22)
-		title.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
-		detail_container.add_child(title)
+		title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45))
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hdr_row.add_child(title)
 
 		var stats := Label.new()
 		var spd = float(r.get("speed_multiplier", 1.0)) * 40.0
 		var rbe = r.get("rbe", 616)
 		var hp = r.get("body_hp", 200)
-		stats.text = "Total RBE: %d | Body HP: %d | Speed: %.1f u/s" % [rbe, hp, spd]
+		var r_imm: Array = r.get("immunities", [])
+		var r_imm_str := "None" if r_imm.is_empty() else ", ".join(r_imm)
+		stats.text = "Total RBE: %d | Body HP: %d | Speed: %.1f u/s\nImmunities: %s" % [rbe, hp, spd, r_imm_str]
+		stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		detail_container.add_child(stats)
 
 		detail_container.add_child(HSeparator.new())
 
 		var desc := Label.new()
 		if enemy_id == "matriarch":
-			desc.text = "👑 Absolute Control Immunity: Rat Matriarch completely ignores stun, freeze, slow, knockback, and instant-kill effects! Only pure sustained DPS and pop overflow can defeat her."
+			desc.text = "Absolute Control Immunity: Rat Matriarch ignores stun, freeze, slow, knockback, and instant-kill effects. Only sustained DPS and pop overflow can defeat her."
 			desc.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 		else:
 			desc.text = "Visual Damage Stages: Shows visible physical wear, disheveled gear, and debris at 75%, 50%, and 25% health thresholds."

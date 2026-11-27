@@ -357,27 +357,34 @@ def make_mouse_walk_sheet(name: str) -> Image.Image:
 
         # Group 1
         if name == "rust":
+            # Permanent SPEC 10 shapes: notched ear + chew marks
             bobs = [0, -4, 0, -3]
             tilts = [2, -2, 2, -1]
             place_at(cell, base, cx, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=1.0, sy=1.0)
-            draw.ellipse([cx - 24, ground_y - 36 + bobs[frame], cx - 10, ground_y - 20 + bobs[frame]], fill=(180, 110, 50, 240), outline=(120, 60, 20, 255))
+            # Notched ear wedge & prominent chew-mark stripes on flank
+            draw.polygon([(cx + 6, ground_y - 78 + bobs[frame]), (cx + 14, ground_y - 84 + bobs[frame]), (cx + 12, ground_y - 70 + bobs[frame])], fill=(45, 25, 18, 255))
+            draw.line([cx - 20, ground_y - 40 + bobs[frame], cx - 10, ground_y - 26 + bobs[frame]], fill=(92, 42, 18, 255), width=4)
+            draw.line([cx - 12, ground_y - 42 + bobs[frame], cx - 2, ground_y - 28 + bobs[frame]], fill=(92, 42, 18, 255), width=4)
         elif name == "grain":
             bobs = [-2, 1, -3, 2]
             tilts = [14, 18, 13, 17]
             place_at(cell, base, cx + 4, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=1.02, sy=0.98)
-            draw.line([cx - 32, ground_y - 26 + bobs[frame], cx - 52, ground_y - 34 + bobs[frame]], fill=(217, 173, 54, 255), width=3)
-            draw.rectangle([cx - 16, ground_y - 36 + bobs[frame], cx - 4, ground_y - 24 + bobs[frame]], fill=(160, 100, 40, 240), outline=(100, 50, 10, 255))
+            draw.line([cx - 32, ground_y - 26 + bobs[frame], cx - 54, ground_y - 36 + bobs[frame]], fill=(217, 173, 54, 255), width=4)
+            draw.rectangle([cx - 18, ground_y - 38 + bobs[frame], cx - 2, ground_y - 22 + bobs[frame]], fill=(168, 104, 42, 255), outline=(85, 42, 14, 255), width=2)
         elif name == "iron":
+            # Prominent metal bucket helmet with rim & visor slit
             bobs = [0, 4, 0, 3]
             tilts = [-3, 2, -2, 3]
             place_at(cell, base, cx, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=1.05, sy=0.95)
-            draw.rectangle([cx - 14, ground_y - 82 + bobs[frame], cx + 18, ground_y - 50 + bobs[frame]], fill=(150, 158, 168, 245), outline=(90, 95, 105, 255), width=2)
-            draw.line([cx - 8, ground_y - 64 + bobs[frame], cx + 12, ground_y - 64 + bobs[frame]], fill=(30, 30, 35, 255), width=3)
+            draw.rectangle([cx - 16, ground_y - 86 + bobs[frame], cx + 20, ground_y - 50 + bobs[frame]], fill=(162, 170, 182, 250), outline=(70, 76, 86, 255), width=3)
+            draw.line([cx - 18, ground_y - 50 + bobs[frame], cx + 22, ground_y - 50 + bobs[frame]], fill=(215, 222, 230, 255), width=4)
+            draw.line([cx - 8, ground_y - 66 + bobs[frame], cx + 14, ground_y - 66 + bobs[frame]], fill=(28, 30, 36, 255), width=4)
         elif name == "porcelain":
             bobs = [-1, 1, -2, 1]
             tilts = [4, 6, 3, 5]
             place_at(cell, base, cx, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=0.97, sy=1.02)
-            draw.arc([cx - 16, ground_y - 66 + bobs[frame], cx + 16, ground_y - 32 + bobs[frame]], start=200, end=320, fill=(255, 255, 255, 220), width=2)
+            draw.arc([cx - 18, ground_y - 70 + bobs[frame], cx + 18, ground_y - 32 + bobs[frame]], start=200, end=330, fill=(255, 255, 255, 235), width=3)
+            draw.ellipse([cx - 22, ground_y - 58 + bobs[frame], cx + 22, ground_y - 18 + bobs[frame]], outline=(170, 178, 192, 220), width=2)
 
         # Group 2
         elif name == "slate":
@@ -385,16 +392,16 @@ def make_mouse_walk_sheet(name: str) -> Image.Image:
             bobs = [0, -3, 0, -2]
             tilts = [-2, 2, -1, 3]
             place_at(cell, base, cx, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=1.03, sy=0.97)
-            # Newsboy cap overlay
-            draw.ellipse([cx - 14, ground_y - 82 + bobs[frame], cx + 16, ground_y - 66 + bobs[frame]], fill=(85, 95, 105, 255), outline=(50, 55, 65, 255))
-            draw.line([cx - 16, ground_y - 70 + bobs[frame], cx + 8, ground_y - 68 + bobs[frame]], fill=(50, 55, 65, 255), width=2)
+            draw.ellipse([cx - 16, ground_y - 84 + bobs[frame], cx + 18, ground_y - 66 + bobs[frame]], fill=(88, 98, 110, 255), outline=(42, 48, 56, 255), width=2)
+            draw.line([cx - 18, ground_y - 70 + bobs[frame], cx + 12, ground_y - 68 + bobs[frame]], fill=(42, 48, 56, 255), width=3)
         elif name == "moss":
-            # Camouflaged scout with leaf hat
+            # Camouflaged scout with leaf hat AND prominent leaf tail
             bobs = [-2, 2, -3, 1]
             tilts = [6, 10, 5, 9]
             place_at(cell, base, cx, ground_y, dx=0, dy=bobs[frame], angle=tilts[frame], sx=1.0, sy=1.0)
-            # Leaf perched on head
-            draw.polygon([(cx - 4, ground_y - 78 + bobs[frame]), (cx + 8, ground_y - 92 + bobs[frame]), (cx + 12, ground_y - 74 + bobs[frame])], fill=(85, 155, 60, 255))
+            draw.polygon([(cx - 4, ground_y - 78 + bobs[frame]), (cx + 10, ground_y - 96 + bobs[frame]), (cx + 14, ground_y - 74 + bobs[frame])], fill=(88, 162, 62, 255), outline=(42, 86, 32, 255))
+            draw.polygon([(cx - 28, ground_y - 28 + bobs[frame]), (cx - 54, ground_y - 44 + bobs[frame]), (cx - 44, ground_y - 18 + bobs[frame])], fill=(96, 174, 68, 255), outline=(42, 86, 32, 255))
+            draw.line([cx - 28, ground_y - 28 + bobs[frame], cx - 49, ground_y - 36 + bobs[frame]], fill=(42, 86, 32, 255), width=2)
         elif name == "sugar":
             # Sweet tooth with giant pink spiral lollipop
             bobs = [-4, 2, -5, 3] # bouncy prance

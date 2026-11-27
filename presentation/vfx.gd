@@ -7,11 +7,22 @@ var debris: Array[Dictionary] = []
 var reduced: bool = false
 var shake_mode: int = 1 # 0 off, 1 low, 2 full
 var leak_flash: float = 0.0
+var shake_trauma: float = 0.0
+var shake_offset: Vector2 = Vector2.ZERO
 
 func note(event: Dictionary) -> void:
 	var kind := str(event.get("type", ""))
 	if kind == "leak":
 		leak_flash = 0.35
+		_add_shake(0.55)
+	elif kind == "explosion":
+		_add_shake(0.28)
+	elif kind == "rat_enter":
+		var rat_id := str(event.get("rat", "")).to_lower()
+		_add_shake(0.65 if rat_id == "matriarch" else 0.25)
+	elif kind == "ability":
+		_add_shake(0.32)
+
 	if effects.size() >= MAX_EFFECTS:
 		if reduced or kind in ["kibble", "hit"]:
 			return
@@ -25,21 +36,34 @@ func note(event: Dictionary) -> void:
 		var is_rat := bool(event.get("is_rat", false)) or unit_type in ["burrow", "bristle", "monarch", "dusk", "matriarch"]
 		_spawn_pop_debris(pos, coat, unit_type, is_rat)
 
-	if kind in ["pop", "blocked", "hit", "kibble", "status", "ability", "upgrade", "child", "explosion", "acid_splash", "acid_pool", "brew", "frost_pulse", "slash"]:
+	if kind in ["pop", "blocked", "hit", "kibble", "status", "ability", "upgrade", "child", "explosion", "acid_splash", "acid_pool", "brew", "frost_pulse", "slash", "hero_telegraph"]:
 		var effect := event.duplicate(true)
 		effect["age"] = 0.0
-		var life := 0.55
+		var life := 0.45
 		match kind:
-			"child": life = 0.27
+			"child": life = 0.25
 			"explosion": life = 0.38
-			"acid_splash": life = 0.42
-			"acid_pool": life = 0.48
-			"brew": life = 0.55
+			"acid_splash": life = 0.40
+			"acid_pool": life = 0.45
+			"brew": life = 0.50
 			"frost_pulse": life = 0.35
-			"slash": life = 0.24
-			"pop": life = 0.32
+			"slash": life = 0.22
+			"pop": life = 0.30
+			"kibble": life = 0.42
+			"blocked": life = 0.36
+			"hero_telegraph": life = 0.35
+		if reduced:
+			life *= 0.65
 		effect["life"] = life
 		effects.append(effect)
+
+func _add_shake(amount: float) -> void:
+	if shake_mode <= 0:
+		shake_trauma = 0.0
+		shake_offset = Vector2.ZERO
+		return
+	var mult := 0.45 if shake_mode == 1 else 1.0
+	shake_trauma = minf(1.0, shake_trauma + amount * mult)
 
 func _spawn_pop_debris(pos: Vector2, coat: String, unit_type: String, is_rat: bool) -> void:
 	# Rats equipment flying off
@@ -177,6 +201,13 @@ func _spawn_pop_debris(pos: Vector2, coat: String, unit_type: String, is_rat: bo
 
 func advance(delta: float) -> void:
 	leak_flash = maxf(0.0, leak_flash - delta)
+	if shake_mode <= 0 or shake_trauma <= 0.0:
+		shake_trauma = 0.0
+		shake_offset = Vector2.ZERO
+	else:
+		shake_trauma = maxf(0.0, shake_trauma - delta * 2.4)
+		var mag := shake_trauma * shake_trauma * (6.0 if shake_mode == 1 else 14.0)
+		shake_offset = Vector2(randf_range(-mag, mag), randf_range(-mag, mag))
 	var live_fx: Array[Dictionary] = []
 	for effect in effects:
 		effect.age += delta
@@ -212,6 +243,7 @@ func draw(canvas: CanvasItem) -> void:
 			"brew": _draw_starburst(canvas, pos, t)
 			"frost_pulse": _draw_frost_pulse(canvas, pos, float(effect.get("radius", 90.0)), t)
 			"slash": _draw_slash(canvas, pos, float(effect.get("radius", 40.0)), t)
+			"hero_telegraph": _draw_hero_telegraph(canvas, pos, float(effect.get("radius", 140.0)), t)
 
 	for deb in debris:
 		var alpha: float = clampf(float(deb.life) / float(deb.max_life), 0.0, 1.0)
@@ -256,7 +288,8 @@ func draw(canvas: CanvasItem) -> void:
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	if leak_flash > 0.0:
-		canvas.draw_rect(Rect2(0, 0, 1280, 720), Color(0.85, 0.1, 0.08, leak_flash * 0.42), false, 10.0)
+		var border_alpha := leak_flash * (0.28 if reduced else 0.45)
+		canvas.draw_rect(Rect2(0, 0, 1280, 720), Color(0.85, 0.14, 0.10, border_alpha), false, 8.0 if reduced else 11.0)
 
 func _draw_pop(canvas: CanvasItem, pos: Vector2, coat: String, t: float) -> void:
 	var colors := {
@@ -267,19 +300,49 @@ func _draw_pop(canvas: CanvasItem, pos: Vector2, coat: String, t: float) -> void
 	}
 	var color: Color = colors.get(coat, Color("e7b35e"))
 	for i in range(7):
-		var p := pos + Vector2.from_angle(float(i) * TAU / 7.0) * (8.0 + 25.0 * t)
-		canvas.draw_circle(p, 4.5 * (1.0 - t), Color(color, 1.0 - t))
+		var p := pos + Vector2.from_angle(float(i) * TAU / 7.0) * (8.0 + 24.0 * t)
+		canvas.draw_circle(p, 4.2 * (1.0 - t), Color(color, 1.0 - t))
 
 func _draw_blocked(canvas: CanvasItem, pos: Vector2, blocked_by: String, t: float) -> void:
 	var b := blocked_by.to_lower()
-	var color := Color("b2b7bf") if b == "iron" else Color("77606d") if b == "soot" else Color("64c5d9") if b == "frost" else Color("a968d8")
-	canvas.draw_arc(pos, 14 + t * 8, 0, TAU, 16, Color(color, 1.0 - t), 2.5)
+	var a := 1.0 - t
 	if b == "iron":
+		# Iron clang: steel chevron sparks
+		var col := Color(0.84, 0.88, 0.94, a)
+		canvas.draw_arc(pos, 11 + t * 9, 0, TAU, 16, col, 2.2)
 		for i in range(4):
-			var sp := pos + Vector2.from_angle(float(i) * TAU / 4.0 + 0.4) * (10.0 + t * 14.0)
-			canvas.draw_circle(sp, 2.0 * (1.0 - t), Color(1, 0.95, 0.6, 1.0 - t))
-	var text := "HELD" if b == "matriarch" else "CLANG" if b == "iron" else "PUFF" if b == "soot" else "FROST" if b == "frost" else "SWALLOW"
-	_draw_floater(canvas, pos, text, color, t)
+			var ang := float(i) * TAU / 4.0 + 0.45
+			var inner := pos + Vector2.from_angle(ang) * (7.0 + t * 8.0)
+			var outer := pos + Vector2.from_angle(ang) * (14.0 + t * 14.0)
+			canvas.draw_line(inner, outer, Color(1.0, 0.94, 0.60, a), 2.0)
+	elif b == "soot":
+		# Soot puff: 3 billowing charcoal ash puffs
+		for i in range(3):
+			var ang := float(i) * TAU / 3.0 - 0.5
+			var puff_p := pos + Vector2.from_angle(ang) * (6.0 + t * 12.0)
+			canvas.draw_circle(puff_p, (6.5 - 2.0 * t), Color(0.24, 0.22, 0.23, a * 0.85))
+			canvas.draw_arc(puff_p, (7.0 - 2.0 * t), 0, TAU, 12, Color(0.55, 0.50, 0.50, a * 0.7), 1.4)
+	elif b == "ink":
+		# Ink splash: dark violet blot + splatter droplets
+		canvas.draw_circle(pos, 7.0 + t * 5.0, Color(0.26, 0.12, 0.42, a * 0.85))
+		for i in range(5):
+			var drop := pos + Vector2.from_angle(float(i) * TAU / 5.0) * (9.0 + t * 13.0)
+			canvas.draw_circle(drop, 2.4 * a, Color(0.62, 0.36, 0.88, a))
+	elif b == "frost":
+		# Frost crystal: 6-point ice star
+		var fcol := Color(0.65, 0.90, 0.98, a)
+		for i in range(3):
+			var d := Vector2.from_angle(float(i) * PI / 3.0) * (10.0 + t * 5.0)
+			canvas.draw_line(pos - d, pos + d, fcol, 2.0)
+	else:
+		# Matriarch control immunity ward
+		canvas.draw_arc(pos, 15 + t * 8, 0, TAU, 18, Color(0.95, 0.76, 0.32, a), 2.5)
+
+func _draw_hero_telegraph(canvas: CanvasItem, pos: Vector2, radius: float, t: float) -> void:
+	var a := 1.0 - t
+	var r := radius * (0.35 + 0.65 * t)
+	canvas.draw_arc(pos, r, 0, TAU, 36, Color(1.0, 0.86, 0.38, a * 0.9), 2.8)
+	canvas.draw_arc(pos, r * 0.85, 0, TAU, 28, Color(0.55, 0.88, 1.0, a * 0.65), 1.6)
 
 func _draw_hit(canvas: CanvasItem, pos: Vector2, damage_type: int, t: float) -> void:
 	var colors := [Color("f0af3a"), Color("d5564e"), Color("f18735"), Color("a673e5"), Color("77bc59"), Color("38264b"), Color.WHITE]
@@ -299,7 +362,8 @@ func _draw_explosion(canvas: CanvasItem, pos: Vector2, radius: float, t: float) 
 	var alpha := 1.0 - t
 	canvas.draw_arc(pos, r, 0, TAU, 28, Color(1.0, 0.75, 0.25, alpha * 0.9), 3.0 * alpha)
 	canvas.draw_arc(pos, r * 0.75, 0, TAU, 24, Color(0.95, 0.40, 0.15, alpha * 0.6), 2.0 * alpha)
-	canvas.draw_circle(pos, maxf(4.0, r * 0.45 * (1.0 - t)), Color(1.0, 0.88, 0.45, alpha))
+	if not reduced:
+		canvas.draw_circle(pos, maxf(4.0, r * 0.45 * (1.0 - t)), Color(1.0, 0.88, 0.45, alpha))
 	for i in range(5):
 		var ang := float(i) * TAU / 5.0 + 0.3
 		var puff_pos := pos + Vector2(cos(ang), sin(ang)) * (r * 0.65 * t)
@@ -317,7 +381,8 @@ func _draw_acid_splash(canvas: CanvasItem, pos: Vector2, radius: float, t: float
 func _draw_frost_pulse(canvas: CanvasItem, pos: Vector2, radius: float, t: float) -> void:
 	var current_r := radius * (0.2 + 0.8 * sqrt(t))
 	var alpha := 1.0 - t
-	canvas.draw_circle(pos, current_r, Color(0.60, 0.85, 1.0, alpha * 0.12))
+	if not reduced:
+		canvas.draw_circle(pos, current_r, Color(0.60, 0.85, 1.0, alpha * 0.12))
 	canvas.draw_arc(pos, current_r, 0, TAU, 48, Color(0.72, 0.92, 1.0, alpha * 0.95), 2.5)
 	for i in range(6):
 		var ang := float(i) * TAU / 6.0
